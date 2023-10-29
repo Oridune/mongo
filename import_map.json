@@ -1,10 +1,1 @@
-{
-    "imports": {
-        "mongodb": "npm:mongodb@6.2.0",
-        "pluralize": "https://deno.land/x/deno_plural@2.0.0/mod.ts",
-        "validator": "https://deno.land/x/oridune_validator@v0.2.19/mod.ts",
-        "cliffy:prompt": "https://deno.land/x/cliffy@v0.25.4/prompt/mod.ts",
-        "ts-reset": "npm:@total-typescript/ts-reset@^0.4.2",
-        "highlight": "npm:highlight-es@1.0.3"
-    }
-}
+{}

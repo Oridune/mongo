@@ -1,7 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
-import { MongoClient, MongoClientOptions, ClientSession } from "mongodb";
-import { ObjectValidator } from "validator";
-import { plural } from "pluralize";
+import {
+  ObjectValidator,
+  plural,
+  MongoClient,
+  MongoClientOptions,
+  ClientSession,
+} from "../deps.ts";
 import { MongoModel, ModelOptions } from "./model.ts";
 
 export type TCacheValue = object | number | boolean | string | null | undefined;

@@ -1,6 +1,6 @@
 import { FindOneQuery } from "../lib/query/find.ts";
 import { Mongo, ObjectId } from "../mod.ts";
-import e from "validator";
+import { e } from "../deps.ts";
 
 const PostsData = [
   {
@@ -141,6 +141,9 @@ Deno.test({
     });
 
     await t.step("Updates", async () => {
+      // Wait for a sec to fix the time issue
+      await new Promise((_) => setTimeout(_, 1000));
+
       const Users = await UserModel.updateAndFindMany(
         {},
         { "profile.dob": new Date() }

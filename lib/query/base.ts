@@ -1,5 +1,3 @@
-// deno-lint-ignore-file
-
 export class BaseQuery<Result> {
   protected exec(): Promise<Result> {
     throw new Error(`Query execution implementation is required!`);

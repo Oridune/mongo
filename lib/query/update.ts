@@ -9,7 +9,7 @@ import {
   Timestamp,
   UpdateOptions,
   UpdateResult,
-} from "mongodb";
+} from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoDocument, MongoModel } from "../model.ts";
 
@@ -172,6 +172,8 @@ export class UpdateManyQuery<
       this.Updates as any,
       this.Options
     )) as Result;
+
+    console.log(Result);
 
     for (const Hook of this.Model["PostHooks"].update ?? [])
       await Hook({

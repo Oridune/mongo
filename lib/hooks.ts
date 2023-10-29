@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { DeleteResult, Document, Filter, UpdateResult } from "mongodb";
+import { DeleteResult, Document, Filter, UpdateResult } from "../deps.ts";
 import { MongoDocument } from "./model.ts";
 import { Flatten, Optionalize } from "./utility.ts";
 import { UpdateFilter } from "./query/update.ts";

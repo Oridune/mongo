@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { AggregateOptions, Filter } from "mongodb";
+import { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoDocument, MongoModel } from "../model.ts";
 import { Flatten } from "../utility.ts";
@@ -93,7 +93,7 @@ export class BaseFindQuery<
       },
     });
 
-    return this as BaseFindQuery<
+    return this as unknown as BaseFindQuery<
       Model,
       Shape,
       Result extends Array<infer R>
@@ -124,7 +124,7 @@ export class BaseFindQuery<
       }
     );
 
-    return this as BaseFindQuery<
+    return this as unknown as BaseFindQuery<
       Model,
       Shape,
       Result extends Array<infer R>

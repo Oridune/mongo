@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { DeleteOptions, UpdateOptions } from "mongodb";
+import { DeleteOptions, UpdateOptions } from "../../deps.ts";
 import { MongoDocument, MongoModel } from "../model.ts";
 import { BaseUpdateQuery, UpdateManyQuery, UpdateOneQuery } from "./update.ts";
 import { FindOneQuery, FindQuery } from "./find.ts";

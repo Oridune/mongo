@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { BaseQuery } from "./base.ts";
-import { DeleteOptions, DeleteResult, Filter } from "mongodb";
+import { DeleteOptions, DeleteResult, Filter } from "../../deps.ts";
 import { MongoDocument, MongoModel } from "../model.ts";
 
 export class BaseDeleteQuery<

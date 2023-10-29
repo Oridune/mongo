@@ -1,7 +1,9 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import e, { ObjectValidator, inferInput, inferOutput } from "validator";
-import highlight from "highlight";
 import {
+  e,
+  ObjectValidator,
+  inferInput,
+  inferOutput,
   CollectionOptions,
   ObjectId,
   InsertOneOptions,
@@ -18,7 +20,8 @@ import {
   UpdateResult,
   CountDocumentsOptions,
   ChangeStreamOptions,
-} from "mongodb";
+  highligthEs,
+} from "../deps.ts";
 import { Mongo } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
 import { Flatten, Optionalize, circularReplacer } from "./utility.ts";
@@ -57,7 +60,7 @@ export class MongoModel<
   protected log(method: string, ...args: any[]) {
     if (this.Options.logs || Mongo.enableLogs)
       console.info(
-        highlight(
+        highligthEs(
           `${this.database.databaseName}.${this.Name}.${method}(\n\r\t${args
             .map((arg) => {
               const Arg = { ...arg };
