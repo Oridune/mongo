@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-explicit-any ban-types
 import { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
-import { MongoDocument, MongoModel } from "../model.ts";
-import { Flatten } from "../utility.ts";
+import { MongoModel } from "../model.ts";
+import { Flatten, InputDocument, OutputDocument } from "../utility.ts";
 import { Mongo } from "../mongo.ts";
 
 export type MakeFieldsRequired<T, K extends keyof T> = {
@@ -18,7 +18,7 @@ export type PopulatedDocument<Doc, Field extends string, Value> = {
 export class BaseFindQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = MongoDocument<Shape>[]
+  Result = OutputDocument<Shape>[]
 > extends BaseQuery<Result> {
   protected Aggregation: Record<string, any>[] = [];
 
@@ -31,7 +31,7 @@ export class BaseFindQuery<
     return this;
   }
 
-  public filter(filter: Filter<MongoDocument<Shape>>) {
+  public filter(filter: Filter<InputDocument<Shape>>) {
     this.Aggregation.push({
       $match: filter,
     });
@@ -56,7 +56,7 @@ export class BaseFindQuery<
   }
 
   public sort(
-    sort: Partial<Record<keyof Flatten<Shape> | (string & {}), 1 | -1>>
+    sort: Partial<Record<"_id" | keyof Flatten<Shape> | (string & {}), 1 | -1>>
   ) {
     if (typeof sort === "object" && Object.keys(sort).length)
       this.Aggregation.push({
@@ -68,7 +68,7 @@ export class BaseFindQuery<
 
   public project(
     project: Partial<
-      Record<keyof Shape | keyof Flatten<Shape> | (string & {}), 1 | -1>
+      Record<"_id" | keyof Shape | keyof Flatten<Shape> | (string & {}), 1 | -1>
     >
   ) {
     if (typeof project === "object" && Object.keys(project).length)
@@ -137,7 +137,7 @@ export class BaseFindQuery<
 export class FindQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result extends any[] = MongoDocument<Shape>[]
+  Result extends any[] = OutputDocument<Shape>[]
 > extends BaseFindQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
     for (const Hook of this.Model["PreHooks"].read ?? [])
@@ -160,13 +160,13 @@ export class FindQuery<
     return Promise.all(
       Result.map(
         (doc) =>
-          this.Model["PostHooks"].read?.reduce<Promise<MongoDocument<Shape>>>(
+          this.Model["PostHooks"].read?.reduce<Promise<OutputDocument<Shape>>>(
             async (doc, hook) =>
               hook({ event: "read", method: "find", data: await doc }) as any,
             Promise.resolve(doc)
           ) ?? doc
       )
-    ) as Promise<Result>;
+    ) as any;
   }
 
   constructor(
@@ -182,7 +182,7 @@ export class FindQuery<
 export class FindOneQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = MongoDocument<Shape> | null
+  Result = OutputDocument<Shape> | null
 > extends BaseFindQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
     this.Aggregation.push({ $limit: 1 });
@@ -200,7 +200,7 @@ export class FindOneQuery<
       () =>
         this.Model.collection
           .aggregate(this.Aggregation, this.Options)
-          .toArray() as Promise<MongoDocument<Shape>[]>,
+          .toArray() as Promise<OutputDocument<Shape>[]>,
       this.Options?.cache
     );
 
@@ -208,7 +208,9 @@ export class FindOneQuery<
       await Promise.all(
         Result.map(
           (doc) =>
-            this.Model["PostHooks"].read?.reduce<Promise<MongoDocument<Shape>>>(
+            this.Model["PostHooks"].read?.reduce<
+              Promise<OutputDocument<Shape>>
+            >(
               async (doc, hook) =>
                 hook({
                   event: "read",

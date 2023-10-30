@@ -1,4 +1,4 @@
-import { e, ObjectId } from "./deps.ts";
+import { e, inferInput, inferOutput, ObjectId } from "./deps.ts";
 import { Mongo } from "./mod.ts";
 
 const Cache = new Map<
@@ -24,6 +24,9 @@ try {
       const Value = Cache.get(key);
       if (Value && Value.ttl + Value.time >= Date.now() / 1000)
         return Value.value;
+    },
+    (key) => {
+      Cache.delete(key);
     }
   );
 
@@ -40,6 +43,7 @@ try {
 
   // Create User Schema
   const UserSchema = e.object({
+    _id: e.optional(e.if(ObjectId.isValid)),
     username: e.string(),
     password: e.optional(e.string()).default("topSecret"),
     profile: e.object({
@@ -164,7 +168,15 @@ try {
 
     console.time("fetch");
 
-    await UserModel.find({}, { cache: { key: "myFetch", ttl: 3000 } });
+    const User = await UserModel.find(
+      {},
+      { cache: { key: "myFetch", ttl: 3000 } }
+    )
+      .populate("posts", PostModel)
+      .populateOne("latestPost", PostModel)
+      .project({});
+
+    User[0]._id;
 
     console.timeEnd("fetch");
   });

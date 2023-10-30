@@ -1,5 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 
+import { type ObjectId } from "../deps.ts";
+
 // Returns R if T is an object, otherwise returns F
 type IsObject<T, R, F = T> = T extends
   | ((...args: any[]) => any)
@@ -42,13 +44,18 @@ export type Flatten<T> = T extends FlattenOneLevel<T>
   ? T
   : Flatten<FlattenOneLevel<T>>;
 
-export type Optionalize<T> = Partial<T> &
-  Pick<
-    T,
-    {
-      [P in keyof T]: T[P] extends Exclude<T[P], undefined> ? P : never;
-    }[keyof T]
-  >;
+export type InputDocument<
+  T,
+  UndefinedKeys extends keyof T = {
+    [K in keyof T]: undefined extends T[K] ? K : never;
+  }[keyof T],
+  Result = Omit<T, UndefinedKeys> & Partial<Pick<T, UndefinedKeys>>
+> = "_id" extends keyof Result ? Result : Result & { _id?: ObjectId };
+
+export type OutputDocument<T> = { _id: ObjectId } & Omit<
+  InputDocument<T>,
+  "_id"
+>;
 
 export const circularReplacer = () => {
   const seen = new WeakSet();

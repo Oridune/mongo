@@ -1,8 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
-import { DeleteResult, Document, Filter, UpdateResult } from "../deps.ts";
-import { MongoDocument } from "./model.ts";
-import { Flatten, Optionalize } from "./utility.ts";
-import { UpdateFilter } from "./query/update.ts";
+import {
+  DeleteResult,
+  Document,
+  Filter,
+  UpdateResult,
+  UpdateFilter,
+} from "../deps.ts";
+import { Flatten, InputDocument, OutputDocument } from "./utility.ts";
 
 export type THooksDetails<InputShape, OutputShape> = {
   create: {
@@ -10,17 +14,19 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "create";
         method: "create" | "createMany";
-        data: Optionalize<InputShape>;
+        data: InputDocument<InputShape>;
       };
-      returns: Optionalize<InputShape> | Promise<Optionalize<InputShape>>;
+      returns: InputDocument<InputShape> | Promise<InputDocument<InputShape>>;
     };
     post: {
       details: {
         event: "create";
         method: "create" | "createMany";
-        data: MongoDocument<OutputShape>;
+        data: OutputDocument<OutputShape>;
       };
-      returns: MongoDocument<OutputShape> | Promise<MongoDocument<OutputShape>>;
+      returns:
+        | OutputDocument<OutputShape>
+        | Promise<OutputDocument<OutputShape>>;
     };
   };
   read: {
@@ -36,9 +42,11 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "read";
         method: "find" | "findOne";
-        data: MongoDocument<OutputShape>;
+        data: OutputDocument<OutputShape>;
       };
-      returns: MongoDocument<OutputShape> | Promise<MongoDocument<OutputShape>>;
+      returns:
+        | OutputDocument<OutputShape>
+        | Promise<OutputDocument<OutputShape>>;
     };
   };
   update: {
@@ -46,10 +54,8 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "update";
         method: "updateOne" | "updateMany";
-        filter: Filter<MongoDocument<OutputShape>>;
-        updates: UpdateFilter<
-          MongoDocument<Flatten<OutputShape> & OutputShape>
-        >;
+        filter: Filter<InputDocument<InputShape>>;
+        updates: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>>;
       };
       returns: void | Promise<void>;
     };
@@ -57,7 +63,7 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "update";
         method: "updateOne" | "updateMany";
-        data: UpdateResult<MongoDocument<OutputShape>>;
+        data: UpdateResult<InputDocument<InputShape>>;
       };
       returns: void | Promise<void>;
     };
@@ -67,7 +73,7 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "delete";
         method: "deleteOne" | "deleteMany";
-        filter: Filter<MongoDocument<OutputShape>>;
+        filter: Filter<InputDocument<InputShape>>;
       };
       returns: void | Promise<void>;
     };
@@ -85,21 +91,21 @@ export type THooksDetails<InputShape, OutputShape> = {
       details: {
         event: "replace";
         method: "replaceOne";
-        filter: Filter<MongoDocument<OutputShape>>;
-        replacement: Optionalize<InputShape>;
+        filter: Filter<InputDocument<InputShape>>;
+        replacement: InputDocument<InputShape>;
       };
-      returns: Optionalize<InputShape> | Promise<Optionalize<InputShape>>;
+      returns: InputDocument<InputShape> | Promise<InputDocument<InputShape>>;
     };
     post: {
       details: {
         event: "replace";
         method: "replaceOne";
         data:
-          | MongoDocument<OutputShape>
-          | UpdateResult<MongoDocument<OutputShape>>
+          | InputDocument<InputShape>
+          | UpdateResult<InputDocument<InputShape>>
           | Promise<
-              | MongoDocument<OutputShape>
-              | UpdateResult<MongoDocument<OutputShape>>
+              | InputDocument<InputShape>
+              | UpdateResult<InputDocument<InputShape>>
             >;
       };
       returns: void | Promise<void>;

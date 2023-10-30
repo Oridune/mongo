@@ -16,6 +16,7 @@ export type TCacheSetter = (
   ttl: number
 ) => void | Promise<void>;
 export type TCacheGetter = (key: string) => TCacheValue | Promise<TCacheValue>;
+export type TCacheDelete = (key: string) => void | Promise<void>;
 
 export class Mongo {
   static enableLogs = false;
@@ -25,6 +26,7 @@ export class Mongo {
   protected static cachingMethods?: {
     set: TCacheSetter;
     get: TCacheGetter;
+    del: TCacheDelete;
   };
 
   protected static setCache(key: string, value: TCacheValue, ttl: number) {
@@ -39,6 +41,13 @@ export class Mongo {
       throw new Error(`Caching methods are not provided!`);
 
     return this.cachingMethods.get(key);
+  }
+
+  protected static deleteCache(key: string) {
+    if (typeof this.cachingMethods?.del !== "function")
+      throw new Error(`Caching methods are not provided!`);
+
+    return this.cachingMethods.del(key);
   }
 
   /**
@@ -98,11 +107,20 @@ export class Mongo {
     return this.client.withSession<T>(callback);
   }
 
-  static setCachingMethods(setter: TCacheSetter, getter: TCacheGetter) {
-    if (typeof setter === "function" && typeof getter === "function")
+  static setCachingMethods(
+    setter: TCacheSetter,
+    getter: TCacheGetter,
+    deleter: TCacheDelete
+  ) {
+    if (
+      typeof setter === "function" &&
+      typeof getter === "function" &&
+      typeof deleter === "function"
+    )
       this.cachingMethods = {
         set: setter,
         get: getter,
+        del: deleter,
       };
   }
 

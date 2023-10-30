@@ -10,7 +10,6 @@ import {
   BulkWriteOptions,
   ReplaceOptions,
   Filter,
-  Document,
   CreateIndexesOptions,
   IndexDirection,
   AggregateOptions,
@@ -21,16 +20,18 @@ import {
   CountDocumentsOptions,
   ChangeStreamOptions,
   highligthEs,
+  UpdateFilter,
 } from "../deps.ts";
 import { Mongo } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
-import { Flatten, Optionalize, circularReplacer } from "./utility.ts";
-import { FindQuery, FindOneQuery } from "./query/find.ts";
 import {
-  UpdateOneQuery,
-  UpdateManyQuery,
-  UpdateFilter,
-} from "./query/update.ts";
+  Flatten,
+  InputDocument,
+  OutputDocument,
+  circularReplacer,
+} from "./utility.ts";
+import { FindQuery, FindOneQuery } from "./query/find.ts";
+import { UpdateOneQuery, UpdateManyQuery } from "./query/update.ts";
 import { DeleteManyQuery, DeleteOneQuery } from "./query/delete.ts";
 import {
   FindAndDeleteManyQuery,
@@ -47,10 +48,6 @@ export interface ModelOptions {
   logs?: boolean;
   invalidateFields?: string[];
 }
-
-export type MongoDocument<Shape> = Optionalize<Shape> & {
-  _id: ObjectId;
-} & Document;
 
 export class MongoModel<
   Schema extends ObjectValidator<any, any, any>,
@@ -100,9 +97,9 @@ export class MongoModel<
   public async createIndex(
     ...indexDesc: (CreateIndexesOptions & {
       key: Partial<
-        Record<keyof Flatten<OutputShape> | (string & {}), IndexDirection>
+        Record<keyof Flatten<InputShape> | (string & {}), IndexDirection>
       >;
-      partialFilterExpression?: Filter<MongoDocument<OutputShape>>;
+      partialFilterExpression?: Filter<InputDocument<InputShape>>;
     })[]
   ) {
     this.log("createIndex", ...indexDesc);
@@ -114,11 +111,11 @@ export class MongoModel<
   }
 
   public async create(
-    doc: Optionalize<InputShape>,
+    doc: InputDocument<InputShape>,
     options?: InsertOneOptions
-  ): Promise<MongoDocument<OutputShape>> {
+  ): Promise<OutputDocument<OutputShape>> {
     doc =
-      (await this.PreHooks.create?.reduce<Promise<Optionalize<InputShape>>>(
+      (await this.PreHooks.create?.reduce<Promise<InputDocument<InputShape>>>(
         async (doc, hook) =>
           hook({ event: "create", method: "create", data: await doc }),
         Promise.resolve(doc)
@@ -131,7 +128,7 @@ export class MongoModel<
     const Result = { _id: Ack.insertedId, ...Doc };
 
     return (
-      this.PostHooks.create?.reduce<Promise<MongoDocument<OutputShape>>>(
+      this.PostHooks.create?.reduce<Promise<OutputDocument<OutputShape>>>(
         async (doc, hook) =>
           hook({ event: "create", method: "create", data: await doc }),
         Promise.resolve(Result)
@@ -140,13 +137,13 @@ export class MongoModel<
   }
 
   public async createMany(
-    docs: Optionalize<InputShape>[],
+    docs: InputDocument<InputShape>[],
     options?: BulkWriteOptions
-  ): Promise<MongoDocument<OutputShape>[]> {
+  ): Promise<OutputDocument<OutputShape>[]> {
     docs = await Promise.all(
       docs.map(
         (doc) =>
-          this.PreHooks.create?.reduce<Promise<Optionalize<InputShape>>>(
+          this.PreHooks.create?.reduce<Promise<InputDocument<InputShape>>>(
             async (doc, hook) =>
               hook({ event: "create", method: "createMany", data: await doc }),
             Promise.resolve(doc)
@@ -165,24 +162,24 @@ export class MongoModel<
         ...doc,
       })).map(
         (doc) =>
-          this.PostHooks.create?.reduce<Promise<MongoDocument<OutputShape>>>(
+          this.PostHooks.create?.reduce<Promise<OutputDocument<OutputShape>>>(
             async (doc, hook) =>
               hook({ event: "create", method: "createMany", data: await doc }),
             Promise.resolve(doc)
           ) ?? doc
       )
-    );
+    ) as any;
   }
 
   public find(
-    filter: Filter<MongoDocument<OutputShape>> = {},
+    filter: Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: { key: string; ttl: number } }
   ) {
     return new FindQuery(this, options).filter(filter as any);
   }
 
   public findOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: { key: string; ttl: number } }
   ) {
     const Filter = (
@@ -193,7 +190,7 @@ export class MongoModel<
   }
 
   public count(
-    filter: Filter<MongoDocument<OutputShape>> = {},
+    filter: Filter<InputDocument<InputShape>> = {},
     options?: CountDocumentsOptions & { cache?: { key: string; ttl: number } }
   ) {
     this.log("count", filter, options);
@@ -204,7 +201,7 @@ export class MongoModel<
   }
 
   public watch(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: ChangeStreamOptions
   ) {
     const Filter = (
@@ -212,16 +209,16 @@ export class MongoModel<
     ) as any;
 
     this.log("watch", Filter, options);
-    return this.collection.watch<MongoDocument<OutputShape>>(
+    return this.collection.watch<OutputDocument<OutputShape>>(
       [{ $match: Filter }],
       options
     );
   }
 
   public updateOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -234,9 +231,9 @@ export class MongoModel<
   }
 
   public updateAndFindOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -249,9 +246,9 @@ export class MongoModel<
   }
 
   public findAndUpdateOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -264,9 +261,9 @@ export class MongoModel<
   }
 
   public updateMany(
-    filter: Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new UpdateManyQuery(this, options)
@@ -275,9 +272,9 @@ export class MongoModel<
   }
 
   public updateAndFindMany(
-    filter: Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new UpdateAndFindManyQuery(this, options)
@@ -286,9 +283,9 @@ export class MongoModel<
   }
 
   public findAndUpdateMany(
-    filter: Filter<MongoDocument<OutputShape>> = {},
-    updates?: UpdateFilter<MongoDocument<Flatten<OutputShape> & OutputShape>> &
-      Partial<MongoDocument<Flatten<OutputShape> & OutputShape>>,
+    filter: Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
+      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new FindAndUpdateManyQuery(this, options)
@@ -297,7 +294,7 @@ export class MongoModel<
   }
 
   public deleteOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions
   ) {
     const Filter = (
@@ -308,7 +305,7 @@ export class MongoModel<
   }
 
   public findAndDeleteOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions
   ) {
     const Filter = (
@@ -319,22 +316,22 @@ export class MongoModel<
   }
 
   public deleteMany(
-    filter: Filter<MongoDocument<OutputShape>> = {},
+    filter: Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions
   ) {
     return new DeleteManyQuery(this, options).filter(filter as any);
   }
 
   public findAndDeleteMany(
-    filter: Filter<MongoDocument<OutputShape>> = {},
+    filter: Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions
   ) {
     return new FindAndDeleteManyQuery(this, options).filter(filter as any);
   }
 
   public async replaceOne(
-    filter: ObjectId | string | Filter<MongoDocument<OutputShape>> = {},
-    doc: Optionalize<InputShape>,
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    doc: InputDocument<InputShape>,
     options?: ReplaceOptions
   ) {
     const Filter = (
@@ -342,7 +339,7 @@ export class MongoModel<
     ) as any;
 
     doc =
-      (await this.PreHooks.replace?.reduce<Promise<Optionalize<InputShape>>>(
+      (await this.PreHooks.replace?.reduce<Promise<InputDocument<InputShape>>>(
         async (doc, hook) =>
           hook({
             event: "replace",
@@ -357,8 +354,8 @@ export class MongoModel<
 
     const Doc = await this.Schema.validate(doc);
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
-      | MongoDocument<OutputShape>
-      | UpdateResult<MongoDocument<OutputShape>>;
+      | InputDocument<InputShape>
+      | UpdateResult<InputDocument<InputShape>>;
 
     for (const Hook of this.PostHooks.replace ?? [])
       await Hook({

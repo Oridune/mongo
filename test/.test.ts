@@ -1,6 +1,16 @@
+// deno-lint-ignore-file no-explicit-any
 import { FindOneQuery } from "../lib/query/find.ts";
 import { Mongo, ObjectId } from "../mod.ts";
 import { e } from "../deps.ts";
+
+const Cache = new Map<
+  string,
+  {
+    value: any;
+    ttl: number;
+    time: number;
+  }
+>();
 
 const PostsData = [
   {
@@ -36,6 +46,21 @@ Deno.test({
 
     await Mongo.connect("mongodb://localhost:27017/mongo");
     await Mongo.drop();
+
+    // Setup Caching
+    Mongo.setCachingMethods(
+      (key, value, ttl) => {
+        Cache.set(key, { value, ttl, time: Date.now() / 1000 });
+      },
+      (key) => {
+        const Value = Cache.get(key);
+        if (Value && Value.ttl + Value.time >= Date.now() / 1000)
+          return Value.value;
+      },
+      (key) => {
+        Cache.delete(key);
+      }
+    );
 
     // User Schema
     const UserSchema = e.object({
