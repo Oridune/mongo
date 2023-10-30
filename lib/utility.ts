@@ -6,6 +6,8 @@ type IsObject<T, R, F = T> = T extends
   | (new (...args: any[]) => any)
   | { constructor: new (...args: any[]) => any }
   | Date
+  | Array<any>
+  | URL
   ? F
   : T extends object
   ? R

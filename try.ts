@@ -1,6 +1,5 @@
-import { ObjectId } from "mongodb";
+import { e, ObjectId } from "./deps.ts";
 import { Mongo } from "./mod.ts";
-import e from "validator";
 
 const Cache = new Map<
   string,
