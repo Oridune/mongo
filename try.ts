@@ -24,7 +24,9 @@ try {
 
   // Create User Schema
   const UserSchema = e.object({
-    _id: e.optional(e.if(ObjectId.isValid)),
+    _id: e
+      .optional(e.if(ObjectId.isValid))
+      .custom((ctx) => new ObjectId(ctx.output)),
     username: e.string(),
     password: e.optional(e.string()).default("topSecret"),
     profile: e.object({

@@ -207,7 +207,9 @@ export class MongoModel<
     options?: AggregateOptions & { cache?: { key: string; ttl: number } }
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new FindOneQuery(this, options).filter(Filter);
@@ -224,12 +226,31 @@ export class MongoModel<
     );
   }
 
+  public async exists(
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    options?: CountDocumentsOptions & { cache?: { key: string; ttl: number } }
+  ) {
+    const Filter = (
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
+    ) as any;
+
+    this.log("exists", Filter, options);
+    return !!(await Mongo.useCaching(
+      () => this.collection.countDocuments(Filter, options),
+      options?.cache
+    ));
+  }
+
   public watch(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: ChangeStreamOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     this.log("watch", Filter, options);
@@ -246,7 +267,9 @@ export class MongoModel<
     options?: UpdateOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new UpdateOneQuery(this, options)
@@ -261,7 +284,9 @@ export class MongoModel<
     options?: UpdateOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new UpdateAndFindOneQuery(this, options)
@@ -276,7 +301,9 @@ export class MongoModel<
     options?: UpdateOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new FindAndUpdateOneQuery(this, options)
@@ -322,7 +349,9 @@ export class MongoModel<
     options?: DeleteOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new DeleteOneQuery(this, options).filter(Filter);
@@ -333,7 +362,9 @@ export class MongoModel<
     options?: DeleteOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     return new FindAndDeleteOneQuery(this, options).filter(Filter);
@@ -359,7 +390,9 @@ export class MongoModel<
     options?: ReplaceOptions
   ) {
     const Filter = (
-      ObjectId.isValid(filter as any) ? { _id: filter } : filter
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
     ) as any;
 
     doc =

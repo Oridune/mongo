@@ -64,7 +64,9 @@ Deno.test({
 
     // User Schema
     const UserSchema = e.object({
-      _id: e.optional(e.if(ObjectId.isValid)),
+      _id: e.optional(
+        e.if(ObjectId.isValid).custom((ctx) => new ObjectId(ctx.output))
+      ),
       username: e.string(),
       password: e.optional(e.string()).default("topSecret"),
       profile: e.object({
@@ -90,7 +92,9 @@ Deno.test({
 
     // Post Schema
     const PostSchema = e.object({
-      _id: e.optional(e.if(ObjectId.isValid)),
+      _id: e
+        .optional(e.if(ObjectId.isValid))
+        .custom((ctx) => new ObjectId(ctx.output)),
       title: e.string(),
       description: e.string(),
       drafted: e.optional(e.boolean()).default(true),
