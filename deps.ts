@@ -3,7 +3,7 @@ import e, {
   ObjectValidator,
   type inferInput,
   type inferOutput,
-} from "https://deno.land/x/oridune_validator@v0.2.19/mod.ts";
+} from "https://deno.land/x/oridune_validator@v0.2.20/mod.ts";
 
 // @ts-ignore
 import EsHighlighter from "npm:highlight-es@1.0.3";
