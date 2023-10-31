@@ -48,7 +48,7 @@ try {
     password: e.optional(e.string()).default("topSecret"),
     profile: e.object({
       name: e.string(),
-      dob: e.date(),
+      dob: e.optional(e.date()),
     }),
     followers: e.optional(e.array(e.if(ObjectId.isValid))),
     posts: e.optional(e.array(e.if(ObjectId.isValid))),
@@ -116,7 +116,7 @@ try {
           // password: "secret2",
           profile: {
             name: "Saif Ali Khan",
-            dob: new Date(),
+            // dob: new Date(),
           },
           posts: [Post._id],
           latestPost: Post._id,

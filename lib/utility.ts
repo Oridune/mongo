@@ -44,18 +44,21 @@ export type Flatten<T> = T extends FlattenOneLevel<T>
   ? T
   : Flatten<FlattenOneLevel<T>>;
 
-export type InputDocument<
+export type Optionalize<
   T,
   UndefinedKeys extends keyof T = {
     [K in keyof T]: undefined extends T[K] ? K : never;
-  }[keyof T],
-  Result = Omit<T, UndefinedKeys> & Partial<Pick<T, UndefinedKeys>>
-> = "_id" extends keyof Result ? Result : Result & { _id?: ObjectId };
+  }[keyof T]
+> = Omit<T, UndefinedKeys> & Partial<Pick<T, UndefinedKeys>>;
 
-export type OutputDocument<T> = { _id: ObjectId } & Omit<
-  InputDocument<T>,
-  "_id"
->;
+export type InputDocument<
+  T,
+  R = Optionalize<{
+    [K in keyof T]: T[K] extends object ? Optionalize<T[K]> : T[K];
+  }>
+> = "_id" extends keyof R ? R : R & { _id?: ObjectId };
+
+export type OutputDocument<T> = { _id: ObjectId } & Omit<T, "_id">;
 
 export const circularReplacer = () => {
   const seen = new WeakSet();
