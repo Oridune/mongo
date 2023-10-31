@@ -23,6 +23,12 @@ export class Mongo {
 
   static client?: MongoClient;
 
+  protected static preConnectEvents: Array<() => void | Promise<void>> = [];
+  protected static postConnectEvents: Array<() => void | Promise<void>> = [];
+
+  protected static preDisconnectEvents: Array<() => void | Promise<void>> = [];
+  protected static postDisconnectEvents: Array<() => void | Promise<void>> = [];
+
   protected static cachingMethods?: {
     set: TCacheSetter;
     get: TCacheGetter;
@@ -50,6 +56,44 @@ export class Mongo {
     return this.cachingMethods.del(key);
   }
 
+  static pre(
+    event: "connect" | "disconnect",
+    callback: () => void | Promise<void>
+  ) {
+    switch (event) {
+      case "connect":
+        this.preConnectEvents.push(callback);
+        break;
+
+      case "disconnect":
+        this.preDisconnectEvents.push(callback);
+        break;
+
+      default:
+        throw new Error(`Invalid event type '${event}'`);
+    }
+    return this;
+  }
+
+  static post(
+    event: "connect" | "disconnect",
+    callback: () => void | Promise<void>
+  ) {
+    switch (event) {
+      case "connect":
+        this.postConnectEvents.push(callback);
+        break;
+
+      case "disconnect":
+        this.postDisconnectEvents.push(callback);
+        break;
+
+      default:
+        throw new Error(`Invalid event type '${event}'`);
+    }
+    return this;
+  }
+
   /**
    * Is database connected?
    * @returns
@@ -67,12 +111,24 @@ export class Mongo {
   }
 
   static async connect(url: string, options?: MongoClientOptions) {
+    // Execute Pre-Connect Events
+    await Promise.all(this.preConnectEvents.map((_) => _()));
+
     this.client ??= await MongoClient.connect(url, options);
+
+    // Execute Post-Connect Events
+    await Promise.all(this.postConnectEvents.map((_) => _()));
   }
 
-  static disconnect() {
+  static async disconnect() {
+    // Execute Pre-Disconnect Events
+    await Promise.all(this.preDisconnectEvents.map((_) => _()));
+
     this.client?.close();
     delete this.client;
+
+    // Execute Post-Disconnect Events
+    await Promise.all(this.postDisconnectEvents.map((_) => _()));
   }
 
   static async drop(dbName?: string | undefined) {

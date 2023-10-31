@@ -110,7 +110,7 @@ export class MongoModel<
     return this.database.collection(this.Name, this.Options.collectionOptions);
   }
 
-  public async createIndex(
+  public createIndex(
     ...indexDesc: (CreateIndexesOptions & {
       key: Partial<
         Record<keyof Flatten<InputShape> | (string & {}), IndexDirection>
@@ -118,12 +118,16 @@ export class MongoModel<
       partialFilterExpression?: Filter<InputDocument<InputShape>>;
     })[]
   ) {
-    this.log("createIndex", ...indexDesc);
+    Mongo.post("connect", async () => {
+      this.log("createIndex", ...indexDesc);
 
-    if (indexDesc.length)
-      await this.collection
-        .createIndexes(indexDesc as any)
-        .catch(console.error);
+      if (indexDesc.length)
+        await this.collection
+          .createIndexes(indexDesc as any)
+          .catch(console.error);
+    });
+
+    return this;
   }
 
   public async create(

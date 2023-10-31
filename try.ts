@@ -11,25 +11,6 @@ const Cache = new Map<
 >();
 
 try {
-  Mongo.enableLogs = true;
-
-  await Mongo.connect("mongodb://localhost:27017/mongo");
-  await Mongo.drop();
-
-  Mongo.setCachingMethods(
-    (key, value, ttl) => {
-      Cache.set(key, { value, ttl, time: Date.now() / 1000 });
-    },
-    (key) => {
-      const Value = Cache.get(key);
-      if (Value && Value.ttl + Value.time >= Date.now() / 1000)
-        return Value.value;
-    },
-    (key) => {
-      Cache.delete(key);
-    }
-  );
-
   // Create Post Schema
   const PostSchema = e.object({
     title: e.string(),
@@ -60,7 +41,7 @@ try {
   // Create User Model
   const UserModel = Mongo.model("user", UserSchema);
 
-  await UserModel.createIndex(
+  UserModel.createIndex(
     {
       key: { username: 1 },
       unique: true,
@@ -94,6 +75,25 @@ try {
         updatedAt: new Date(),
       };
     });
+
+  Mongo.enableLogs = true;
+
+  await Mongo.connect("mongodb://localhost:27017/mongo");
+  await Mongo.drop();
+
+  Mongo.setCachingMethods(
+    (key, value, ttl) => {
+      Cache.set(key, { value, ttl, time: Date.now() / 1000 });
+    },
+    (key) => {
+      const Value = Cache.get(key);
+      if (Value && Value.ttl + Value.time >= Date.now() / 1000)
+        return Value.value;
+    },
+    (key) => {
+      Cache.delete(key);
+    }
+  );
 
   // (async () => {
   //   for await (const _ of UserModel.watch({}, { fullDocument: "updateLookup" }))
