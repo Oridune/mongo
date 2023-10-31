@@ -5,14 +5,28 @@ import { MongoModel } from "../model.ts";
 import { Flatten, InputDocument, OutputDocument } from "../utility.ts";
 import { Mongo } from "../mongo.ts";
 
-export type MakeFieldsRequired<T, K extends keyof T> = {
-  [P in K]-?: T[P];
-} & {
-  [P in Exclude<keyof T, K>]: T[P];
-};
+export type Sorting<T> = Partial<
+  Record<"_id" | keyof Flatten<T> | (string & {}), 1 | -1>
+>;
+
+export type Projection<T> = Partial<
+  Record<"_id" | keyof T | keyof Flatten<T> | (string & {}), 1 | 0>
+>;
 
 export type PopulatedDocument<Doc, Field extends string, Value> = {
   [K in keyof Doc]: K extends Field ? Value : Doc[K];
+};
+
+export type PopulateOptions<
+  M extends MongoModel<any, any, any>,
+  I = M extends MongoModel<any, infer R, any> ? R : never
+> = {
+  foreignField?: string;
+  filter?: Filter<InputDocument<I>>;
+  sort?: Sorting<I>;
+  skip?: number;
+  limit?: number;
+  project?: Projection<I>;
 };
 
 export class BaseFindQuery<
@@ -21,6 +35,63 @@ export class BaseFindQuery<
   Result = OutputDocument<Shape>[]
 > extends BaseQuery<Result> {
   protected Aggregation: Record<string, any>[] = [];
+
+  protected createPopulateAggregation(
+    field: string,
+    model: MongoModel<any, any, any>,
+    options?: PopulateOptions<any> & {
+      unwind?: boolean;
+    }
+  ): any[] {
+    const SubPopulateConfig = model["PopulateConfig"];
+
+    const Pipeline: object[] = [
+      {
+        $lookup: {
+          from: model.Name,
+          localField: field,
+          foreignField: options?.foreignField ?? "_id",
+          as: field,
+          ...(typeof SubPopulateConfig === "object"
+            ? {
+                pipeline: this.createPopulateAggregation(
+                  SubPopulateConfig.field,
+                  SubPopulateConfig.model,
+                  SubPopulateConfig.options
+                ),
+              }
+            : {}),
+        },
+      },
+      ...(options?.unwind
+        ? [
+            {
+              $unwind: {
+                path: `$${field}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ]
+        : []),
+    ];
+
+    if (typeof options?.filter === "object")
+      Pipeline.push({ $match: options.filter });
+
+    if (typeof options?.sort === "object")
+      Pipeline.push({ $sort: options.sort });
+
+    if (typeof options?.project === "object")
+      Pipeline.push({ $project: options.project });
+
+    if (typeof options?.skip === "number")
+      Pipeline.push({ $skip: options.skip });
+
+    if (typeof options?.limit === "number")
+      Pipeline.push({ $limit: options.limit });
+
+    return Pipeline;
+  }
 
   constructor(protected Model: Model) {
     super();
@@ -32,50 +103,31 @@ export class BaseFindQuery<
   }
 
   public filter(filter: Filter<InputDocument<Shape>>) {
-    this.Aggregation.push({
-      $match: filter,
-    });
+    this.Aggregation.push({ $match: filter });
+    return this;
+  }
+
+  public sort(sort: Sorting<Shape>) {
+    if (typeof sort === "object" && Object.keys(sort).length)
+      this.Aggregation.push({ $sort: sort });
+
+    return this;
+  }
+
+  public project(project: Projection<Shape>) {
+    if (typeof project === "object" && Object.keys(project).length)
+      this.Aggregation.push({ $project: project });
 
     return this;
   }
 
   public skip(skip: number) {
-    this.Aggregation.push({
-      $skip: skip,
-    });
-
+    this.Aggregation.push({ $skip: skip });
     return this;
   }
 
   public limit(limit: number) {
-    this.Aggregation.push({
-      $limit: limit,
-    });
-
-    return this;
-  }
-
-  public sort(
-    sort: Partial<Record<"_id" | keyof Flatten<Shape> | (string & {}), 1 | -1>>
-  ) {
-    if (typeof sort === "object" && Object.keys(sort).length)
-      this.Aggregation.push({
-        $sort: sort,
-      });
-
-    return this;
-  }
-
-  public project(
-    project: Partial<
-      Record<"_id" | keyof Shape | keyof Flatten<Shape> | (string & {}), 1 | -1>
-    >
-  ) {
-    if (typeof project === "object" && Object.keys(project).length)
-      this.Aggregation.push({
-        $project: project,
-      });
-
+    this.Aggregation.push({ $limit: limit });
     return this;
   }
 
@@ -83,15 +135,13 @@ export class BaseFindQuery<
     F extends string,
     M extends MongoModel<any, any, any>,
     S = M extends MongoModel<any, any, infer R> ? R : never
-  >(field: F, model: M, foreignField = "_id") {
-    this.Aggregation.push({
-      $lookup: {
-        from: model.Name,
-        localField: field,
-        foreignField: foreignField,
-        as: field,
-      },
-    });
+  >(field: F, model: M, options?: PopulateOptions<M>) {
+    if (!(model instanceof MongoModel))
+      throw new Error("Invalid population model!");
+
+    this.Aggregation.push(
+      ...this.createPopulateAggregation(field, model, options as any)
+    );
 
     return this as unknown as BaseFindQuery<
       Model,
@@ -106,22 +156,12 @@ export class BaseFindQuery<
     F extends string,
     M extends MongoModel<any, any, any>,
     S = M extends MongoModel<any, any, infer R> ? R : never
-  >(field: F, model: M, foreignField = "_id") {
+  >(field: F, model: M, options?: PopulateOptions<M>) {
     this.Aggregation.push(
-      {
-        $lookup: {
-          from: model.Name,
-          localField: field,
-          foreignField: foreignField,
-          as: field,
-        },
-      },
-      {
-        $unwind: {
-          path: `$${field}`,
-          preserveNullAndEmptyArrays: true,
-        },
-      }
+      ...this.createPopulateAggregation(field, model, {
+        ...(options as any),
+        unwind: true,
+      })
     );
 
     return this as unknown as BaseFindQuery<

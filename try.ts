@@ -109,9 +109,13 @@ try {
       { session }
     );
 
+    const User1Id = new ObjectId();
+    const User2Id = new ObjectId();
+
     await UserModel.createMany(
       [
         {
+          _id: User1Id,
           username: "saffellikhan",
           // password: "secret2",
           profile: {
@@ -120,63 +124,69 @@ try {
           },
           posts: [Post._id],
           latestPost: Post._id,
+          followers: [User2Id],
         },
         {
+          _id: User2Id,
           username: "abdullah",
           password: "secret3",
           profile: {
             name: "Abdullah Khan",
             dob: new Date(),
           },
+          followers: [User1Id],
         },
       ],
       { session }
     );
 
-    await UserModel.findOne({}, { session })
-      .populate("posts", PostModel)
-      .populateOne("latestPost", PostModel);
+    // await UserModel.findOne({}, { session })
+    //   .populate("posts", PostModel)
+    //   .populateOne("latestPost", PostModel);
 
-    console.log(
-      await UserModel.updateMany(
-        { username: "saffellikhan" },
-        {
-          "profile.dob": new Date(),
-        },
-        { session }
-      )
-    );
+    // console.log(
+    //   await UserModel.updateMany(
+    //     { username: "saffellikhan" },
+    //     {
+    //       "profile.dob": new Date(),
+    //     },
+    //     { session }
+    //   )
+    // );
 
-    console.log(
-      await UserModel.replaceOne(
-        { username: "saffellikhan" },
-        { username: "john", profile: { name: "John Doe", dob: new Date() } }
-      )
-    );
+    // console.log(
+    //   await UserModel.replaceOne(
+    //     { username: "saffellikhan" },
+    //     { username: "john", profile: { name: "John Doe", dob: new Date() } }
+    //   )
+    // );
 
-    console.time("fetch");
+    // console.time("fetch");
 
-    await UserModel.find({}, { cache: { key: "myFetch", ttl: 3000 } });
+    // await UserModel.find({}, { cache: { key: "myFetch", ttl: 3000 } });
 
-    console.timeEnd("fetch");
+    // console.timeEnd("fetch");
 
-    console.time("fetch");
+    // console.time("fetch");
 
-    await UserModel.find({}, { cache: { key: "myFetch", ttl: 3000 } });
+    // await UserModel.find({}, { cache: { key: "myFetch", ttl: 3000 } });
 
-    console.timeEnd("fetch");
+    // console.timeEnd("fetch");
 
     console.time("fetch");
 
     const User = await UserModel.find(
       {},
       { cache: { key: "myFetch", ttl: 3000 } }
-    )
-      .populate("posts", PostModel)
-      .populateOne("latestPost", PostModel)
-      .project({});
+    ).populate(
+      "followers",
+      UserModel.populate(
+        "followers",
+        UserModel.populateOne("latestPost", PostModel, { sort: { _id: -1 } })
+      )
+    );
 
-    User[0]._id;
+    console.log(User[0].followers[0].followers[0].latestPost);
 
     console.timeEnd("fetch");
   });

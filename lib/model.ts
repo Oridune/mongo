@@ -30,7 +30,12 @@ import {
   OutputDocument,
   circularReplacer,
 } from "./utility.ts";
-import { FindQuery, FindOneQuery } from "./query/find.ts";
+import {
+  FindQuery,
+  FindOneQuery,
+  PopulateOptions,
+  PopulatedDocument,
+} from "./query/find.ts";
 import { UpdateOneQuery, UpdateManyQuery } from "./query/update.ts";
 import { DeleteManyQuery, DeleteOneQuery } from "./query/delete.ts";
 import {
@@ -57,6 +62,7 @@ export class MongoModel<
   protected log(method: string, ...args: any[]) {
     if (this.Options.logs || Mongo.enableLogs)
       console.info(
+        "Query Executed::",
         highligthEs(
           `${this.database.databaseName}.${this.Name}.${method}(\n\r\t${args
             .map((arg) => {
@@ -67,13 +73,23 @@ export class MongoModel<
                   Arg.session as ClientSession
                 ).id?.id.toUUID()})`;
 
-              return Arg ? JSON.stringify(Arg, circularReplacer()) : undefined;
+              return Arg
+                ? JSON.stringify(Arg, circularReplacer(), 1)
+                : undefined;
             })
             .filter(Boolean)
             .join(",\n\r\t")}\n\r);`
         )
       );
   }
+
+  protected PopulateConfig?: {
+    field: string;
+    model: MongoModel<any, any, any>;
+    options?: PopulateOptions<any> & {
+      unwind?: boolean;
+    };
+  };
 
   constructor(
     public Name: string,
@@ -112,7 +128,7 @@ export class MongoModel<
 
   public async create(
     doc: InputDocument<InputShape>,
-    options?: InsertOneOptions
+    options?: InsertOneOptions & { validate?: boolean }
   ): Promise<OutputDocument<OutputShape>> {
     doc =
       (await this.PreHooks.create?.reduce<Promise<InputDocument<InputShape>>>(
@@ -123,7 +139,8 @@ export class MongoModel<
 
     this.log("create", doc, options);
 
-    const Doc = await this.Schema.validate(doc);
+    const Doc =
+      options?.validate === false ? doc : await this.Schema.validate(doc);
     const Ack = await this.collection.insertOne(Doc, options);
     const Result = { _id: Ack.insertedId, ...Doc };
 
@@ -138,7 +155,7 @@ export class MongoModel<
 
   public async createMany(
     docs: InputDocument<InputShape>[],
-    options?: BulkWriteOptions
+    options?: BulkWriteOptions & { validate?: boolean }
   ): Promise<OutputDocument<OutputShape>[]> {
     docs = await Promise.all(
       docs.map(
@@ -153,13 +170,16 @@ export class MongoModel<
 
     this.log("createMany", docs, options);
 
-    const Docs = await e.array(this.Schema).validate(docs);
+    const Docs =
+      options?.validate === false
+        ? docs
+        : await e.array(this.Schema).validate(docs);
     const Ack = await this.collection.insertMany(Docs, options);
 
     return Promise.all(
       Docs.map((doc, index) => ({
         _id: Ack.insertedIds[index],
-        ...doc,
+        ...(doc as any),
       })).map(
         (doc) =>
           this.PostHooks.create?.reduce<Promise<OutputDocument<OutputShape>>>(
@@ -365,5 +385,56 @@ export class MongoModel<
       });
 
     return Result;
+  }
+
+  public populate<
+    F extends string,
+    M extends MongoModel<any, any, any>,
+    S = M extends MongoModel<any, any, infer R> ? R : never
+  >(field: F, model: M, options?: PopulateOptions<M>) {
+    const Model = new (this["constructor"] as typeof MongoModel)(
+      this.Name,
+      this.Schema,
+      this.Options
+    );
+
+    Model["PopulateConfig"] = {
+      field,
+      model,
+      options: options as any,
+    };
+
+    return Model as MongoModel<
+      Schema,
+      InputShape,
+      PopulatedDocument<OutputShape, F, S[]>
+    >;
+  }
+
+  public populateOne<
+    F extends string,
+    M extends MongoModel<any, any, any>,
+    S = M extends MongoModel<any, any, infer R> ? R : never
+  >(field: F, model: M, options?: PopulateOptions<M>) {
+    const Model = new (this["constructor"] as typeof MongoModel)(
+      this.Name,
+      this.Schema,
+      this.Options
+    );
+
+    Model["PopulateConfig"] = {
+      field,
+      model,
+      options: {
+        ...(options as any),
+        unwind: true,
+      },
+    };
+
+    return Model as MongoModel<
+      Schema,
+      InputShape,
+      PopulatedDocument<OutputShape, F, S>
+    >;
   }
 }
