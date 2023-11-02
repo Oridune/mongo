@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { FindOneQuery } from "../lib/query/find.ts";
 import { Mongo, ObjectId } from "../mod.ts";
-import { e } from "../deps.ts";
+import e from "../validator.ts";
 
 const Cache = new Map<
   string,

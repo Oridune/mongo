@@ -1,9 +1,6 @@
 // deno-lint-ignore-file no-explicit-any ban-types
+import e, { ObjectValidator, inferInput, inferOutput } from "../validator.ts";
 import {
-  e,
-  ObjectValidator,
-  inferInput,
-  inferOutput,
   CollectionOptions,
   ObjectId,
   InsertOneOptions,

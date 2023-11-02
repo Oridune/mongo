@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
+import { ObjectValidator } from "../validator.ts";
 import {
-  ObjectValidator,
   plural,
   MongoClient,
   MongoClientOptions,
