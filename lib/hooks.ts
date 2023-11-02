@@ -6,7 +6,7 @@ import {
   UpdateResult,
   UpdateFilter,
 } from "../deps.ts";
-import { Flatten, InputDocument, OutputDocument } from "./utility.ts";
+import { FlattenObject, InputDocument, OutputDocument } from "./utility.ts";
 
 export type THooksDetails<InputShape, OutputShape> = {
   create: {
@@ -55,7 +55,9 @@ export type THooksDetails<InputShape, OutputShape> = {
         event: "update";
         method: "updateOne" | "updateMany";
         filter: Filter<InputDocument<InputShape>>;
-        updates: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>>;
+        updates: UpdateFilter<
+          InputDocument<FlattenObject<InputShape> & InputShape>
+        >;
       };
       returns: void | Promise<void>;
     };

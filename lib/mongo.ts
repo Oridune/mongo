@@ -5,6 +5,9 @@ import {
   MongoClient,
   MongoClientOptions,
   ClientSession,
+  ClientSessionOptions,
+  TransactionOptions,
+  EndSessionOptions,
 } from "../deps.ts";
 import { MongoModel, ModelOptions } from "./model.ts";
 
@@ -152,15 +155,37 @@ export class Mongo {
    * @param session Optionally pass an external (parent) session
    * @returns
    */
-  static transaction<T>(
+  static async transaction<T>(
     callback: (session: ClientSession) => Promise<T>,
-    session?: ClientSession
+    opts?:
+      | {
+          sessionOpts?: ClientSessionOptions;
+          transactionOpts?: TransactionOptions;
+          sessionEndOpts?: EndSessionOptions;
+        }
+      | ClientSession
   ) {
-    if (session) return callback(session);
+    if (opts instanceof ClientSession) return callback(opts);
 
     if (!this.client) throw new Error(`Please connect the client first!`);
 
-    return this.client.withSession<T>(callback);
+    const Session = this.client.startSession(opts?.sessionOpts);
+
+    try {
+      Session.startTransaction(opts?.transactionOpts);
+
+      const Result = await callback(Session);
+
+      await Session.commitTransaction();
+
+      return Result;
+    } catch (error) {
+      await Session.abortTransaction();
+
+      throw error;
+    } finally {
+      await Session.endSession(opts?.sessionEndOpts);
+    }
   }
 
   static setCachingMethods(

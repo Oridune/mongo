@@ -25,7 +25,7 @@ import {
 import { Mongo } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
 import {
-  Flatten,
+  FlattenObject,
   InputDocument,
   OutputDocument,
   circularReplacer,
@@ -113,7 +113,7 @@ export class MongoModel<
   public createIndex(
     ...indexDesc: (CreateIndexesOptions & {
       key: Partial<
-        Record<keyof Flatten<InputShape> | (string & {}), IndexDirection>
+        Record<keyof FlattenObject<InputShape> | (string & {}), IndexDirection>
       >;
       partialFilterExpression?: Filter<InputDocument<InputShape>>;
     })[]
@@ -262,8 +262,10 @@ export class MongoModel<
 
   public updateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -279,8 +281,10 @@ export class MongoModel<
 
   public updateAndFindOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -296,8 +300,10 @@ export class MongoModel<
 
   public findAndUpdateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     const Filter = (
@@ -313,8 +319,10 @@ export class MongoModel<
 
   public updateMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new UpdateManyQuery(this, options)
@@ -324,8 +332,10 @@ export class MongoModel<
 
   public updateAndFindMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new UpdateAndFindManyQuery(this, options)
@@ -335,8 +345,10 @@ export class MongoModel<
 
   public findAndUpdateMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<InputDocument<Flatten<InputShape> & InputShape>> &
-      Partial<InputDocument<Flatten<InputShape> & InputShape>>,
+    updates?: UpdateFilter<
+      InputDocument<FlattenObject<InputShape> & InputShape>
+    > &
+      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
     options?: UpdateOptions
   ) {
     return new FindAndUpdateManyQuery(this, options)

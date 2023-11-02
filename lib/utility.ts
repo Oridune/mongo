@@ -40,9 +40,9 @@ type FlattenStepTwo<T> = {
 type FlattenOneLevel<T> = FlattenStepTwo<FlattenStepOne<T>>;
 
 // {a: {b: 1, c: {d: 1}}} => {"a.b": 1, "a.b.c.d": 1}
-export type Flatten<T> = T extends FlattenOneLevel<T>
+export type FlattenObject<T> = T extends FlattenOneLevel<T>
   ? T
-  : Flatten<FlattenOneLevel<T>>;
+  : FlattenObject<FlattenOneLevel<T>>;
 
 export type Optionalize<
   T,

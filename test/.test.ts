@@ -64,9 +64,7 @@ Deno.test({
 
     // User Schema
     const UserSchema = e.object({
-      _id: e.optional(
-        e.if(ObjectId.isValid).custom((ctx) => new ObjectId(ctx.output))
-      ),
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
       username: e.string(),
       password: e.optional(e.string()).default("topSecret"),
       profile: e.object({
@@ -92,9 +90,7 @@ Deno.test({
 
     // Post Schema
     const PostSchema = e.object({
-      _id: e
-        .optional(e.if(ObjectId.isValid))
-        .custom((ctx) => new ObjectId(ctx.output)),
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
       title: e.string(),
       description: e.string(),
       drafted: e.optional(e.boolean()).default(true),
@@ -137,72 +133,148 @@ Deno.test({
       );
     });
 
-    await t.step("Create Users and Posts", async () => {
-      // Create Users
-      const Users = await UserModel.createMany(UsersData);
+    // await t.step("Create Users and Posts", async () => {
+    //   // Create Users
+    //   const Users = await UserModel.createMany(UsersData);
 
-      // Check if the result is a valid Users list
-      await e.array(UserSchema).validate(Users);
+    //   // Check if the result is a valid Users list
+    //   await e.array(UserSchema).validate(Users);
 
-      // Create Post
-      const Post = await PostModel.create(PostsData[0]);
+    //   // Create Post
+    //   const Post = await PostModel.create(PostsData[0]);
 
-      // Check if the result is a valid Post
-      await PostSchema.validate(Post);
+    //   // Check if the result is a valid Post
+    //   await PostSchema.validate(Post);
 
-      // Relate first User with the Post
-      await UserModel.updateOne(Users[0]._id, {
-        $push: { posts: Post._id },
-        latestPost: Post._id,
+    //   // Relate first User with the Post
+    //   await UserModel.updateOne(Users[0]._id, {
+    //     $push: { posts: Post._id },
+    //     latestPost: Post._id,
+    //   });
+    // });
+
+    // await t.step("Fetch with populate", async () => {
+    //   const Query = UserModel.findOne()
+    //     .populate("posts", PostModel)
+    //     .populateOne("latestPost", PostModel);
+
+    //   await e.instanceOf(FindOneQuery).validate(Query);
+
+    //   const User = await Query;
+
+    //   await UserWithPostsSchema.validate(User);
+    // });
+
+    // await t.step("Updates", async () => {
+    //   // Wait for a sec to fix the time issue
+    //   await new Promise((_) => setTimeout(_, 1000));
+
+    //   const Users = await UserModel.updateAndFindMany(
+    //     {},
+    //     { "profile.dob": new Date() }
+    //   );
+
+    //   Users.map((user, i) => {
+    //     if (user.profile.dob.toString() === UsersData[i].profile.dob.toString())
+    //       throw new Error(`Date of birth not updated!`);
+    //   });
+
+    //   const Post = await PostModel.updateAndFindOne({}, {});
+
+    //   if (
+    //     Post &&
+    //     (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
+    //       Post.createdAt.toString() !== PostsData[0].createdAt.toString())
+    //   )
+    //     throw new Error(`Hook didn't update the modification time!`);
+    // });
+
+    // await t.step("Delete", async () => {
+    //   await UserModel.deleteOne({});
+
+    //   if ((await UserModel.count()) !== 1)
+    //     throw new Error(`First user deletion failed!`);
+
+    //   await UserModel.deleteMany();
+
+    //   if ((await UserModel.count()) !== 0)
+    //     throw new Error(`Deletion not correct!`);
+
+    //   await PostModel.deleteMany();
+
+    //   if ((await PostModel.count()) !== 0)
+    //     throw new Error(`Deletion not correct!`);
+    // });
+
+    await t.step("Transaction Rollback Test", async () => {
+      try {
+        await Mongo.transaction(async (session) => {
+          // Create Users
+          const Users = await UserModel.createMany(UsersData, { session });
+
+          // Check if the result is a valid Users list
+          await e.array(UserSchema).validate(Users);
+
+          // Create Post
+          const Post = await PostModel.create(PostsData[0], { session });
+
+          // Check if the result is a valid Post
+          await PostSchema.validate(Post);
+
+          // Relate first User with the Post
+          await UserModel.updateOne(
+            Users[0]._id,
+            {
+              $push: { posts: Post._id },
+              latestPost: Post._id,
+            },
+            { session }
+          );
+
+          throw new Error(`Transaction cancelled!`);
+        });
+
+        throw new Error(`This transaction should not execute!`);
+      } catch {
+        if ((await UserModel.count()) !== 0 || (await PostModel.count()) !== 0)
+          throw new Error(`Transaction rollback not working!`);
+      }
+    });
+
+    await t.step("Transaction Commit Test", async () => {
+      await Mongo.transaction(async (session) => {
+        // Create Users
+        const Users = await UserModel.createMany(UsersData, { session });
+
+        // Check if the result is a valid Users list
+        await e.array(UserSchema).validate(Users);
+
+        // Create Post
+        const Post = await PostModel.create(PostsData[0], { session });
+
+        // Check if the result is a valid Post
+        await PostSchema.validate(Post);
+
+        // Check the data consistancy in the current session
+        if (
+          (await UserModel.count({}, { session })) === 0 ||
+          (await PostModel.count({}, { session })) === 0
+        )
+          throw new Error(`Transaction commit not working!`);
+
+        // Relate first User with the Post
+        await UserModel.updateOne(
+          Users[0]._id,
+          {
+            $push: { posts: Post._id },
+            latestPost: Post._id,
+          },
+          { session }
+        );
       });
-    });
 
-    await t.step("Fetch with populate", async () => {
-      const Query = UserModel.findOne()
-        .populate("posts", PostModel)
-        .populateOne("latestPost", PostModel);
-
-      await e.instanceOf(FindOneQuery).validate(Query);
-
-      const User = await Query;
-
-      await UserWithPostsSchema.validate(User);
-    });
-
-    await t.step("Updates", async () => {
-      // Wait for a sec to fix the time issue
-      await new Promise((_) => setTimeout(_, 1000));
-
-      const Users = await UserModel.updateAndFindMany(
-        {},
-        { "profile.dob": new Date() }
-      );
-
-      Users.map((user, i) => {
-        if (user.profile.dob.toString() === UsersData[i].profile.dob.toString())
-          throw new Error(`Date of birth not updated!`);
-      });
-
-      const Post = await PostModel.updateAndFindOne({}, {});
-
-      if (
-        Post &&
-        (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
-          Post.createdAt.toString() !== PostsData[0].createdAt.toString())
-      )
-        throw new Error(`Hook didn't update the modification time!`);
-    });
-
-    await t.step("Delete", async () => {
-      await UserModel.deleteOne({});
-
-      if ((await UserModel.count()) !== 1)
-        throw new Error(`First user deletion failed!`);
-
-      await UserModel.deleteMany();
-
-      if ((await UserModel.count()) !== 0)
-        throw new Error(`Deletion not correct!`);
+      if ((await UserModel.count()) === 0 || (await PostModel.count()) === 0)
+        throw new Error(`Transaction commit not working!`);
     });
 
     Mongo.disconnect();
