@@ -133,78 +133,78 @@ Deno.test({
       );
     });
 
-    // await t.step("Create Users and Posts", async () => {
-    //   // Create Users
-    //   const Users = await UserModel.createMany(UsersData);
+    await t.step("Create Users and Posts", async () => {
+      // Create Users
+      const Users = await UserModel.createMany(UsersData);
 
-    //   // Check if the result is a valid Users list
-    //   await e.array(UserSchema).validate(Users);
+      // Check if the result is a valid Users list
+      await e.array(UserSchema).validate(Users);
 
-    //   // Create Post
-    //   const Post = await PostModel.create(PostsData[0]);
+      // Create Post
+      const Post = await PostModel.create(PostsData[0]);
 
-    //   // Check if the result is a valid Post
-    //   await PostSchema.validate(Post);
+      // Check if the result is a valid Post
+      await PostSchema.validate(Post);
 
-    //   // Relate first User with the Post
-    //   await UserModel.updateOne(Users[0]._id, {
-    //     $push: { posts: Post._id },
-    //     latestPost: Post._id,
-    //   });
-    // });
+      // Relate first User with the Post
+      await UserModel.updateOne(Users[0]._id, {
+        $push: { posts: Post._id },
+        latestPost: Post._id,
+      });
+    });
 
-    // await t.step("Fetch with populate", async () => {
-    //   const Query = UserModel.findOne()
-    //     .populate("posts", PostModel)
-    //     .populateOne("latestPost", PostModel);
+    await t.step("Fetch with populate", async () => {
+      const Query = UserModel.findOne()
+        .populate("posts", PostModel)
+        .populateOne("latestPost", PostModel);
 
-    //   await e.instanceOf(FindOneQuery).validate(Query);
+      await e.instanceOf(FindOneQuery).validate(Query);
 
-    //   const User = await Query;
+      const User = await Query;
 
-    //   await UserWithPostsSchema.validate(User);
-    // });
+      await UserWithPostsSchema.validate(User);
+    });
 
-    // await t.step("Updates", async () => {
-    //   // Wait for a sec to fix the time issue
-    //   await new Promise((_) => setTimeout(_, 1000));
+    await t.step("Updates", async () => {
+      // Wait for a sec to fix the time issue
+      await new Promise((_) => setTimeout(_, 1000));
 
-    //   const Users = await UserModel.updateAndFindMany(
-    //     {},
-    //     { "profile.dob": new Date() }
-    //   );
+      const Users = await UserModel.updateAndFindMany(
+        {},
+        { "profile.dob": new Date() }
+      );
 
-    //   Users.map((user, i) => {
-    //     if (user.profile.dob.toString() === UsersData[i].profile.dob.toString())
-    //       throw new Error(`Date of birth not updated!`);
-    //   });
+      Users.map((user, i) => {
+        if (user.profile.dob.toString() === UsersData[i].profile.dob.toString())
+          throw new Error(`Date of birth not updated!`);
+      });
 
-    //   const Post = await PostModel.updateAndFindOne({}, {});
+      const Post = await PostModel.updateAndFindOne({}, {});
 
-    //   if (
-    //     Post &&
-    //     (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
-    //       Post.createdAt.toString() !== PostsData[0].createdAt.toString())
-    //   )
-    //     throw new Error(`Hook didn't update the modification time!`);
-    // });
+      if (
+        Post &&
+        (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
+          Post.createdAt.toString() !== PostsData[0].createdAt.toString())
+      )
+        throw new Error(`Hook didn't update the modification time!`);
+    });
 
-    // await t.step("Delete", async () => {
-    //   await UserModel.deleteOne({});
+    await t.step("Delete", async () => {
+      await UserModel.deleteOne({});
 
-    //   if ((await UserModel.count()) !== 1)
-    //     throw new Error(`First user deletion failed!`);
+      if ((await UserModel.count()) !== 1)
+        throw new Error(`First user deletion failed!`);
 
-    //   await UserModel.deleteMany();
+      await UserModel.deleteMany();
 
-    //   if ((await UserModel.count()) !== 0)
-    //     throw new Error(`Deletion not correct!`);
+      if ((await UserModel.count()) !== 0)
+        throw new Error(`Deletion not correct!`);
 
-    //   await PostModel.deleteMany();
+      await PostModel.deleteMany();
 
-    //   if ((await PostModel.count()) !== 0)
-    //     throw new Error(`Deletion not correct!`);
-    // });
+      if ((await PostModel.count()) !== 0)
+        throw new Error(`Deletion not correct!`);
+    });
 
     await t.step("Transaction Rollback Test", async () => {
       try {

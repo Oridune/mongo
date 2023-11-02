@@ -27,6 +27,7 @@ export type PopulateOptions<
   skip?: number;
   limit?: number;
   project?: Projection<I>;
+  having?: Filter<InputDocument<I>>;
 };
 
 export class BaseFindQuery<
@@ -45,7 +46,7 @@ export class BaseFindQuery<
   ): any[] {
     const SubPopulateConfig = model["PopulateConfig"];
 
-    const Pipeline: object[] = [
+    return [
       {
         $lookup: {
           from: model.Name,
@@ -54,11 +55,33 @@ export class BaseFindQuery<
           as: field,
           ...(typeof SubPopulateConfig === "object"
             ? {
-                pipeline: this.createPopulateAggregation(
-                  SubPopulateConfig.field,
-                  SubPopulateConfig.model,
-                  SubPopulateConfig.options
-                ),
+                pipeline: (() => {
+                  const Pipeline = this.createPopulateAggregation(
+                    SubPopulateConfig.field,
+                    SubPopulateConfig.model,
+                    SubPopulateConfig.options
+                  );
+
+                  if (typeof options?.filter === "object")
+                    Pipeline.push({ $match: options.filter });
+
+                  if (typeof options?.sort === "object")
+                    Pipeline.push({ $sort: options.sort });
+
+                  if (typeof options?.project === "object")
+                    Pipeline.push({ $project: options.project });
+
+                  if (typeof options?.skip === "number")
+                    Pipeline.push({ $skip: options.skip });
+
+                  if (typeof options?.limit === "number")
+                    Pipeline.push({ $limit: options.limit });
+
+                  if (typeof options?.having === "object")
+                    Pipeline.push({ $match: options.having });
+
+                  return Pipeline;
+                })(),
               }
             : {}),
         },
@@ -74,23 +97,6 @@ export class BaseFindQuery<
           ]
         : []),
     ];
-
-    if (typeof options?.filter === "object")
-      Pipeline.push({ $match: options.filter });
-
-    if (typeof options?.sort === "object")
-      Pipeline.push({ $sort: options.sort });
-
-    if (typeof options?.project === "object")
-      Pipeline.push({ $project: options.project });
-
-    if (typeof options?.skip === "number")
-      Pipeline.push({ $skip: options.skip });
-
-    if (typeof options?.limit === "number")
-      Pipeline.push({ $limit: options.limit });
-
-    return Pipeline;
   }
 
   constructor(protected Model: Model) {
