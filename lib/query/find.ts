@@ -103,11 +103,6 @@ export class BaseFindQuery<
     super();
   }
 
-  public search(search: string) {
-    this.Aggregation.push({ $text: { $search: search } });
-    return this;
-  }
-
   public filter(filter: Filter<InputDocument<Shape>>) {
     this.Aggregation.push({ $match: filter });
     return this;

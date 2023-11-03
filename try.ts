@@ -12,6 +12,8 @@ const Cache = new Map<
 >();
 
 try {
+  Mongo.post("connect", () => Mongo.drop());
+
   // Create Post Schema
   const PostSchema = e.object({
     title: e.string(),
@@ -53,25 +55,26 @@ try {
     },
     {
       key: { username: "text", "profile.name": "text" },
-      background: true,
+      // background: true,
     }
   );
 
-  UserModel.pre("create", (details) => {
-    const Doc = details.data;
-    console.log(Doc);
-    return Doc;
-  })
-    .post("create", (details) => {
-      const Doc = details.data;
-      console.log(Doc);
-      return Doc;
-    })
-    .post("read", (details) => {
-      const Doc = details.data;
-      console.log(Doc);
-      return Doc;
-    })
+  UserModel
+    // .pre("create", (details) => {
+    //   const Doc = details.data;
+    //   console.log(Doc);
+    //   return Doc;
+    // })
+    //   .post("create", (details) => {
+    //     const Doc = details.data;
+    //     console.log(Doc);
+    //     return Doc;
+    //   })
+    //   .post("read", (details) => {
+    //     const Doc = details.data;
+    //     console.log(Doc);
+    //     return Doc;
+    //   })
     .pre("update", (details) => {
       details.updates.$set = {
         ...details.updates.$set,
@@ -82,7 +85,6 @@ try {
   Mongo.enableLogs = true;
 
   await Mongo.connect("mongodb://localhost:27017/mongo");
-  await Mongo.drop();
 
   Mongo.setCachingMethods(
     (key, value, ttl) => {
@@ -176,22 +178,28 @@ try {
 
     // console.timeEnd("fetch");
 
-    console.time("fetch");
+    // console.time("fetch");
 
-    const User = await UserModel.find(
-      {},
-      { cache: { key: "myFetch", ttl: 3000 } }
-    ).populate(
-      "followers",
-      UserModel.populate(
-        "followers",
-        UserModel.populateOne("latestPost", PostModel, { sort: { _id: -1 } })
-      )
+    // const User = await UserModel.find(
+    //   {},
+    //   { cache: { key: "myFetch", ttl: 3000 } }
+    // ).populate(
+    //   "followers",
+    //   UserModel.populate(
+    //     "followers",
+    //     UserModel.populateOne("latestPost", PostModel, { sort: { _id: -1 } })
+    //   )
+    // );
+
+    // console.log(User[0].followers[0].followers[0].latestPost);
+
+    // console.timeEnd("fetch");
+
+    console.log(
+      await UserModel.search("Khan", { session }).filter({
+        username: "saffellikhan",
+      })
     );
-
-    console.log(User[0].followers[0].followers[0].latestPost);
-
-    console.timeEnd("fetch");
   });
 } catch (error) {
   console.log(error);

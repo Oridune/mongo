@@ -199,6 +199,29 @@ export class MongoModel<
     return new FindQuery(this, options).filter(filter as any);
   }
 
+  public search(
+    searchTerm?:
+      | string
+      | {
+          $search: string;
+          $language?: string;
+          $caseSensitive?: boolean;
+          $diacriticSensitive?: boolean;
+        },
+    options?: AggregateOptions & { cache?: { key: string; ttl: number } }
+  ) {
+    return new FindQuery(this, options).filter({
+      ...(searchTerm
+        ? {
+            $text:
+              typeof searchTerm === "object"
+                ? searchTerm
+                : { $search: searchTerm },
+          }
+        : {}),
+    });
+  }
+
   public findOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: { key: string; ttl: number } }
