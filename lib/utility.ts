@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-
 import { type ObjectId } from "../deps.ts";
 
 // Returns R if T is an object, otherwise returns F
@@ -10,6 +9,8 @@ type IsObject<T, R, F = T> = T extends
   | Date
   | Array<any>
   | URL
+  | URLSearchParams
+  | RegExp
   ? F
   : T extends object
   ? R
@@ -71,4 +72,44 @@ export const circularReplacer = () => {
     }
     return value;
   };
+};
+
+export const deepObjectToFlatten = (
+  obj: Record<string, any>,
+  prefix = ""
+): Record<string, any> => {
+  return Object.keys(obj).reduce((acc, key) => {
+    const propName = prefix ? `${prefix}.${key}` : key;
+    if (
+      typeof obj[key] === "object" &&
+      obj[key] !== null &&
+      obj[key].constructor === Object
+    )
+      return { ...acc, ...deepObjectToFlatten(obj[key], propName) };
+    else return { ...acc, [propName]: obj[key] };
+  }, {});
+};
+
+export const dotNotationToDeepObject = (obj: Record<string, any>) => {
+  const result: Record<string, any> = {};
+
+  Object.keys(obj).forEach((key) => {
+    const keys = key.split(".");
+    let currentObj = result;
+
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+
+      if (i === keys.length - 1) {
+        currentObj[k] = obj[key];
+      } else {
+        if (!currentObj[k]) {
+          currentObj[k] = {};
+        }
+        currentObj = currentObj[k];
+      }
+    }
+  });
+
+  return result;
 };

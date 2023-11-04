@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import e from "../../validator.ts";
 import {
   Filter,
   UpdateFilter,
@@ -7,7 +8,11 @@ import {
 } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
-import { InputDocument } from "../utility.ts";
+import {
+  InputDocument,
+  deepObjectToFlatten,
+  dotNotationToDeepObject,
+} from "../utility.ts";
 
 export class BaseUpdateQuery<
   Model extends MongoModel<any, any, any>,
@@ -16,6 +21,22 @@ export class BaseUpdateQuery<
 > extends BaseQuery<Result> {
   protected Filters: Record<string, any> = {};
   protected Updates: UpdateFilter<InputDocument<Shape>> = {};
+
+  protected async validate<T extends UpdateFilter<InputDocument<Shape>>>(
+    updates: T,
+    options?: { validate?: boolean }
+  ): Promise<T> {
+    if (options?.validate !== false)
+      if (updates.$set) {
+        const SetSchema = e.deepPartial(this.Model.Schema);
+
+        updates.$set = deepObjectToFlatten(
+          await SetSchema.validate(dotNotationToDeepObject(updates.$set))
+        ) as any;
+      }
+
+    return updates;
+  }
 
   constructor(protected Model: Model) {
     super();
@@ -74,9 +95,11 @@ export class UpdateOneQuery<
 
     this.Model["log"]("updateOne", this.Filters, this.Updates, this.Options);
 
+    const Updates = await this.validate(this.Updates, this.Options);
+
     const Result = (await this.Model.collection.updateOne(
       this.Filters,
-      this.Updates,
+      Updates,
       this.Options
     )) as Result;
 
@@ -84,13 +107,17 @@ export class UpdateOneQuery<
       await Hook({
         event: "update",
         method: "updateOne",
+        updates: Updates as any,
         data: Result as any,
       });
 
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: UpdateOptions) {
+  constructor(
+    protected Model: Model,
+    protected Options?: UpdateOptions & { validate?: boolean }
+  ) {
     super(Model);
   }
 }
@@ -111,9 +138,11 @@ export class UpdateManyQuery<
 
     this.Model["log"]("updateMany", this.Filters, this.Updates, this.Options);
 
+    const Updates = await this.validate(this.Updates, this.Options);
+
     const Result = (await this.Model.collection.updateMany(
       this.Filters,
-      this.Updates as any,
+      Updates as any,
       this.Options
     )) as Result;
 
@@ -121,13 +150,17 @@ export class UpdateManyQuery<
       await Hook({
         event: "update",
         method: "updateOne",
+        updates: Updates as any,
         data: Result as any,
       });
 
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: UpdateOptions) {
+  constructor(
+    protected Model: Model,
+    protected Options?: UpdateOptions & { validate?: boolean }
+  ) {
     super(Model);
   }
 }

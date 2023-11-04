@@ -286,7 +286,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -305,7 +305,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -324,7 +324,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -343,7 +343,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     return new UpdateManyQuery(this, options)
       .filter(filter as any)
@@ -356,7 +356,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     return new UpdateAndFindManyQuery(this, options)
       .filter(filter as any)
@@ -369,7 +369,7 @@ export class MongoModel<
       InputDocument<FlattenObject<InputShape> & InputShape>
     > &
       Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
-    options?: UpdateOptions
+    options?: UpdateOptions & { validate?: boolean }
   ) {
     return new FindAndUpdateManyQuery(this, options)
       .filter(filter as any)

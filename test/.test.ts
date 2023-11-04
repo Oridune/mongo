@@ -148,7 +148,7 @@ Deno.test({
 
       // Relate first User with the Post
       await UserModel.updateOne(Users[0]._id, {
-        $push: { posts: Post._id },
+        posts: [Post._id],
         latestPost: Post._id,
       });
     });
@@ -162,7 +162,10 @@ Deno.test({
 
       const User = await Query;
 
-      await UserWithPostsSchema.validate(User);
+      await UserWithPostsSchema.validate(User).catch((error) => {
+        console.error(error, User);
+        throw error;
+      });
     });
 
     await t.step("Updates", async () => {
