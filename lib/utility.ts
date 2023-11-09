@@ -41,7 +41,9 @@ export type Optionalize<
     [K in keyof RequiredT]: IsObject<
       RequiredT[K],
       Optionalize<RequiredT[K]>,
-      RequiredT[K]
+      RequiredT[K] extends Array<infer O>
+        ? IsObject<O, Optionalize<O>, O>
+        : RequiredT[K]
     >;
   },
   OptionalT = Pick<T, UndefinedKeys>,
@@ -49,7 +51,9 @@ export type Optionalize<
     [K in keyof OptionalT]: IsObject<
       OptionalT[K],
       Optionalize<OptionalT[K]>,
-      OptionalT[K]
+      OptionalT[K] extends Array<infer O>
+        ? IsObject<O, Optionalize<O>, O>
+        : OptionalT[K]
     >;
   }
 > = DeepRequired & Partial<DeepOptional>;
