@@ -42,7 +42,7 @@ export type Optionalize<
       RequiredT[K],
       Optionalize<RequiredT[K]>,
       RequiredT[K] extends Array<infer O>
-        ? IsObject<O, Optionalize<O>, O>
+        ? Array<IsObject<O, Optionalize<O>, O>>
         : RequiredT[K]
     >;
   },
@@ -52,7 +52,7 @@ export type Optionalize<
       OptionalT[K],
       Optionalize<OptionalT[K]>,
       OptionalT[K] extends Array<infer O>
-        ? IsObject<O, Optionalize<O>, O>
+        ? Array<IsObject<O, Optionalize<O>, O>>
         : OptionalT[K]
     >;
   }
