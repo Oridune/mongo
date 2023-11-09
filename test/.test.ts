@@ -26,7 +26,7 @@ const UsersData = [
     username: "saffellikhan",
     profile: {
       name: "Saif Ali Khan",
-      dob: new Date(),
+      // dob: new Date(),
     },
   },
   {
@@ -69,7 +69,7 @@ Deno.test({
       password: e.optional(e.string()).default("topSecret"),
       profile: e.object({
         name: e.string(),
-        dob: e.date(),
+        dob: e.optional(e.date()).default(() => new Date()),
       }),
       age: e.optional(e.number()).default(18),
       followers: e.optional(e.array(e.if(ObjectId.isValid))),
@@ -178,7 +178,9 @@ Deno.test({
       );
 
       Users.map((user, i) => {
-        if (user.profile.dob.toString() === UsersData[i].profile.dob.toString())
+        if (
+          user.profile.dob.toString() === UsersData[i].profile.dob?.toString()
+        )
           throw new Error(`Date of birth not updated!`);
       });
 

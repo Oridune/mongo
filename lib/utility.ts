@@ -1,20 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { type ObjectId } from "../deps.ts";
-
-// Returns R if T is an object, otherwise returns F
-type IsObject<T, R, F = T> = T extends
-  | ((...args: any[]) => any)
-  | (new (...args: any[]) => any)
-  | { constructor: new (...args: any[]) => any }
-  | Date
-  | Array<any>
-  | URL
-  | URLSearchParams
-  | RegExp
-  ? F
-  : T extends object
-  ? R
-  : F;
+import { type IsObject } from "../validator.ts";
 
 // "a.b.c" => "b.c"
 type Tail<S> = S extends `${string}.${infer T}` ? Tail<T> : S;
@@ -49,15 +35,26 @@ export type Optionalize<
   T,
   UndefinedKeys extends keyof T = {
     [K in keyof T]: undefined extends T[K] ? K : never;
-  }[keyof T]
-> = Omit<T, UndefinedKeys> & Partial<Pick<T, UndefinedKeys>>;
+  }[keyof T],
+  RequiredT = Omit<T, UndefinedKeys>,
+  DeepRequired = {
+    [K in keyof RequiredT]: IsObject<
+      RequiredT[K],
+      Optionalize<RequiredT[K]>,
+      RequiredT[K]
+    >;
+  },
+  OptionalT = Pick<T, UndefinedKeys>,
+  DeepOptional = {
+    [K in keyof OptionalT]: IsObject<
+      OptionalT[K],
+      Optionalize<OptionalT[K]>,
+      OptionalT[K]
+    >;
+  }
+> = DeepRequired & Partial<DeepOptional>;
 
-export type InputDocument<
-  T,
-  R = Optionalize<{
-    [K in keyof T]: T[K] extends object ? Optionalize<T[K]> : T[K];
-  }>
-> = "_id" extends keyof R ? R : R & { _id?: ObjectId };
+export type InputDocument<T> = { _id?: ObjectId } & Omit<Optionalize<T>, "_id">;
 
 export type OutputDocument<T> = { _id: ObjectId } & Omit<T, "_id">;
 
