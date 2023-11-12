@@ -25,6 +25,14 @@ try {
 
   const PostModel = Mongo.model("post", PostSchema);
 
+  const FileSchema = e.object({
+    name: e.optional(e.string()),
+    url: e.string(),
+    mimeType: e.optional(e.string()),
+    sizeInBytes: e.optional(e.number({ cast: true })),
+    alt: e.optional(e.string()),
+  });
+
   // Create User Schema
   const UserSchema = e.object({
     _id: e
@@ -32,12 +40,16 @@ try {
       .custom((ctx) => new ObjectId(ctx.output)),
     username: e.string(),
     password: e.optional(e.string()).default("topSecret"),
-    profile: e.object({
-      name: e.string(),
-      dob: e.optional(e.date()),
-    }),
+    avatar: e.optional(FileSchema),
+    profile: e.optional(
+      e.object({
+        name: e.string(),
+        dob: e.optional(e.date()),
+      })
+    ),
     followers: e.optional(e.array(e.if(ObjectId.isValid))),
     posts: e.optional(e.array(e.if(ObjectId.isValid))),
+    attachments: e.optional(e.array(FileSchema)),
     latestPost: e.optional(e.if(ObjectId.isValid)),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
@@ -194,6 +206,12 @@ try {
     // console.log(User[0].followers[0].followers[0].latestPost);
 
     // console.timeEnd("fetch");
+
+    await UserModel.updateOne("", {
+      $push: {
+        attachments: { url: "" },
+      },
+    });
 
     console.log(
       await UserModel.search("Khan", { session }).filter({

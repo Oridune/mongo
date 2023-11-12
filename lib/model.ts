@@ -54,7 +54,8 @@ export interface ModelOptions {
 export class MongoModel<
   Schema extends ObjectValidator<any, any, any>,
   InputShape extends object = inferInput<Schema>,
-  OutputShape extends object = inferOutput<Schema>
+  OutputShape extends object = inferOutput<Schema>,
+  FlattenShape = FlattenObject<InputShape>
 > extends MongoHooks<InputShape, OutputShape> {
   protected log(method: string, ...args: any[]) {
     if (this.Options.logs || Mongo.enableLogs)
@@ -109,9 +110,7 @@ export class MongoModel<
 
   public createIndex(
     ...indexDesc: (CreateIndexesOptions & {
-      key: Partial<
-        Record<keyof FlattenObject<InputShape> | (string & {}), IndexDirection>
-      >;
+      key: Partial<Record<keyof FlattenShape | (string & {}), IndexDirection>>;
       partialFilterExpression?: Filter<InputDocument<InputShape>>;
     })[]
   ) {
@@ -280,12 +279,9 @@ export class MongoModel<
     );
   }
 
-  public updateOne(
+  public updateOne<F = InputDocument<FlattenShape & InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
@@ -299,12 +295,9 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateAndFindOne(
+  public updateAndFindOne<F = InputDocument<FlattenShape & InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
@@ -318,12 +311,9 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateOne(
+  public findAndUpdateOne<F = InputDocument<FlattenShape & InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     const Filter = (
@@ -337,12 +327,9 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateMany(
+  public updateMany<F = InputDocument<FlattenShape & InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     return new UpdateManyQuery(this, options)
@@ -350,12 +337,9 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateAndFindMany(
+  public updateAndFindMany<F = InputDocument<FlattenShape & InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     return new UpdateAndFindManyQuery(this, options)
@@ -363,12 +347,9 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateMany(
+  public findAndUpdateMany<F = InputDocument<FlattenShape & InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<
-      InputDocument<FlattenObject<InputShape> & InputShape>
-    > &
-      Partial<InputDocument<FlattenObject<InputShape> & InputShape>>,
+    updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
   ) {
     return new FindAndUpdateManyQuery(this, options)

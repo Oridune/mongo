@@ -31,31 +31,25 @@ export type FlattenObject<T> = T extends FlattenOneLevel<T>
   ? T
   : FlattenObject<FlattenOneLevel<T>>;
 
+type OptionalizeIfObject<T, R = Exclude<T, undefined>> = IsObject<
+  R,
+  Optionalize<R>,
+  R extends Array<infer O> ? Array<OptionalizeIfObject<O>> : R
+>;
+
+type OptionalizeEach<T> = {
+  [K in keyof T]: OptionalizeIfObject<T[K]>;
+};
+
 export type Optionalize<
   T,
   UndefinedKeys extends keyof T = {
     [K in keyof T]: undefined extends T[K] ? K : never;
   }[keyof T],
   RequiredT = Omit<T, UndefinedKeys>,
-  DeepRequired = {
-    [K in keyof RequiredT]: IsObject<
-      RequiredT[K],
-      Optionalize<RequiredT[K]>,
-      RequiredT[K] extends Array<infer O>
-        ? Array<IsObject<O, Optionalize<O>, O>>
-        : RequiredT[K]
-    >;
-  },
+  DeepRequired = OptionalizeEach<RequiredT>,
   OptionalT = Pick<T, UndefinedKeys>,
-  DeepOptional = {
-    [K in keyof OptionalT]: IsObject<
-      OptionalT[K],
-      Optionalize<OptionalT[K]>,
-      OptionalT[K] extends Array<infer O>
-        ? Array<IsObject<O, Optionalize<O>, O>>
-        : OptionalT[K]
-    >;
-  }
+  DeepOptional = OptionalizeEach<OptionalT>
 > = DeepRequired & Partial<DeepOptional>;
 
 export type InputDocument<T> = { _id?: ObjectId } & Omit<Optionalize<T>, "_id">;
