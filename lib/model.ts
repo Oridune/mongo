@@ -18,6 +18,7 @@ import {
   ChangeStreamOptions,
   highligthEs,
   UpdateFilter,
+  CommandOperationOptions,
 } from "../deps.ts";
 import { Mongo } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
@@ -121,6 +122,15 @@ export class MongoModel<
         await this.collection
           .createIndexes(indexDesc as any)
           .catch(console.error);
+    });
+
+    return this;
+  }
+
+  public dropIndex(indexNames: string[], options?: CommandOperationOptions) {
+    Mongo.post("connect", async () => {
+      for (const Name of indexNames)
+        await this.collection.dropIndex(Name, options);
     });
 
     return this;

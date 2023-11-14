@@ -6,8 +6,10 @@ import { FlattenObject, InputDocument, OutputDocument } from "../utility.ts";
 import { Mongo } from "../mongo.ts";
 
 export type Sorting<T> = Partial<
-  Record<"_id" | keyof FlattenObject<T> | (string & {}), 1 | -1>
->;
+  Record<"_id" | keyof FlattenObject<T>, 1 | -1 | (number & {})>
+> & {
+  [K: string]: number;
+};
 
 export type Projection<T> = Partial<
   Record<"_id" | keyof T | keyof FlattenObject<T> | (string & {}), 1 | 0>

@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { type ObjectId } from "../deps.ts";
-import { type IsObject } from "../validator.ts";
+import { type IsObject as _IsObject } from "../validator.ts";
+
+type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
 
 // "a.b.c" => "b.c"
 type Tail<S> = S extends `${string}.${infer T}` ? Tail<T> : S;

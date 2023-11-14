@@ -213,10 +213,16 @@ try {
       },
     });
 
+    const Sort: Record<string, number> | { _id: number } = {
+      _id: 1,
+    };
+
     console.log(
-      await UserModel.search("Khan", { session }).filter({
-        username: "saffellikhan",
-      })
+      await UserModel.search("Khan", { session })
+        .filter({
+          username: "saffellikhan",
+        })
+        .sort(Sort)
     );
   });
 } catch (error) {
