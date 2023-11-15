@@ -12,8 +12,10 @@ export type Sorting<T> = Partial<
 };
 
 export type Projection<T> = Partial<
-  Record<"_id" | keyof T | keyof FlattenObject<T> | (string & {}), 1 | 0>
->;
+  Record<"_id" | keyof T | keyof FlattenObject<T>, 1 | 0 | (number & {})>
+> & {
+  [K: string]: number;
+};
 
 export type PopulatedDocument<Doc, Field extends string, Value> = {
   [K in keyof Doc]: K extends Field ? Value : Doc[K];

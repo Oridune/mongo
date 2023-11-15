@@ -214,7 +214,7 @@ try {
     });
 
     const Sort: Record<string, number> | { _id: number } = {
-      _id: 1,
+      something: 1,
     };
 
     console.log(
@@ -223,6 +223,7 @@ try {
           username: "saffellikhan",
         })
         .sort(Sort)
+        .project(Sort)
     );
   });
 } catch (error) {
