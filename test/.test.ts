@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { FindOneQuery } from "../lib/query/find.ts";
+import { FindQuery, FindOneQuery } from "../lib/query/find.ts";
 import { Mongo, ObjectId } from "../mod.ts";
 import e from "../validator.ts";
 
@@ -21,20 +21,49 @@ const PostsData = [
   },
 ];
 
+const User1Id = new ObjectId();
+const User2Id = new ObjectId();
+
 const UsersData = [
   {
+    _id: User1Id,
     username: "saffellikhan",
     profile: {
       name: "Saif Ali Khan",
       // dob: new Date(),
     },
+    activity: [
+      {
+        description: "Logged in!",
+        user: User1Id,
+      },
+      {
+        description: "Waved by someone!",
+        user: User2Id,
+      },
+    ],
+    latestActivity: {
+      description: "Waved by someone!",
+      user: User2Id,
+    },
   },
   {
+    _id: User2Id,
     username: "abdullah",
     password: "secret3",
     profile: {
       name: "Abdullah Khan",
       dob: new Date(),
+    },
+    activity: [
+      {
+        description: "Waved by someone!",
+        user: User1Id,
+      },
+    ],
+    latestActivity: {
+      description: "Waved by someone!",
+      user: User1Id,
     },
   },
 ];
@@ -62,6 +91,12 @@ Deno.test({
       }
     );
 
+    // Activity Schema
+    const ActivitySchema = e.object({
+      description: e.string(),
+      user: e.instanceOf(ObjectId, { instantiate: true }),
+    });
+
     // User Schema
     const UserSchema = e.object({
       _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
@@ -75,6 +110,8 @@ Deno.test({
       followers: e.optional(e.array(e.if(ObjectId.isValid))),
       posts: e.optional(e.array(e.if(ObjectId.isValid))),
       latestPost: e.optional(e.if(ObjectId.isValid)),
+      activity: e.optional(e.array(ActivitySchema)),
+      latestActivity: e.optional(ActivitySchema),
       createdAt: e.optional(e.date()).default(() => new Date()),
       updatedAt: e.optional(e.date()).default(() => new Date()),
     });
@@ -86,6 +123,12 @@ Deno.test({
         ...details.updates.$set,
         updatedAt: new Date(),
       };
+    });
+
+    // Activity with Populates
+    const ActivityWithPopulatesSchema = e.object({
+      description: e.string(),
+      user: UserSchema,
     });
 
     // Post Schema
@@ -107,16 +150,21 @@ Deno.test({
       };
     });
 
-    // User with Posts
-    const UserWithPostsSchema = e.required(
-      e.omit(UserSchema, { keys: ["posts", "latestPost"] }).extends(
-        e.object({
-          posts: e.array(PostSchema),
-          latestPost: PostSchema,
-        })
-      ),
-      { ignore: ["followers"] }
-    );
+    // User with Populates
+    const UserWithPopulatesSchema = e
+      .omit(e.required(UserSchema, { ignore: ["followers"] }), {
+        keys: ["posts", "latestPost", "activity", "latestActivity"],
+      })
+      .extends(
+        e.partial(
+          e.object({
+            posts: e.array(PostSchema),
+            latestPost: PostSchema,
+            activity: e.array(ActivityWithPopulatesSchema),
+            latestActivity: ActivityWithPopulatesSchema,
+          })
+        )
+      );
 
     await t.step("Create Indexes", async () => {
       await UserModel.createIndex(
@@ -154,16 +202,34 @@ Deno.test({
     });
 
     await t.step("Fetch with populate", async () => {
+      const Query = UserModel.find()
+        .populate("posts", PostModel)
+        .populateOne("latestPost", PostModel)
+        .populateOne("activity.user", UserModel)
+        .populateOne("latestActivity.user", UserModel);
+
+      const Users = await e.instanceOf(FindQuery).validate(Query);
+
+      await e
+        .array(UserWithPopulatesSchema)
+        .validate(Users)
+        .catch((error) => {
+          console.error(error, Users);
+          throw error;
+        });
+    });
+
+    await t.step("Fetch One with populate", async () => {
       const Query = UserModel.findOne()
         .populate("posts", PostModel)
-        .populateOne("latestPost", PostModel);
+        .populateOne("latestPost", PostModel)
+        .populateOne("activity.user", UserModel)
+        .populateOne("latestActivity.user", UserModel);
 
-      await e.instanceOf(FindOneQuery).validate(Query);
+      const Users = await e.instanceOf(FindOneQuery).validate(Query);
 
-      const User = await Query;
-
-      await UserWithPostsSchema.validate(User).catch((error) => {
-        console.error(error, User);
+      await UserWithPopulatesSchema.validate(Users).catch((error) => {
+        console.error(error, Users);
         throw error;
       });
     });

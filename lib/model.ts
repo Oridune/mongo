@@ -90,12 +90,16 @@ export class MongoModel<
     };
   };
 
+  public UpdateSchema: ObjectValidator<any, any, any>;
+
   constructor(
     public Name: string,
     public Schema: Schema,
     public Options: ModelOptions = {}
   ) {
     super();
+
+    this.UpdateSchema = e.deepCast(e.deepPartial(this.Schema));
   }
 
   get database() {
@@ -248,9 +252,15 @@ export class MongoModel<
     filter: Filter<InputDocument<InputShape>> = {},
     options?: CountDocumentsOptions & { cache?: { key: string; ttl: number } }
   ) {
-    this.log("count", filter, options);
+    const Filter = (
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
+    ) as any;
+
+    this.log("count", Filter, options);
     return Mongo.useCaching(
-      () => this.collection.countDocuments(filter, options),
+      () => this.collection.countDocuments(Filter, options),
       options?.cache
     );
   }

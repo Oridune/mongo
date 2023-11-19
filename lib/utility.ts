@@ -110,3 +110,27 @@ export const dotNotationToDeepObject = (obj: Record<string, any>) => {
 
   return result;
 };
+
+export const assignDeepValues = (keys: string[], deepObject: any) => {
+  const Result: any = {};
+
+  keys.forEach((key) => {
+    let value = deepObject;
+
+    const NestedKeys = key.split(".");
+
+    let exists = true;
+
+    for (const NestedKey of NestedKeys)
+      if (value[NestedKey] !== undefined) value = value[NestedKey];
+      else {
+        exists = false;
+        break;
+      }
+
+    if (exists) Result[key] = value;
+    else Result[key] = undefined;
+  });
+
+  return Result;
+};

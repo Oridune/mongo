@@ -50,7 +50,32 @@ export class BaseFindQuery<
   ): any[] {
     const SubPopulateConfig = model["PopulateConfig"];
 
+    const IsNestedPopulate = /\./.test(field);
+    const ParentField = field.split(".")[0];
+
     return [
+      ...(IsNestedPopulate
+        ? [
+            {
+              $addFields: {
+                [`isNull_${ParentField}`]: {
+                  $cond: [`$${ParentField}`, false, true],
+                },
+              },
+            },
+            {
+              $addFields: {
+                [`isArray_${ParentField}`]: { $isArray: `$${ParentField}` },
+              },
+            },
+            {
+              $unwind: {
+                path: `$${ParentField}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ]
+        : []),
       {
         $lookup: {
           from: model.Name,
@@ -98,6 +123,45 @@ export class BaseFindQuery<
                 preserveNullAndEmptyArrays: true,
               },
             },
+          ]
+        : []),
+      ...(IsNestedPopulate
+        ? [
+            {
+              $group: {
+                _id: "$_id",
+                [ParentField]: { $push: `$${ParentField}` },
+                otherFields: { $mergeObjects: "$$ROOT" },
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: {
+                  $mergeObjects: [
+                    "$otherFields",
+                    { _id: "$_id", [ParentField]: `$${ParentField}` },
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                [ParentField]: {
+                  $cond: [
+                    { $eq: [`$isNull_${ParentField}`, true] },
+                    "$$REMOVE",
+                    {
+                      $cond: [
+                        { $eq: [`$isArray_${ParentField}`, true] },
+                        `$${ParentField}`,
+                        { $arrayElemAt: [`$${ParentField}`, 0] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+            { $unset: [`isNull_${ParentField}`, `isArray_${ParentField}`] },
           ]
         : []),
     ];
@@ -229,8 +293,13 @@ export class FindOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape> | null
 > extends BaseFindQuery<Model, Shape, Result> {
+  protected LimitApplied = false;
+
   protected async exec(): Promise<Result> {
-    this.Aggregation.push({ $limit: 1 });
+    if (!this.LimitApplied) {
+      this.Aggregation.push({ $limit: 1 });
+      this.LimitApplied = true;
+    }
 
     for (const Hook of this.Model["PreHooks"].read ?? [])
       await Hook({

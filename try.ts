@@ -49,8 +49,22 @@ try {
     ),
     followers: e.optional(e.array(e.if(ObjectId.isValid))),
     posts: e.optional(e.array(e.if(ObjectId.isValid))),
-    attachments: e.optional(e.array(FileSchema)),
     latestPost: e.optional(e.if(ObjectId.isValid)),
+    attachments: e.optional(e.array(FileSchema)),
+    activity: e.optional(
+      e.array(
+        e.object({
+          description: e.string(),
+          user: e.instanceOf(ObjectId, { instantiate: true }),
+        })
+      )
+    ),
+    latestActivity: e.optional(
+      e.object({
+        description: e.string(),
+        user: e.instanceOf(ObjectId, { instantiate: true }),
+      })
+    ),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
   });
@@ -142,6 +156,20 @@ try {
           posts: [Post._id],
           latestPost: Post._id,
           followers: [User2Id],
+          activity: [
+            {
+              description: "Logged in!",
+              user: User1Id,
+            },
+            {
+              description: "Waved by someone!",
+              user: User2Id,
+            },
+          ],
+          latestActivity: {
+            description: "Waved by someone!",
+            user: User2Id,
+          },
         },
         {
           _id: User2Id,
@@ -207,24 +235,24 @@ try {
 
     // console.timeEnd("fetch");
 
-    await UserModel.updateOne("", {
-      $push: {
-        attachments: { url: "" },
+    await UserModel.updateMany(
+      {},
+      {
+        password: "revealed!",
+        "attachments.0.url": "...",
       },
-    });
-
-    const Sort: Record<string, number> | { _id: number } = {
-      something: 1,
-    };
-
-    console.log(
-      await UserModel.search("Khan", { session })
-        .filter({
-          username: "saffellikhan",
-        })
-        .sort(Sort)
-        .project(Sort)
+      { session }
     );
+
+    // console.log(
+    //   await UserModel.findOne({}, { session })
+    //   // .search("Khan", { session })
+    //   // .filter({
+    //   //   username: "saffellikhan",
+    //   // })
+    //   // .populate("posts", PostModel)
+    //   // .populateOne("latestActivity.user", UserModel)
+    // );
   });
 } catch (error) {
   console.log(error);

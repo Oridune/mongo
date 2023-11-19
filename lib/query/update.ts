@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import e from "../../validator.ts";
 import {
   Filter,
   UpdateFilter,
@@ -10,7 +9,7 @@ import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
 import {
   InputDocument,
-  deepObjectToFlatten,
+  assignDeepValues,
   dotNotationToDeepObject,
 } from "../utility.ts";
 
@@ -27,13 +26,13 @@ export class BaseUpdateQuery<
     options?: { validate?: boolean }
   ): Promise<T> {
     if (options?.validate !== false)
-      if (updates.$set) {
-        const SetSchema = e.deepPartial(this.Model.Schema);
-
-        updates.$set = deepObjectToFlatten(
-          await SetSchema.validate(dotNotationToDeepObject(updates.$set))
-        ) as any;
-      }
+      if (typeof updates.$set === "object")
+        updates.$set = assignDeepValues(
+          Object.keys(updates.$set),
+          await this.Model.UpdateSchema.validate(
+            dotNotationToDeepObject(updates.$set)
+          )
+        );
 
     return updates;
   }
