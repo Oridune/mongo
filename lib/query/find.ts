@@ -162,6 +162,7 @@ export class BaseFindQuery<
               },
             },
             { $unset: [`isNull_${ParentField}`, `isArray_${ParentField}`] },
+            { $sort: { _id: 1 } },
           ]
         : []),
     ];
