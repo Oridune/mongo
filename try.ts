@@ -245,7 +245,19 @@ try {
     );
 
     // console.log(
-    //   await UserModel.findOne({}, { session })
+    // await UserModel.findOne(
+    //   {},
+    //   {
+    //     cache: {
+    //       key: `users`,
+    //       ttl: 60, // Cache for 5 minutes...
+    //     },
+    //     session,
+    //   }
+    // ).populateOne(
+    //   "activity.user",
+    //   UserModel.populateOne("latestPost", PostModel)
+    // );
     //   // .search("Khan", { session })
     //   // .filter({
     //   //   username: "saffellikhan",
