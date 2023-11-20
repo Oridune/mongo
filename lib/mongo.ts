@@ -115,23 +115,23 @@ export class Mongo {
 
   static async connect(url: string, options?: MongoClientOptions) {
     // Execute Pre-Connect Events
-    for (const _ of this.preConnectEvents) await _();
+    for (const _ of this.preConnectEvents) await _()?.catch(console.error);
 
     this.client ??= await MongoClient.connect(url, options);
 
     // Execute Post-Connect Events
-    for (const _ of this.postConnectEvents) await _();
+    for (const _ of this.postConnectEvents) await _()?.catch(console.error);
   }
 
   static async disconnect() {
     // Execute Pre-Disconnect Events
-    for (const _ of this.preDisconnectEvents) await _();
+    for (const _ of this.preDisconnectEvents) await _()?.catch(console.error);
 
     this.client?.close();
     delete this.client;
 
     // Execute Post-Disconnect Events
-    for (const _ of this.postDisconnectEvents) await _();
+    for (const _ of this.postDisconnectEvents) await _()?.catch(console.error);
   }
 
   static async drop(dbName?: string | undefined) {
