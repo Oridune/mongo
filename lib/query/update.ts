@@ -11,6 +11,7 @@ import {
   InputDocument,
   assignDeepValues,
   dotNotationToDeepObject,
+  pickProps,
 } from "../utility.ts";
 
 export class BaseUpdateQuery<
@@ -25,7 +26,7 @@ export class BaseUpdateQuery<
     updates: T,
     options?: { validate?: boolean }
   ): Promise<T> {
-    if (options?.validate !== false)
+    if (options?.validate !== false) {
       if (typeof updates.$set === "object")
         updates.$set = assignDeepValues(
           Object.keys(updates.$set),
@@ -33,6 +34,53 @@ export class BaseUpdateQuery<
             dotNotationToDeepObject(updates.$set)
           )
         );
+
+      if (typeof updates.$setOnInsert === "object")
+        updates.$setOnInsert = assignDeepValues(
+          Object.keys(updates.$setOnInsert),
+          await this.Model.UpdateSchema.validate(
+            dotNotationToDeepObject(updates.$setOnInsert)
+          )
+        );
+
+      if (typeof updates.$push === "object") {
+        const ModifierKeys: string[] = [];
+        const InsertKeys: string[] = [];
+
+        for (const [Key, Value] of Object.entries(updates.$push))
+          if (
+            typeof Value === "object" &&
+            !!Value &&
+            !!Object.keys(Value).find((_) =>
+              /^\$(each|slice|position|sort)/.test(_)
+            )
+          )
+            ModifierKeys.push(Key);
+          else InsertKeys.push(Key);
+
+        updates.$push = {
+          ...assignDeepValues(
+            InsertKeys,
+            await this.Model.UpdateSchema.validate(
+              dotNotationToDeepObject(pickProps(InsertKeys, updates.$push))
+            ),
+            (value, key) =>
+              !(updates.$push![key] instanceof Array) && value instanceof Array
+                ? value[0]
+                : value
+          ),
+          ...assignDeepValues(
+            ModifierKeys,
+            await this.Model.UpdateSchema.validate(
+              dotNotationToDeepObject(
+                pickProps(ModifierKeys, updates.$push, (value) => value.$each)
+              )
+            ),
+            (value, key) => ({ ...updates.$push![key], $each: value })
+          ),
+        };
+      }
+    }
 
     return updates;
   }
@@ -92,9 +140,9 @@ export class UpdateOneQuery<
         updates: this.Updates as any,
       });
 
-    this.Model["log"]("updateOne", this.Filters, this.Updates, this.Options);
-
     const Updates = await this.validate(this.Updates, this.Options);
+
+    this.Model["log"]("updateOne", this.Filters, Updates, this.Options);
 
     const Result = (await this.Model.collection.updateOne(
       this.Filters,
@@ -135,9 +183,9 @@ export class UpdateManyQuery<
         updates: this.Updates as any,
       });
 
-    this.Model["log"]("updateMany", this.Filters, this.Updates, this.Options);
-
     const Updates = await this.validate(this.Updates, this.Options);
+
+    this.Model["log"]("updateMany", this.Filters, Updates, this.Options);
 
     const Result = (await this.Model.collection.updateMany(
       this.Filters,

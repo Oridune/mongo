@@ -239,7 +239,15 @@ try {
       {},
       {
         password: "revealed!",
-        "attachments.0.url": "...",
+        $push: {
+          attachments: {
+            $each: [{ url: null, sizeInBytes: 1 }],
+          },
+          followers: User1Id,
+        },
+        $setOnInsert: {
+          avatar: { url: null },
+        },
       },
       { session }
     );

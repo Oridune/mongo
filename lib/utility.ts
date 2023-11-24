@@ -111,7 +111,11 @@ export const dotNotationToDeepObject = (obj: Record<string, any>) => {
   return result;
 };
 
-export const assignDeepValues = (keys: string[], deepObject: any) => {
+export const assignDeepValues = (
+  keys: string[],
+  deepObject: any,
+  modifier?: (value: any, key: string) => any
+) => {
   const Result: any = {};
 
   keys.forEach((key) => {
@@ -128,9 +132,28 @@ export const assignDeepValues = (keys: string[], deepObject: any) => {
         break;
       }
 
-    if (exists) Result[key] = value;
+    if (exists)
+      Result[key] =
+        typeof modifier === "function" ? modifier(value, key) : value;
     else Result[key] = undefined;
   });
+
+  return Result;
+};
+
+export const pickProps = (
+  keys: string[],
+  object: any,
+  modifier?: (value: any, key: string) => any
+) => {
+  const Result: any = {};
+
+  for (const Key in object)
+    if (keys.includes(Key))
+      Result[Key] =
+        typeof modifier === "function"
+          ? modifier(object[Key], Key)
+          : object[Key];
 
   return Result;
 };
