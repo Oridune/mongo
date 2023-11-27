@@ -92,31 +92,33 @@ Deno.test({
     );
 
     // Activity Schema
-    const ActivitySchema = e.object({
-      description: e.string(),
-      user: e.instanceOf(ObjectId, { instantiate: true }),
-    });
+    const createActivitySchema = () =>
+      e.object({
+        description: e.string(),
+        user: e.instanceOf(ObjectId, { instantiate: true }),
+      });
 
     // User Schema
-    const UserSchema = e.object({
-      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-      username: e.string(),
-      password: e.optional(e.string()).default("topSecret"),
-      profile: e.object({
-        name: e.string(),
-        dob: e.optional(e.date()).default(() => new Date()),
-      }),
-      age: e.optional(e.number()).default(18),
-      followers: e.optional(e.array(e.if(ObjectId.isValid))),
-      posts: e.optional(e.array(e.if(ObjectId.isValid))),
-      latestPost: e.optional(e.if(ObjectId.isValid)),
-      activity: e.optional(e.array(ActivitySchema)),
-      latestActivity: e.optional(ActivitySchema),
-      createdAt: e.optional(e.date()).default(() => new Date()),
-      updatedAt: e.optional(e.date()).default(() => new Date()),
-    });
+    const createUserSchema = () =>
+      e.object({
+        _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+        username: e.string(),
+        password: e.optional(e.string()).default("topSecret"),
+        profile: e.object({
+          name: e.string(),
+          dob: e.optional(e.date()).default(() => new Date()),
+        }),
+        age: e.optional(e.number()).default(18),
+        followers: e.optional(e.array(e.if(ObjectId.isValid))),
+        posts: e.optional(e.array(e.if(ObjectId.isValid))),
+        latestPost: e.optional(e.if(ObjectId.isValid)),
+        activity: e.optional(e.array(createActivitySchema())),
+        latestActivity: e.optional(createActivitySchema()),
+        createdAt: e.optional(e.date()).default(() => new Date()),
+        updatedAt: e.optional(e.date()).default(() => new Date()),
+      });
 
-    const UserModel = Mongo.model("user", UserSchema);
+    const UserModel = Mongo.model("user", createUserSchema);
 
     UserModel.pre("update", (details) => {
       details.updates.$set = {
@@ -126,22 +128,24 @@ Deno.test({
     });
 
     // Activity with Populates
-    const ActivityWithPopulatesSchema = e.object({
-      description: e.string(),
-      user: UserSchema,
-    });
+    const createActivityWithPopulatesSchema = () =>
+      e.object({
+        description: e.string(),
+        user: createUserSchema(),
+      });
 
     // Post Schema
-    const PostSchema = e.object({
-      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-      title: e.string(),
-      description: e.string(),
-      drafted: e.optional(e.boolean()).default(true),
-      createdAt: e.optional(e.date()).default(() => new Date()),
-      updatedAt: e.optional(e.date()).default(() => new Date()),
-    });
+    const createPostSchema = () =>
+      e.object({
+        _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+        title: e.string(),
+        description: e.string(),
+        drafted: e.optional(e.boolean()).default(true),
+        createdAt: e.optional(e.date()).default(() => new Date()),
+        updatedAt: e.optional(e.date()).default(() => new Date()),
+      });
 
-    const PostModel = Mongo.model("post", PostSchema);
+    const PostModel = Mongo.model("post", createPostSchema);
 
     PostModel.pre("update", (details) => {
       details.updates.$set = {
@@ -152,16 +156,16 @@ Deno.test({
 
     // User with Populates
     const UserWithPopulatesSchema = e
-      .omit(e.required(UserSchema, { ignore: ["followers"] }), {
+      .omit(e.required(createUserSchema(), { ignore: ["followers"] }), {
         keys: ["posts", "latestPost", "activity", "latestActivity"],
       })
       .extends(
         e.partial(
           e.object({
-            posts: e.array(PostSchema),
-            latestPost: PostSchema,
-            activity: e.array(ActivityWithPopulatesSchema),
-            latestActivity: ActivityWithPopulatesSchema,
+            posts: e.array(createPostSchema()),
+            latestPost: createPostSchema(),
+            activity: e.array(createActivityWithPopulatesSchema()),
+            latestActivity: createActivityWithPopulatesSchema(),
           })
         )
       );
@@ -186,13 +190,13 @@ Deno.test({
       const Users = await UserModel.createMany(UsersData);
 
       // Check if the result is a valid Users list
-      await e.array(UserSchema).validate(Users);
+      await e.array(createUserSchema()).validate(Users);
 
       // Create Post
       const Post = await PostModel.create(PostsData[0]);
 
       // Check if the result is a valid Post
-      await PostSchema.validate(Post);
+      await createPostSchema().validate(Post);
 
       // Relate first User with the Post
       await UserModel.updateOne(Users[0]._id, {
@@ -284,13 +288,13 @@ Deno.test({
           const Users = await UserModel.createMany(UsersData, { session });
 
           // Check if the result is a valid Users list
-          await e.array(UserSchema).validate(Users);
+          await e.array(createUserSchema()).validate(Users);
 
           // Create Post
           const Post = await PostModel.create(PostsData[0], { session });
 
           // Check if the result is a valid Post
-          await PostSchema.validate(Post);
+          await createPostSchema().validate(Post);
 
           // Relate first User with the Post
           await UserModel.updateOne(
@@ -318,13 +322,13 @@ Deno.test({
         const Users = await UserModel.createMany(UsersData, { session });
 
         // Check if the result is a valid Users list
-        await e.array(UserSchema).validate(Users);
+        await e.array(createUserSchema()).validate(Users);
 
         // Create Post
         const Post = await PostModel.create(PostsData[0], { session });
 
         // Check if the result is a valid Post
-        await PostSchema.validate(Post);
+        await createPostSchema().validate(Post);
 
         // Check the data consistancy in the current session
         if (

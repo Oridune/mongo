@@ -140,12 +140,9 @@ export class Mongo {
 
   static model<T extends ObjectValidator<any, any, any>>(
     name: string,
-    schema: T,
+    schema: T | (() => T),
     options?: ModelOptions
   ) {
-    if (!(schema instanceof ObjectValidator))
-      throw new Error(`Invalid or unexpected schema passed!`);
-
     return new MongoModel(plural(name), schema, options);
   }
 

@@ -90,16 +90,26 @@ export class MongoModel<
     };
   };
 
-  public UpdateSchema: ObjectValidator<any, any, any>;
+  public getSchema() {
+    const Schema =
+      typeof this.Schema === "function" ? this.Schema() : this.Schema;
+
+    if (!(Schema instanceof ObjectValidator))
+      throw new Error(`Invalid or unexpected schema passed!`);
+
+    return Schema;
+  }
+
+  public getUpdateSchema: () => ObjectValidator<any, any, any>;
 
   constructor(
     public Name: string,
-    public Schema: Schema,
+    public Schema: Schema | (() => Schema),
     public Options: ModelOptions = {}
   ) {
     super();
 
-    this.UpdateSchema = e.deepCast(e.deepPartial(this.Schema));
+    this.getUpdateSchema = () => e.deepCast(e.deepPartial(this.getSchema()));
   }
 
   get database() {
@@ -154,7 +164,7 @@ export class MongoModel<
     this.log("create", doc, options);
 
     const Doc =
-      options?.validate === false ? doc : await this.Schema.validate(doc);
+      options?.validate === false ? doc : await this.getSchema().validate(doc);
     const Ack = await this.collection.insertOne(Doc, options);
     const Result = { _id: Ack.insertedId, ...Doc };
 
@@ -187,7 +197,7 @@ export class MongoModel<
     const Docs =
       options?.validate === false
         ? docs
-        : await e.array(this.Schema).validate(docs);
+        : await e.array(this.getSchema()).validate(docs);
     const Ack = await this.collection.insertMany(Docs, options);
 
     return Promise.all(
@@ -442,7 +452,7 @@ export class MongoModel<
 
     this.log("replaceOne", Filter, doc, options);
 
-    const Doc = await this.Schema.validate(doc);
+    const Doc = await this.getSchema().validate(doc);
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
       | InputDocument<InputShape>
       | UpdateResult<InputDocument<InputShape>>;

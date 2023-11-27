@@ -242,6 +242,7 @@ try {
         $push: {
           attachments: {
             $each: [{ url: null, sizeInBytes: 1 }],
+            $position: 2,
           },
           followers: User1Id,
         },

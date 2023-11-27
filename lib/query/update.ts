@@ -30,7 +30,7 @@ export class BaseUpdateQuery<
       if (typeof updates.$set === "object")
         updates.$set = assignDeepValues(
           Object.keys(updates.$set),
-          await this.Model.UpdateSchema.validate(
+          await this.Model.getUpdateSchema().validate(
             dotNotationToDeepObject(updates.$set)
           )
         );
@@ -38,7 +38,7 @@ export class BaseUpdateQuery<
       if (typeof updates.$setOnInsert === "object")
         updates.$setOnInsert = assignDeepValues(
           Object.keys(updates.$setOnInsert),
-          await this.Model.UpdateSchema.validate(
+          await this.Model.getUpdateSchema().validate(
             dotNotationToDeepObject(updates.$setOnInsert)
           )
         );
@@ -61,7 +61,7 @@ export class BaseUpdateQuery<
         updates.$push = {
           ...assignDeepValues(
             InsertKeys,
-            await this.Model.UpdateSchema.validate(
+            await this.Model.getUpdateSchema().validate(
               dotNotationToDeepObject(pickProps(InsertKeys, updates.$push))
             ),
             (value, key) =>
@@ -71,7 +71,7 @@ export class BaseUpdateQuery<
           ),
           ...assignDeepValues(
             ModifierKeys,
-            await this.Model.UpdateSchema.validate(
+            await this.Model.getUpdateSchema().validate(
               dotNotationToDeepObject(
                 pickProps(ModifierKeys, updates.$push, (value) => value.$each)
               )
