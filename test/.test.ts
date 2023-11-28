@@ -92,14 +92,14 @@ Deno.test({
     );
 
     // Activity Schema
-    const createActivitySchema = () =>
+    const ActivitySchema = () =>
       e.object({
         description: e.string(),
         user: e.instanceOf(ObjectId, { instantiate: true }),
       });
 
     // User Schema
-    const createUserSchema = () =>
+    const UserSchema = () =>
       e.object({
         _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
         username: e.string(),
@@ -112,13 +112,13 @@ Deno.test({
         followers: e.optional(e.array(e.if(ObjectId.isValid))),
         posts: e.optional(e.array(e.if(ObjectId.isValid))),
         latestPost: e.optional(e.if(ObjectId.isValid)),
-        activity: e.optional(e.array(createActivitySchema())),
-        latestActivity: e.optional(createActivitySchema()),
+        activity: e.optional(e.array(ActivitySchema)),
+        latestActivity: e.optional(ActivitySchema),
         createdAt: e.optional(e.date()).default(() => new Date()),
         updatedAt: e.optional(e.date()).default(() => new Date()),
       });
 
-    const UserModel = Mongo.model("user", createUserSchema);
+    const UserModel = Mongo.model("user", UserSchema);
 
     UserModel.pre("update", (details) => {
       details.updates.$set = {
@@ -128,14 +128,14 @@ Deno.test({
     });
 
     // Activity with Populates
-    const createActivityWithPopulatesSchema = () =>
+    const ActivityWithPopulatesSchema = () =>
       e.object({
         description: e.string(),
-        user: createUserSchema(),
+        user: UserSchema,
       });
 
     // Post Schema
-    const createPostSchema = () =>
+    const PostSchema = () =>
       e.object({
         _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
         title: e.string(),
@@ -145,7 +145,7 @@ Deno.test({
         updatedAt: e.optional(e.date()).default(() => new Date()),
       });
 
-    const PostModel = Mongo.model("post", createPostSchema);
+    const PostModel = Mongo.model("post", PostSchema);
 
     PostModel.pre("update", (details) => {
       details.updates.$set = {
@@ -156,16 +156,16 @@ Deno.test({
 
     // User with Populates
     const UserWithPopulatesSchema = e
-      .omit(e.required(createUserSchema(), { ignore: ["followers"] }), {
+      .omit(e.required(UserSchema, { ignore: ["followers"] }), {
         keys: ["posts", "latestPost", "activity", "latestActivity"],
       })
       .extends(
         e.partial(
           e.object({
-            posts: e.array(createPostSchema()),
-            latestPost: createPostSchema(),
-            activity: e.array(createActivityWithPopulatesSchema()),
-            latestActivity: createActivityWithPopulatesSchema(),
+            posts: e.array(PostSchema),
+            latestPost: PostSchema,
+            activity: e.array(ActivityWithPopulatesSchema),
+            latestActivity: ActivityWithPopulatesSchema,
           })
         )
       );
@@ -190,13 +190,13 @@ Deno.test({
       const Users = await UserModel.createMany(UsersData);
 
       // Check if the result is a valid Users list
-      await e.array(createUserSchema()).validate(Users);
+      await e.array(UserSchema).validate(Users);
 
       // Create Post
       const Post = await PostModel.create(PostsData[0]);
 
       // Check if the result is a valid Post
-      await createPostSchema().validate(Post);
+      await PostSchema().validate(Post);
 
       // Relate first User with the Post
       await UserModel.updateOne(Users[0]._id, {
@@ -288,13 +288,13 @@ Deno.test({
           const Users = await UserModel.createMany(UsersData, { session });
 
           // Check if the result is a valid Users list
-          await e.array(createUserSchema()).validate(Users);
+          await e.array(UserSchema).validate(Users);
 
           // Create Post
           const Post = await PostModel.create(PostsData[0], { session });
 
           // Check if the result is a valid Post
-          await createPostSchema().validate(Post);
+          await PostSchema().validate(Post);
 
           // Relate first User with the Post
           await UserModel.updateOne(
@@ -322,13 +322,13 @@ Deno.test({
         const Users = await UserModel.createMany(UsersData, { session });
 
         // Check if the result is a valid Users list
-        await e.array(createUserSchema()).validate(Users);
+        await e.array(UserSchema).validate(Users);
 
         // Create Post
         const Post = await PostModel.create(PostsData[0], { session });
 
         // Check if the result is a valid Post
-        await createPostSchema().validate(Post);
+        await PostSchema().validate(Post);
 
         // Check the data consistancy in the current session
         if (
