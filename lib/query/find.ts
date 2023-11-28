@@ -2,17 +2,17 @@
 import { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
-import { FlattenObject, InputDocument, OutputDocument } from "../utility.ts";
+import { InputDocument, OutputDocument } from "../utility.ts";
 import { Mongo } from "../mongo.ts";
 
 export type Sorting<T> = Partial<
-  Record<"_id" | keyof FlattenObject<T>, 1 | -1 | (number & {})>
+  Record<"_id" | keyof T, 1 | -1 | (number & {})>
 > & {
   [K: string]: number;
 };
 
 export type Projection<T> = Partial<
-  Record<"_id" | keyof T | keyof FlattenObject<T>, 1 | 0 | (number & {})>
+  Record<"_id" | keyof T, 1 | 0 | (number & {})>
 > & {
   [K: string]: number;
 };

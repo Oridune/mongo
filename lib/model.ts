@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-explicit-any ban-types
+// deno-lint-ignore-file no-explicit-any
 import e, { ObjectValidator, inferInput, inferOutput } from "../validator.ts";
 import {
   CollectionOptions,
@@ -22,12 +22,7 @@ import {
 } from "../deps.ts";
 import { Mongo } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
-import {
-  FlattenObject,
-  InputDocument,
-  OutputDocument,
-  circularReplacer,
-} from "./utility.ts";
+import { InputDocument, OutputDocument, circularReplacer } from "./utility.ts";
 import {
   FindQuery,
   FindOneQuery,
@@ -55,8 +50,7 @@ export interface ModelOptions {
 export class MongoModel<
   Schema extends ObjectValidator<any, any, any>,
   InputShape extends object = inferInput<Schema>,
-  OutputShape extends object = inferOutput<Schema>,
-  FlattenShape = FlattenObject<InputShape>
+  OutputShape extends object = inferOutput<Schema>
 > extends MongoHooks<InputShape, OutputShape> {
   protected log(method: string, ...args: any[]) {
     if (this.Options.logs || Mongo.enableLogs)
@@ -125,7 +119,7 @@ export class MongoModel<
 
   public createIndex(
     ...indexDesc: (CreateIndexesOptions & {
-      key: Partial<Record<keyof FlattenShape | (string & {}), IndexDirection>>;
+      key: Partial<Record<string, IndexDirection>>;
       partialFilterExpression?: Filter<InputDocument<InputShape>>;
     })[]
   ) {
@@ -309,7 +303,7 @@ export class MongoModel<
     );
   }
 
-  public updateOne<F = InputDocument<FlattenShape & InputShape>>(
+  public updateOne<F = InputDocument<InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
@@ -325,7 +319,7 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateAndFindOne<F = InputDocument<FlattenShape & InputShape>>(
+  public updateAndFindOne<F = InputDocument<InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
@@ -341,7 +335,7 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateOne<F = InputDocument<FlattenShape & InputShape>>(
+  public findAndUpdateOne<F = InputDocument<InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
@@ -357,7 +351,7 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateMany<F = InputDocument<FlattenShape & InputShape>>(
+  public updateMany<F = InputDocument<InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
@@ -367,7 +361,7 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateAndFindMany<F = InputDocument<FlattenShape & InputShape>>(
+  public updateAndFindMany<F = InputDocument<InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
@@ -377,7 +371,7 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateMany<F = InputDocument<FlattenShape & InputShape>>(
+  public findAndUpdateMany<F = InputDocument<InputShape>>(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
     options?: UpdateOptions & { validate?: boolean }
