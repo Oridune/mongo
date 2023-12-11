@@ -157,3 +157,32 @@ export const pickProps = (
 
   return Result;
 };
+
+export const performanceStats = async <T>(
+  key: string,
+  callback: () => T,
+  options?: { enabled?: boolean; logs?: boolean }
+) => {
+  if (!options?.enabled)
+    return {
+      result: await callback(),
+    };
+
+  const TimeStart = new Date();
+
+  const Result = await callback();
+
+  const TimeEnd = new Date();
+
+  const TimeMs = TimeEnd.getTime() - TimeStart.getTime();
+
+  if (options.logs) console.log(`It took ${TimeMs}ms to execute '${key}'.`);
+
+  return {
+    key,
+    startedAt: TimeStart,
+    endedAt: TimeEnd,
+    result: Result,
+    timeMs: TimeMs,
+  };
+};

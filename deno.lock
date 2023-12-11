@@ -3,7 +3,8 @@
   "packages": {
     "specifiers": {
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
-      "npm:mongodb@6.2.0": "npm:mongodb@6.2.0"
+      "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
+      "npm:mongodb@6.3.0": "npm:mongodb@6.3.0"
     },
     "npm": {
       "@mongodb-js/saslprep@1.1.0": {
@@ -19,6 +20,12 @@
       "@types/webidl-conversions@7.0.2": {
         "integrity": "sha512-uNv6b/uGRLlCVmelat2rA8bcVd3k/42mV2EmjhPh6JLkd35T5bgwR/t6xy7a9MWhd9sixIeBUzhBenvk3NO+DQ==",
         "dependencies": {}
+      },
+      "@types/whatwg-url@11.0.3": {
+        "integrity": "sha512-z1ELvMijRL1QmU7QuzDkeYXSF2+dXI0ITKoQsIoVKcNBOiK5RMmWy+pYYxJTHFt8vkpZe7UsvRErQwcxZkjoUw==",
+        "dependencies": {
+          "@types/webidl-conversions": "@types/webidl-conversions@7.0.2"
+        }
       },
       "@types/whatwg-url@8.2.2": {
         "integrity": "sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==",
@@ -90,12 +97,27 @@
           "whatwg-url": "whatwg-url@11.0.0"
         }
       },
+      "mongodb-connection-string-url@3.0.0": {
+        "integrity": "sha512-t1Vf+m1I5hC2M5RJx/7AtxgABy1cZmIPQRMXw+gEIPn/cZNF3Oiy+l0UIypUwVB5trcWHq3crg2g3uAR9aAwsQ==",
+        "dependencies": {
+          "@types/whatwg-url": "@types/whatwg-url@11.0.3",
+          "whatwg-url": "whatwg-url@13.0.0"
+        }
+      },
       "mongodb@6.2.0": {
         "integrity": "sha512-d7OSuGjGWDZ5usZPqfvb36laQ9CPhnWkAGHT61x5P95p/8nMVeH8asloMwW6GcYFeB0Vj4CB/1wOTDG2RA9BFA==",
         "dependencies": {
           "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.0",
           "bson": "bson@6.2.0",
           "mongodb-connection-string-url": "mongodb-connection-string-url@2.6.0"
+        }
+      },
+      "mongodb@6.3.0": {
+        "integrity": "sha512-tt0KuGjGtLUhLoU263+xvQmPHEGTw5LbcNC73EoFRYgSHwZt5tsoJC110hDyO1kjQzpgNrpdcSza9PknWN4LrA==",
+        "dependencies": {
+          "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.0",
+          "bson": "bson@6.2.0",
+          "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
         }
       },
       "punycode@2.3.0": {
@@ -120,6 +142,12 @@
           "punycode": "punycode@2.3.0"
         }
       },
+      "tr46@4.1.1": {
+        "integrity": "sha512-2lv/66T7e5yNyhAAC4NaKe5nVavzuGJQVVtRYLyQ2OI8tsJ61PMLlelehb0wi2Hx6+hT/OJUWZcw8MjlSRnxvw==",
+        "dependencies": {
+          "punycode": "punycode@2.3.0"
+        }
+      },
       "webidl-conversions@7.0.0": {
         "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==",
         "dependencies": {}
@@ -128,6 +156,13 @@
         "integrity": "sha512-RKT8HExMpoYx4igMiVMY83lN6UeITKJlBQ+vR/8ZJ8OCdSiN3RwCq+9gH0+Xzj0+5IrM6i4j/6LuvzbZIQgEcQ==",
         "dependencies": {
           "tr46": "tr46@3.0.0",
+          "webidl-conversions": "webidl-conversions@7.0.0"
+        }
+      },
+      "whatwg-url@13.0.0": {
+        "integrity": "sha512-9WWbymnqj57+XEuqADHrCJ2eSXzn8WXIW/YSGaZtb2WKAInQ6CHfaUUcTyyver0p8BDg5StLQq8h1vtZuwmOig==",
+        "dependencies": {
+          "tr46": "tr46@4.1.1",
           "webidl-conversions": "webidl-conversions@7.0.0"
         }
       }
@@ -818,6 +853,30 @@
     "https://deno.land/x/oridune_validator@v0.2.35/lib/validators/utility/optional.ts": "c87a48e8587ddb99eb50e0f2f0314b7328d660e5c7d85b8b00381d1dcd8690ac",
     "https://deno.land/x/oridune_validator@v0.2.35/lib/validators/utility/or.ts": "d8969d8b345f735aa698308bd6b9fc036fb8b30ccce7fa96d8b8324d8c34ff8f",
     "https://deno.land/x/oridune_validator@v0.2.35/mod.ts": "f671ea1f0bd0b76c0f1c454cc032083c06b8982efc287c48aad598703feccd67",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/exceptions.ts": "060aaaf965919c58c37f24158e12c996aef8a43ee207246a6cad53cd815233cc",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/types.ts": "6922e435b26ee814b7fbbcb071728f61ea0b2b1d751eb2d9165f553facc189f8",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators.ts": "3d536a7b8ade0f7bd01c585a552fd59e8e0a1f5764ba7085cb6d4197da17df34",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/base.ts": "7b30221c78cbf258c0ec1891a03184423136e8f66d4f9c79cfbc138a95cfd2aa",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/mod.ts": "11502a6ecc1ceb9379e8faa397164ae86eec74f8ee1a13a1dca70dc616c37f1c",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/array.ts": "ac532bddb4d7d3fbcced0b25fd9e0dc16e0ebdc7b13cdabddb68eaf0cf269964",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/date.ts": "00d2677be1dbdc58a82053e39f3c7adc386c7ce0b23e2dff1e0cbf4d4767302e",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/enum.ts": "18574fd6172998d8d05bd57008b25f461ad73b051db23c66e5171f3322b78239",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/object.ts": "b75c58fde8a982f6142454f7e5900bbe60dc7fdd4a17cf1dc12cd024062a114d",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/record.ts": "7d245f60d102c9d9ea85996620f9967bbe4de1d96d59c0b11a51ca23e74406c5",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/non-primitives/tuple.ts": "324deea30f4afe2eb6751686c2892b682dc65c035bff7146c20d63ed389f3274",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/bigint.ts": "c3c0800ee7a130049d932eb909c3c4a872cae4779a8705acec366b88b35fa6c2",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/boolean.ts": "89c5e21e46df6c846831c69494c79490a2cc848a6aa44a6d48ff52637114df1c",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/null.ts": "78afc92b7cc54187426b6d30209fae6617d82ba069d0cb1d7705813e8e09582f",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/number.ts": "ad4f6e104bee764d2596223b12a7a637cfce3dd5500c21b19da97bcaf6dd2eab",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/string.ts": "4f983a47ee654d15c5d2f1a262e44c9f723d18dfb315184f3150836c19d64ee4",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/primitives/undefined.ts": "e0008fb8fcae6311393bfe85f98b064ebbfe05f5e728bbdf9873f7d114f200e4",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/and.ts": "368d765a1970c3fc37a3ed82607f14805b303202fed06ae47dbdfe81e07e318d",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/any.ts": "034efffd6ee3553c5f487ebb030713490b77d057a4e3ee26c833b6d4dbc3bd3d",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/if.ts": "814141672291d5ad07c70b208312e9136a4e43f6bb0cefeada5c315b62ce446e",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/instanceOf.ts": "f780e593e23afc8bf60f5f15f45df5fc62d802e80585ffc6b53501623e9cce40",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/optional.ts": "c87a48e8587ddb99eb50e0f2f0314b7328d660e5c7d85b8b00381d1dcd8690ac",
+    "https://deno.land/x/oridune_validator@v0.2.37/lib/validators/utility/or.ts": "d8969d8b345f735aa698308bd6b9fc036fb8b30ccce7fa96d8b8324d8c34ff8f",
+    "https://deno.land/x/oridune_validator@v0.2.37/mod.ts": "f671ea1f0bd0b76c0f1c454cc032083c06b8982efc287c48aad598703feccd67",
     "https://deno.land/x/ts_morph@18.0.0/bootstrap/mod.ts": "b53aad517f106c4079971fcd4a81ab79fadc40b50061a3ab2b741a09119d51e9",
     "https://deno.land/x/ts_morph@18.0.0/bootstrap/ts_morph_bootstrap.js": "6645ac03c5e6687dfa8c78109dc5df0250b811ecb3aea2d97c504c35e8401c06",
     "https://deno.land/x/ts_morph@18.0.0/common/DenoRuntime.ts": "6a7180f0c6e90dcf23ccffc86aa8271c20b1c4f34c570588d08a45880b7e172d",

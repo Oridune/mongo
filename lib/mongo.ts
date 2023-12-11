@@ -10,6 +10,7 @@ import {
   EndSessionOptions,
 } from "../deps.ts";
 import { MongoModel, ModelOptions } from "./model.ts";
+import { performanceStats } from "./utility.ts";
 
 export type TCacheValue = object | number | boolean | string | null | undefined;
 
@@ -20,6 +21,8 @@ export type TCacheSetter = (
 ) => void | Promise<void>;
 export type TCacheGetter = (key: string) => TCacheValue | Promise<TCacheValue>;
 export type TCacheDelete = (key: string) => void | Promise<void>;
+
+export type TCacheOptions = { key: string; ttl: number; logs?: boolean };
 
 export class Mongo {
   static enableLogs = false;
@@ -204,12 +207,31 @@ export class Mongo {
 
   static async useCaching<T extends TCacheValue>(
     callback: () => Promise<T>,
-    cache?: { key: string; ttl: number }
+    cache?: TCacheOptions
   ) {
-    const Cached = cache?.key ? await this.getCache(cache.key) : undefined;
+    const Cached = cache?.key
+      ? (
+          await performanceStats(
+            `cache-fetch:${cache.key}`,
+            () => this.getCache(cache.key),
+            {
+              enabled: cache.logs,
+              logs: cache.logs,
+            }
+          )
+        ).result
+      : undefined;
+
     const Result = (Cached ?? (await callback())) as T;
 
-    if (cache?.key && Cached === undefined && Result !== undefined)
+    const EmptyResults = [null, undefined];
+
+    if (
+      cache?.key &&
+      EmptyResults.includes(Cached as any) &&
+      Result !== undefined &&
+      Result !== Cached
+    )
       await this.setCache(cache.key, Result, cache.ttl ?? 0);
 
     return Result;

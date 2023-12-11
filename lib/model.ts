@@ -20,7 +20,7 @@ import {
   UpdateFilter,
   CommandOperationOptions,
 } from "../deps.ts";
-import { Mongo } from "./mongo.ts";
+import { Mongo, TCacheOptions } from "./mongo.ts";
 import { MongoHooks } from "./hooks.ts";
 import { InputDocument, OutputDocument, circularReplacer } from "./utility.ts";
 import {
@@ -211,7 +211,7 @@ export class MongoModel<
 
   public find(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: { key: string; ttl: number } }
+    options?: AggregateOptions & { cache?: TCacheOptions }
   ) {
     return new FindQuery(this, options).filter(filter as any);
   }
@@ -225,7 +225,7 @@ export class MongoModel<
           $caseSensitive?: boolean;
           $diacriticSensitive?: boolean;
         },
-    options?: AggregateOptions & { cache?: { key: string; ttl: number } }
+    options?: AggregateOptions & { cache?: TCacheOptions }
   ) {
     return new FindQuery(this, options).filter({
       ...(searchTerm
@@ -241,7 +241,7 @@ export class MongoModel<
 
   public findOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: { key: string; ttl: number } }
+    options?: AggregateOptions & { cache?: TCacheOptions }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -254,7 +254,7 @@ export class MongoModel<
 
   public count(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: CountDocumentsOptions & { cache?: { key: string; ttl: number } }
+    options?: CountDocumentsOptions & { cache?: TCacheOptions }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -271,7 +271,7 @@ export class MongoModel<
 
   public async exists(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: CountDocumentsOptions & { cache?: { key: string; ttl: number } }
+    options?: CountDocumentsOptions & { cache?: TCacheOptions }
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)

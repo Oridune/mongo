@@ -3,7 +3,7 @@ import { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
 import { InputDocument, OutputDocument } from "../utility.ts";
-import { Mongo } from "../mongo.ts";
+import { Mongo, TCacheOptions } from "../mongo.ts";
 
 export type Sorting<T> = Partial<
   Record<"_id" | keyof T, 1 | -1 | (number & {})>
@@ -282,7 +282,7 @@ export class FindQuery<
   constructor(
     protected Model: Model,
     protected Options?: AggregateOptions & {
-      cache?: { key: string; ttl: number };
+      cache?: TCacheOptions;
     }
   ) {
     super(Model);
@@ -342,7 +342,7 @@ export class FindOneQuery<
   constructor(
     protected Model: Model,
     protected Options?: AggregateOptions & {
-      cache?: { key: string; ttl: number };
+      cache?: TCacheOptions;
     }
   ) {
     super(Model);
