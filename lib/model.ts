@@ -462,9 +462,9 @@ export class MongoModel<
   }
 
   public populate<
-    F extends string,
+    F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = M extends MongoModel<any, any, infer R> ? R : never
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
   >(field: F, model: M, options?: PopulateOptions<M>) {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,
@@ -486,9 +486,9 @@ export class MongoModel<
   }
 
   public populateOne<
-    F extends string,
+    F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = M extends MongoModel<any, any, infer R> ? R : never
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
   >(field: F, model: M, options?: PopulateOptions<M>) {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,

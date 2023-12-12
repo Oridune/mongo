@@ -17,8 +17,32 @@ export type Projection<T> = Partial<
   [K: string]: number;
 };
 
-export type PopulatedDocument<Doc, Field extends string, Value> = {
-  [K in keyof Doc]: K extends Field ? Value : Doc[K];
+type NestedPopulatedDocument<
+  Doc,
+  Field extends string,
+  Value,
+  SDoc = Doc extends Array<infer S> ? S : Doc,
+  Result = {
+    [K in keyof SDoc]: K extends Field ? Value : SDoc[K];
+  }
+> = Doc extends Array<any> ? Result[] : Result;
+
+export type PopulatedDocument<
+  Doc,
+  Field extends string,
+  Value,
+  F1 = Field extends `${infer R}.${string}` ? R : Field,
+  F2 = Field extends `${string}.${infer R}` ? R : false
+> = {
+  [K in keyof Doc]: K extends F1
+    ? F2 extends string
+      ? undefined extends Doc[K]
+        ?
+            | NestedPopulatedDocument<Exclude<Doc[K], undefined>, F2, Value>
+            | undefined
+        : NestedPopulatedDocument<Doc[K], F2, Value>
+      : Value
+    : Doc[K];
 };
 
 export type PopulateOptions<
@@ -202,9 +226,9 @@ export class BaseFindQuery<
   }
 
   public populate<
-    F extends string,
+    F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = M extends MongoModel<any, any, infer R> ? R : never
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
   >(field: F, model: M, options?: PopulateOptions<M>) {
     if (!(model instanceof MongoModel))
       throw new Error("Invalid population model!");
@@ -223,9 +247,9 @@ export class BaseFindQuery<
   }
 
   public populateOne<
-    F extends string,
+    F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = M extends MongoModel<any, any, infer R> ? R : never
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
   >(field: F, model: M, options?: PopulateOptions<M>) {
     this.Aggregation.push(
       ...this.createPopulateAggregation(field, model, {
