@@ -343,6 +343,10 @@ export class FindOneQuery<
       this.Options?.cache
     );
 
+    if (!Result.length)
+      if (this.Options?.errorOnNull) throw new Error("Record not found!");
+      else return null as Result;
+
     return (
       await Promise.all(
         Result.map(
@@ -367,6 +371,7 @@ export class FindOneQuery<
     protected Model: Model,
     protected Options?: AggregateOptions & {
       cache?: TCacheOptions;
+      errorOnNull?: boolean;
     }
   ) {
     super(Model);

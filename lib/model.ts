@@ -252,6 +252,18 @@ export class MongoModel<
     return new FindOneQuery(this, options).filter(Filter);
   }
 
+  public findOneOrFail(
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    options?: AggregateOptions & { cache?: TCacheOptions }
+  ) {
+    return this.findOne(filter, {
+      ...options,
+      // deno-lint-ignore ban-ts-comment
+      // @ts-ignore
+      errorOnNull: true,
+    });
+  }
+
   public count(
     filter: Filter<InputDocument<InputShape>> = {},
     options?: CountDocumentsOptions & { cache?: TCacheOptions }
@@ -420,6 +432,18 @@ export class MongoModel<
     return new DeleteOneQuery(this, options).filter(Filter);
   }
 
+  public async deleteOneOrFail(
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    options?: DeleteOptions
+  ) {
+    const Result = await this.deleteOne(filter, options);
+
+    if (!Result.deletedCount)
+      throw new Error("Record deletion has been failed!");
+
+    return Result;
+  }
+
   public findAndDeleteOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions
@@ -438,6 +462,18 @@ export class MongoModel<
     options?: DeleteOptions
   ) {
     return new DeleteManyQuery(this, options).filter(filter as any);
+  }
+
+  public async deleteManyOrFail(
+    filter: Filter<InputDocument<InputShape>> = {},
+    options?: DeleteOptions
+  ) {
+    const Result = await this.deleteMany(filter, options);
+
+    if (!Result.deletedCount)
+      throw new Error("Record deletion has been failed!");
+
+    return Result;
   }
 
   public findAndDeleteMany(
