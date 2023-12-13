@@ -319,6 +319,19 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  public async updateOneOrFail<F = InputDocument<InputShape>>(
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<F> & Partial<F>,
+    options?: UpdateOptions & { validate?: boolean }
+  ) {
+    const Result = await this.updateOne<F>(filter, updates, options);
+
+    if (!Result.modifiedCount)
+      throw new Error("Record update has been failed!");
+
+    return Result;
+  }
+
   public updateAndFindOne<F = InputDocument<InputShape>>(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?: UpdateFilter<F> & Partial<F>,
@@ -359,6 +372,19 @@ export class MongoModel<
     return new UpdateManyQuery(this, options)
       .filter(filter as any)
       .updates(updates as any);
+  }
+
+  public async updateManyOrFail<F = InputDocument<InputShape>>(
+    filter: Filter<InputDocument<InputShape>> = {},
+    updates?: UpdateFilter<F> & Partial<F>,
+    options?: UpdateOptions & { validate?: boolean }
+  ) {
+    const Result = await this.updateMany<F>(filter, updates, options);
+
+    if (!Result.modifiedCount)
+      throw new Error("Record update has been failed!");
+
+    return Result;
   }
 
   public updateAndFindMany<F = InputDocument<InputShape>>(
