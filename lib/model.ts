@@ -256,12 +256,22 @@ export class MongoModel<
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: TCacheOptions }
   ) {
-    return this.findOne(filter, {
+    const Query = this.findOne(filter, {
       ...options,
       // deno-lint-ignore ban-ts-comment
       // @ts-ignore
       errorOnNull: true,
     });
+
+    type UnnulledFindOneQuery<T> = T extends FindOneQuery<
+      infer M,
+      infer S,
+      infer R
+    >
+      ? FindOneQuery<M, S, Exclude<R, null>>
+      : never;
+
+    return Query as UnnulledFindOneQuery<typeof Query>;
   }
 
   public count(
