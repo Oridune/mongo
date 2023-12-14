@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { FindQuery, FindOneQuery } from "../lib/query/find.ts";
 import { Mongo, ObjectId } from "../mod.ts";
-import e from "../validator.ts";
+import e, { ValidationException } from "../validator.ts";
 
 const Cache = new Map<
   string,
@@ -262,6 +262,26 @@ Deno.test({
           Post.createdAt.toString() !== PostsData[0].createdAt.toString())
       )
         throw new Error(`Hook didn't update the modification time!`);
+
+      await UserModel.updateOne(User2Id, {
+        $push: {
+          followers: User1Id,
+        },
+      }).catch((error) => {
+        console.error(error);
+        throw error;
+      });
+
+      await UserModel.updateMany(
+        {},
+        {
+          $push: {
+            activity: {
+              description: "This is a test...",
+            },
+          },
+        }
+      ).catch((error) => e.instanceOf(ValidationException).validate(error));
     });
 
     await t.step("Delete", async () => {

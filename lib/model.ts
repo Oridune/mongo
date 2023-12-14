@@ -91,10 +91,12 @@ export class MongoModel<
     if (!(Schema instanceof ObjectValidator))
       throw new Error(`Invalid or unexpected schema passed!`);
 
-    return Schema;
+    return e.deepCast(Schema);
   }
 
-  public getUpdateSchema: () => ObjectValidator<any, any, any>;
+  public getUpdateSchema() {
+    return this.getSchema();
+  }
 
   constructor(
     public Name: string,
@@ -102,8 +104,6 @@ export class MongoModel<
     public Options: ModelOptions = {}
   ) {
     super();
-
-    this.getUpdateSchema = () => e.deepCast(e.deepPartial(this.getSchema()));
   }
 
   get database() {

@@ -4,6 +4,8 @@ import {
   UpdateFilter,
   UpdateOptions,
   UpdateResult,
+  PushOperator,
+  SetFields,
 } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
@@ -13,6 +15,7 @@ import {
   dotNotationToDeepObject,
   pickProps,
 } from "../utility.ts";
+import e from "../../validator.ts";
 
 export class BaseUpdateQuery<
   Model extends MongoModel<any, any, any>,
@@ -22,6 +25,48 @@ export class BaseUpdateQuery<
   protected Filters: Record<string, any> = {};
   protected Updates: UpdateFilter<InputDocument<Shape>> = {};
 
+  protected async validatePush(
+    data: PushOperator<InputDocument<Shape>> | SetFields<InputDocument<Shape>>
+  ) {
+    const ModifierKeys: string[] = [];
+    const InsertKeys: string[] = [];
+
+    for (const [Key, Value] of Object.entries(data))
+      if (
+        typeof Value === "object" &&
+        !!Value &&
+        !!Object.keys(Value).find((_) =>
+          /^\$(each|slice|position|sort)/.test(_)
+        )
+      )
+        ModifierKeys.push(Key);
+      else InsertKeys.push(Key);
+
+    return {
+      ...assignDeepValues(
+        InsertKeys,
+        await e
+          .deepPartial(this.Model.getUpdateSchema())
+          .validate(dotNotationToDeepObject(pickProps(InsertKeys, data))),
+        (value, key) =>
+          !(data[key] instanceof Array) && value instanceof Array
+            ? value[0]
+            : value
+      ),
+      ...assignDeepValues(
+        ModifierKeys,
+        await e
+          .partial(this.Model.getUpdateSchema())
+          .validate(
+            dotNotationToDeepObject(
+              pickProps(ModifierKeys, data, (value) => value.$each)
+            )
+          ),
+        (value, key) => ({ ...data[key], $each: value })
+      ),
+    };
+  }
+
   protected async validate<T extends UpdateFilter<InputDocument<Shape>>>(
     updates: T,
     options?: { validate?: boolean }
@@ -30,56 +75,24 @@ export class BaseUpdateQuery<
       if (typeof updates.$set === "object")
         updates.$set = assignDeepValues(
           Object.keys(updates.$set),
-          await this.Model.getUpdateSchema().validate(
-            dotNotationToDeepObject(updates.$set)
-          )
+          await e
+            .deepPartial(this.Model.getUpdateSchema())
+            .validate(dotNotationToDeepObject(updates.$set))
         );
 
       if (typeof updates.$setOnInsert === "object")
         updates.$setOnInsert = assignDeepValues(
           Object.keys(updates.$setOnInsert),
-          await this.Model.getUpdateSchema().validate(
-            dotNotationToDeepObject(updates.$setOnInsert)
-          )
+          await e
+            .deepPartial(this.Model.getUpdateSchema())
+            .validate(dotNotationToDeepObject(updates.$setOnInsert))
         );
 
-      if (typeof updates.$push === "object") {
-        const ModifierKeys: string[] = [];
-        const InsertKeys: string[] = [];
+      if (typeof updates.$push === "object")
+        updates.$push = await this.validatePush(updates.$push);
 
-        for (const [Key, Value] of Object.entries(updates.$push))
-          if (
-            typeof Value === "object" &&
-            !!Value &&
-            !!Object.keys(Value).find((_) =>
-              /^\$(each|slice|position|sort)/.test(_)
-            )
-          )
-            ModifierKeys.push(Key);
-          else InsertKeys.push(Key);
-
-        updates.$push = {
-          ...assignDeepValues(
-            InsertKeys,
-            await this.Model.getUpdateSchema().validate(
-              dotNotationToDeepObject(pickProps(InsertKeys, updates.$push))
-            ),
-            (value, key) =>
-              !(updates.$push![key] instanceof Array) && value instanceof Array
-                ? value[0]
-                : value
-          ),
-          ...assignDeepValues(
-            ModifierKeys,
-            await this.Model.getUpdateSchema().validate(
-              dotNotationToDeepObject(
-                pickProps(ModifierKeys, updates.$push, (value) => value.$each)
-              )
-            ),
-            (value, key) => ({ ...updates.$push![key], $each: value })
-          ),
-        };
-      }
+      if (typeof updates.$addToSet === "object")
+        updates.$addToSet = await this.validatePush(updates.$addToSet);
     }
 
     return updates;
