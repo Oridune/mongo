@@ -186,7 +186,6 @@ export class BaseFindQuery<
               },
             },
             { $unset: [`isNull_${ParentField}`, `isArray_${ParentField}`] },
-            { $sort: { _id: 1 } },
           ]
         : []),
     ];
@@ -197,7 +196,9 @@ export class BaseFindQuery<
   }
 
   public filter(filter: Filter<InputDocument<Shape>>) {
-    this.Aggregation.push({ $match: filter });
+    if (typeof filter === "object" && Object.keys(filter).length)
+      this.Aggregation.push({ $match: filter });
+
     return this;
   }
 
