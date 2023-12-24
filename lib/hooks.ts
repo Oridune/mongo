@@ -64,7 +64,9 @@ export type THooksDetails<InputShape, OutputShape> = {
         event: "update";
         method: "updateOne" | "updateMany";
         updates: UpdateFilter<InputDocument<InputShape>>;
-        data: UpdateResult<InputDocument<InputShape>>;
+        data: UpdateResult<InputDocument<InputShape>> & {
+          modifications: InputDocument<InputShape>;
+        };
       };
       returns: void | Promise<void>;
     };

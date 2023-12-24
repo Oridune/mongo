@@ -13,6 +13,7 @@ import {
   InputDocument,
   assignDeepValues,
   dotNotationToDeepObject,
+  mongodbModifiersToObject,
   pickProps,
 } from "../utility.ts";
 import e from "../../validator.ts";
@@ -25,7 +26,7 @@ export class BaseUpdateQuery<
   protected Filters: Record<string, any> = {};
   protected Updates: UpdateFilter<InputDocument<Shape>> = {};
 
-  protected async validatePush(
+  protected async validatePushOrSet(
     data: PushOperator<InputDocument<Shape>> | SetFields<InputDocument<Shape>>
   ) {
     const ModifierKeys: string[] = [];
@@ -89,10 +90,10 @@ export class BaseUpdateQuery<
         );
 
       if (typeof updates.$push === "object")
-        updates.$push = await this.validatePush(updates.$push);
+        updates.$push = await this.validatePushOrSet(updates.$push);
 
       if (typeof updates.$addToSet === "object")
-        updates.$addToSet = await this.validatePush(updates.$addToSet);
+        updates.$addToSet = await this.validatePushOrSet(updates.$addToSet);
     }
 
     return updates;
@@ -142,7 +143,9 @@ export class BaseUpdateQuery<
 export class UpdateOneQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = UpdateResult<InputDocument<Shape>>
+  Result = UpdateResult<InputDocument<Shape>> & {
+    modifications: InputDocument<Shape>;
+  }
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
     for (const Hook of this.Model["PreHooks"].update ?? [])
@@ -157,11 +160,18 @@ export class UpdateOneQuery<
 
     this.Model["log"]("updateOne", this.Filters, Updates, this.Options);
 
-    const Result = (await this.Model.collection.updateOne(
-      this.Filters,
-      Updates,
-      this.Options
-    )) as Result;
+    const Result = {
+      ...(await this.Model.collection.updateOne(
+        this.Filters,
+        Updates,
+        this.Options
+      )),
+      get modifications() {
+        return dotNotationToDeepObject(
+          mongodbModifiersToObject(Updates as any)
+        );
+      },
+    } as Result;
 
     for (const Hook of this.Model["PostHooks"].update ?? [])
       await Hook({
@@ -185,7 +195,9 @@ export class UpdateOneQuery<
 export class UpdateManyQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = UpdateResult<InputDocument<Shape>>
+  Result = UpdateResult<InputDocument<Shape>> & {
+    modifications: InputDocument<Shape>;
+  }
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
     for (const Hook of this.Model["PreHooks"].update ?? [])
@@ -200,11 +212,18 @@ export class UpdateManyQuery<
 
     this.Model["log"]("updateMany", this.Filters, Updates, this.Options);
 
-    const Result = (await this.Model.collection.updateMany(
-      this.Filters,
-      Updates as any,
-      this.Options
-    )) as Result;
+    const Result = {
+      ...(await this.Model.collection.updateMany(
+        this.Filters,
+        Updates as any,
+        this.Options
+      )),
+      get modifications() {
+        return dotNotationToDeepObject(
+          mongodbModifiersToObject(Updates as any)
+        );
+      },
+    } as Result;
 
     for (const Hook of this.Model["PostHooks"].update ?? [])
       await Hook({

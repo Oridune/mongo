@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { type ObjectId } from "../deps.ts";
+import { type UpdateFilter, type ObjectId, type Document } from "../deps.ts";
 import { type IsObject as _IsObject } from "../validator.ts";
 
 type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
@@ -185,4 +185,22 @@ export const performanceStats = async <T>(
     result: Result,
     timeMs: TimeMs,
   };
+};
+
+export const mongodbModifiersToObject = (
+  updates: UpdateFilter<Document>,
+  result: Record<string, any> = {}
+) => {
+  if (typeof updates.$set === "object") result = updates.$set;
+
+  for (const Mode of ["$push", "$addToSet"])
+    if (typeof updates[Mode] === "object")
+      for (const SetterKey of Object.keys(updates[Mode]))
+        result[SetterKey] = (() => {
+          const Target = updates[Mode][SetterKey];
+          if ("$each" in Target) return Target.$each;
+          return [Target];
+        })();
+
+  return result;
 };

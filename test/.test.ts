@@ -263,7 +263,7 @@ Deno.test({
       )
         throw new Error(`Hook didn't update the modification time!`);
 
-      await UserModel.updateOne(User2Id, {
+      const { modifications } = await UserModel.updateOne(User2Id, {
         $push: {
           followers: User1Id,
         },
@@ -271,6 +271,14 @@ Deno.test({
         console.error(error);
         throw error;
       });
+
+      await e
+        .partial(UserSchema)
+        .validate(modifications)
+        .catch((error) => {
+          console.error(error);
+          throw error;
+        });
 
       await UserModel.updateMany(
         {},
