@@ -114,28 +114,42 @@ export const dotNotationToDeepObject = (obj: Record<string, any>) => {
 export const assignDeepValues = (
   keys: string[],
   deepObject: any,
-  modifier?: (value: any, key: string) => any
+  options?: {
+    modifier?: (value: any, key: string, parent: any) => any;
+    resolver?: (value: any, key: string, parent: any) => any;
+  }
 ) => {
   const Result: any = {};
 
   keys.forEach((key) => {
     let value = deepObject;
+    let parent: any = undefined;
 
     const NestedKeys = key.split(".");
 
     let exists = true;
 
-    for (const NestedKey of NestedKeys)
-      if (value[NestedKey] !== undefined) value = value[NestedKey];
-      else {
+    for (const NestedKey of NestedKeys) {
+      const Target =
+        typeof options?.resolver === "function"
+          ? options.resolver(value[NestedKey], NestedKey, value)
+          : value[NestedKey];
+
+      if (Target !== undefined) {
+        parent = value;
+        value = Target;
+      } else {
         exists = false;
         break;
       }
+    }
 
-    if (exists)
-      Result[key] =
-        typeof modifier === "function" ? modifier(value, key) : value;
-    else Result[key] = undefined;
+    const Value = exists ? value : undefined;
+
+    Result[key] =
+      typeof options?.modifier === "function"
+        ? options?.modifier(Value, key, parent)
+        : Value;
   });
 
   return Result;
@@ -191,7 +205,14 @@ export const mongodbModifiersToObject = (
   updates: UpdateFilter<Document>,
   result: Record<string, any> = {}
 ) => {
-  if (typeof updates.$set === "object") result = updates.$set;
+  if (typeof updates.$set === "object") {
+    result = updates.$set;
+
+    for (const $ of Object.keys(result).filter((key) => /\.\$\.?/.test(key))) {
+      result[$.replace("$", "0")] = result[$];
+      delete result[$];
+    }
+  }
 
   for (const Mode of ["$push", "$addToSet"])
     if (typeof updates[Mode] === "object")

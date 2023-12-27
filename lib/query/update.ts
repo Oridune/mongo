@@ -49,10 +49,12 @@ export class BaseUpdateQuery<
         await e
           .deepPartial(this.Model.getUpdateSchema())
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data))),
-        (value, key) =>
-          !(data[key] instanceof Array) && value instanceof Array
-            ? value[0]
-            : value
+        {
+          modifier: (value, key) =>
+            !(data[key] instanceof Array) && value instanceof Array
+              ? value[0]
+              : value,
+        }
       ),
       ...assignDeepValues(
         ModifierKeys,
@@ -63,7 +65,7 @@ export class BaseUpdateQuery<
               pickProps(ModifierKeys, data, (value) => value.$each)
             )
           ),
-        (value, key) => ({ ...data[key], $each: value })
+        { modifier: (value, key) => ({ ...data[key], $each: value }) }
       ),
     };
   }
@@ -78,7 +80,13 @@ export class BaseUpdateQuery<
           Object.keys(updates.$set),
           await e
             .deepPartial(this.Model.getUpdateSchema())
-            .validate(dotNotationToDeepObject(updates.$set))
+            .validate(dotNotationToDeepObject(updates.$set)),
+          {
+            resolver: (value, key, parent) => {
+              if (key === "$") return parent[0];
+              return value;
+            },
+          }
         );
 
       if (typeof updates.$setOnInsert === "object")
@@ -86,7 +94,13 @@ export class BaseUpdateQuery<
           Object.keys(updates.$setOnInsert),
           await e
             .deepPartial(this.Model.getUpdateSchema())
-            .validate(dotNotationToDeepObject(updates.$setOnInsert))
+            .validate(dotNotationToDeepObject(updates.$setOnInsert)),
+          {
+            resolver: (value, key, parent) => {
+              if (key === "$") return parent[0];
+              return value;
+            },
+          }
         );
 
       if (typeof updates.$push === "object")
