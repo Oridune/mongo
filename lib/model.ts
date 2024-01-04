@@ -6,7 +6,6 @@ import e, {
   inferOutput,
 } from "../validator.ts";
 import {
-  Db,
   CollectionOptions,
   ObjectId,
   InsertOneOptions,
@@ -58,7 +57,6 @@ export class MongoModel<
   InputShape extends object = inferInput<Schema>,
   OutputShape extends object = inferOutput<Schema>
 > extends MongoHooks<InputShape, OutputShape> {
-  protected DatabaseInstance?: Db;
   protected DatabaseName: string;
   protected FullCollectionName: string;
   protected PopulateConfig?: {
@@ -129,7 +127,7 @@ export class MongoModel<
     if (!Mongo.client || !Mongo.isConnected())
       throw new Error(`Please connect to the database!`);
 
-    return (this.DatabaseInstance ??= Mongo.client.db(this.Options.database));
+    return Mongo.client.db(this.Options.database);
   }
 
   get collection() {
