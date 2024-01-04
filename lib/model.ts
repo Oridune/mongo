@@ -6,6 +6,7 @@ import e, {
   inferOutput,
 } from "../validator.ts";
 import {
+  Db,
   CollectionOptions,
   ObjectId,
   InsertOneOptions,
@@ -57,6 +58,17 @@ export class MongoModel<
   InputShape extends object = inferInput<Schema>,
   OutputShape extends object = inferOutput<Schema>
 > extends MongoHooks<InputShape, OutputShape> {
+  protected DatabaseInstance?: Db;
+  protected DatabaseName: string;
+  protected FullCollectionName: string;
+  protected PopulateConfig?: {
+    field: string;
+    model: MongoModel<any, any, any>;
+    options?: PopulateOptions<any> & {
+      unwind?: boolean;
+    };
+  };
+
   protected log(method: string, ...args: any[]) {
     if (this.Options.logs || Mongo.enableLogs)
       console.info(
@@ -81,17 +93,11 @@ export class MongoModel<
       );
   }
 
-  protected PopulateConfig?: {
-    field: string;
-    model: MongoModel<any, any, any>;
-    options?: PopulateOptions<any> & {
-      unwind?: boolean;
-    };
-  };
-
   public getSchema() {
     const Schema =
-      typeof this.Schema === "function" ? this.Schema() : this.Schema;
+      typeof this.ModelSchema === "function"
+        ? this.ModelSchema()
+        : this.ModelSchema;
 
     if (!(Schema instanceof ObjectValidator))
       throw new Error(`Invalid or unexpected schema passed!`);
@@ -110,17 +116,20 @@ export class MongoModel<
 
   constructor(
     public Name: string,
-    public Schema: Schema | (() => Schema),
+    public ModelSchema: Schema | (() => Schema),
     public Options: ModelOptions = {}
   ) {
     super();
+
+    this.DatabaseName = this.database.databaseName;
+    this.FullCollectionName = `${this.DatabaseName}.${this.Name}`;
   }
 
   get database() {
     if (!Mongo.client || !Mongo.isConnected())
       throw new Error(`Please connect to the database!`);
 
-    return Mongo.client.db(this.Options.database);
+    return (this.DatabaseInstance ??= Mongo.client.db(this.Options.database));
   }
 
   get collection() {
@@ -168,7 +177,12 @@ export class MongoModel<
     this.log("create", doc, options);
 
     const Doc =
-      options?.validate === false ? doc : await this.getSchema().validate(doc);
+      options?.validate === false
+        ? doc
+        : await this.getSchema().validate(doc, {
+            name: this.FullCollectionName,
+          });
+
     const Ack = await this.collection.insertOne(Doc, options);
     const Result = { _id: Ack.insertedId, ...Doc };
 
@@ -201,7 +215,10 @@ export class MongoModel<
     const Docs =
       options?.validate === false
         ? docs
-        : await e.array(this.getSchema()).validate(docs);
+        : await e.array(this.getSchema()).validate(docs, {
+            name: this.FullCollectionName,
+          });
+
     const Ack = await this.collection.insertMany(Docs, options);
 
     return Promise.all(
@@ -528,7 +545,10 @@ export class MongoModel<
 
     this.log("replaceOne", Filter, doc, options);
 
-    const Doc = await this.getSchema().validate(doc);
+    const Doc = await this.getSchema().validate(doc, {
+      name: this.FullCollectionName,
+    });
+
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
       | InputDocument<InputShape>
       | UpdateResult<InputDocument<InputShape>>;
@@ -550,7 +570,7 @@ export class MongoModel<
   >(field: F, model: M, options?: PopulateOptions<M>) {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,
-      this.Schema,
+      this.ModelSchema,
       this.Options
     );
 
@@ -574,7 +594,7 @@ export class MongoModel<
   >(field: F, model: M, options?: PopulateOptions<M>) {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,
-      this.Schema,
+      this.ModelSchema,
       this.Options
     );
 

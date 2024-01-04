@@ -191,7 +191,7 @@ export class BaseFindQuery<
     ];
   }
 
-  constructor(protected Model: Model) {
+  constructor(protected DatabaseModel: Model) {
     super();
   }
 
@@ -275,18 +275,18 @@ export class FindQuery<
   Result extends any[] = OutputDocument<Shape>[]
 > extends BaseFindQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.Model["PreHooks"].read ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].read ?? [])
       await Hook({
         event: "read",
         method: "find",
         aggregationPipeline: this.Aggregation,
       });
 
-    this.Model["log"]("find", this.Aggregation, this.Options);
+    this.DatabaseModel["log"]("find", this.Aggregation, this.Options);
 
     const Result = await Mongo.useCaching(
       () =>
-        this.Model.collection
+        this.DatabaseModel.collection
           .aggregate(this.Aggregation, this.Options)
           .toArray() as Promise<Result>,
       this.Options?.cache
@@ -295,7 +295,9 @@ export class FindQuery<
     return Promise.all(
       Result.map(
         (doc) =>
-          this.Model["PostHooks"].read?.reduce<Promise<OutputDocument<Shape>>>(
+          this.DatabaseModel["PostHooks"].read?.reduce<
+            Promise<OutputDocument<Shape>>
+          >(
             async (doc, hook) =>
               hook({ event: "read", method: "find", data: await doc }) as any,
             Promise.resolve(doc)
@@ -305,12 +307,12 @@ export class FindQuery<
   }
 
   constructor(
-    protected Model: Model,
+    protected DatabaseModel: Model,
     protected Options?: AggregateOptions & {
       cache?: TCacheOptions;
     }
   ) {
-    super(Model);
+    super(DatabaseModel);
   }
 }
 
@@ -327,18 +329,18 @@ export class FindOneQuery<
       this.LimitApplied = true;
     }
 
-    for (const Hook of this.Model["PreHooks"].read ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].read ?? [])
       await Hook({
         event: "read",
         method: "findOne",
         aggregationPipeline: this.Aggregation,
       });
 
-    this.Model["log"]("findOne", this.Aggregation, this.Options);
+    this.DatabaseModel["log"]("findOne", this.Aggregation, this.Options);
 
     const Result = await Mongo.useCaching(
       () =>
-        this.Model.collection
+        this.DatabaseModel.collection
           .aggregate(this.Aggregation, this.Options)
           .toArray() as Promise<OutputDocument<Shape>[]>,
       this.Options?.cache
@@ -352,7 +354,7 @@ export class FindOneQuery<
       await Promise.all(
         Result.map(
           (doc) =>
-            this.Model["PostHooks"].read?.reduce<
+            this.DatabaseModel["PostHooks"].read?.reduce<
               Promise<OutputDocument<Shape>>
             >(
               async (doc, hook) =>
@@ -369,12 +371,12 @@ export class FindOneQuery<
   }
 
   constructor(
-    protected Model: Model,
+    protected DatabaseModel: Model,
     protected Options?: AggregateOptions & {
       cache?: TCacheOptions;
       errorOnNull?: boolean;
     }
   ) {
-    super(Model);
+    super(DatabaseModel);
   }
 }

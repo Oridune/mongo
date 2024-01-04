@@ -34,14 +34,14 @@ export class DeleteOneQuery<
         filter: this.Filters,
       });
 
-    this.Model["log"]("deleteOne", this.Filters, this.Options);
+    this.DatabaseModel["log"]("deleteOne", this.Filters, this.Options);
 
-    const Result = (await this.Model.collection.deleteOne(
+    const Result = (await this.DatabaseModel.collection.deleteOne(
       this.Filters,
       this.Options
     )) as Result;
 
-    for (const Hook of this.Model["PostHooks"].delete ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].delete ?? [])
       await Hook({
         event: "delete",
         method: "deleteOne",
@@ -51,8 +51,11 @@ export class DeleteOneQuery<
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: DeleteOptions) {
-    super(Model);
+  constructor(
+    protected DatabaseModel: Model,
+    protected Options?: DeleteOptions
+  ) {
+    super(DatabaseModel);
   }
 }
 
@@ -62,21 +65,21 @@ export class DeleteManyQuery<
   Result = DeleteResult
 > extends BaseDeleteQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.Model["PreHooks"].delete ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].delete ?? [])
       await Hook({
         event: "delete",
         method: "deleteMany",
         filter: this.Filters,
       });
 
-    this.Model["log"]("deleteMany", this.Filters, this.Options);
+    this.DatabaseModel["log"]("deleteMany", this.Filters, this.Options);
 
-    const Result = (await this.Model.collection.deleteMany(
+    const Result = (await this.DatabaseModel.collection.deleteMany(
       this.Filters,
       this.Options
     )) as Result;
 
-    for (const Hook of this.Model["PostHooks"].delete ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].delete ?? [])
       await Hook({
         event: "delete",
         method: "deleteMany",
@@ -86,7 +89,10 @@ export class DeleteManyQuery<
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: DeleteOptions) {
-    super(Model);
+  constructor(
+    protected DatabaseModel: Model,
+    protected Options?: DeleteOptions
+  ) {
+    super(DatabaseModel);
   }
 }

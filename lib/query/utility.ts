@@ -12,11 +12,11 @@ export class UpdateAndFindOneQuery<
   Result = OutputDocument<Shape> | null
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    await new UpdateOneQuery(this.Model, this.Options)
+    await new UpdateOneQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
 
-    return (await new FindOneQuery(this.Model, this.Options).filter(
+    return (await new FindOneQuery(this.DatabaseModel, this.Options).filter(
       this.Filters
     )) as Result;
   }
@@ -32,11 +32,12 @@ export class FindAndUpdateOneQuery<
   Result = OutputDocument<Shape> | null
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    const Result = (await new FindOneQuery(this.Model, this.Options).filter(
-      this.Filters
-    )) as Result;
+    const Result = (await new FindOneQuery(
+      this.DatabaseModel,
+      this.Options
+    ).filter(this.Filters)) as Result;
 
-    await new UpdateOneQuery(this.Model, this.Options)
+    await new UpdateOneQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
 
@@ -54,11 +55,11 @@ export class UpdateAndFindManyQuery<
   Result = OutputDocument<Shape>[]
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    await new UpdateManyQuery(this.Model, this.Options)
+    await new UpdateManyQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
 
-    return (await new FindQuery(this.Model, this.Options).filter(
+    return (await new FindQuery(this.DatabaseModel, this.Options).filter(
       this.Filters
     )) as Result;
   }
@@ -74,19 +75,23 @@ export class FindAndUpdateManyQuery<
   Result = OutputDocument<Shape>[]
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    const Result = (await new FindQuery(this.Model, this.Options).filter(
-      this.Filters
-    )) as Result;
+    const Result = (await new FindQuery(
+      this.DatabaseModel,
+      this.Options
+    ).filter(this.Filters)) as Result;
 
-    await new UpdateManyQuery(this.Model, this.Options)
+    await new UpdateManyQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
 
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: UpdateOptions) {
-    super(Model);
+  constructor(
+    protected DatabaseModel: Model,
+    protected Options?: UpdateOptions
+  ) {
+    super(DatabaseModel);
   }
 }
 
@@ -96,17 +101,23 @@ export class FindAndDeleteOneQuery<
   Result = OutputDocument<Shape> | null
 > extends BaseDeleteQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    const Result = (await new FindOneQuery(this.Model, this.Options).filter(
-      this.Filters
-    )) as Result;
+    const Result = (await new FindOneQuery(
+      this.DatabaseModel,
+      this.Options
+    ).filter(this.Filters)) as Result;
 
-    await new DeleteOneQuery(this.Model, this.Options).filter(this.Filters);
+    await new DeleteOneQuery(this.DatabaseModel, this.Options).filter(
+      this.Filters
+    );
 
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: DeleteOptions) {
-    super(Model);
+  constructor(
+    protected DatabaseModel: Model,
+    protected Options?: DeleteOptions
+  ) {
+    super(DatabaseModel);
   }
 }
 
@@ -116,16 +127,22 @@ export class FindAndDeleteManyQuery<
   Result = OutputDocument<Shape>[]
 > extends BaseDeleteQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    const Result = (await new FindQuery(this.Model, this.Options).filter(
-      this.Filters
-    )) as Result;
+    const Result = (await new FindQuery(
+      this.DatabaseModel,
+      this.Options
+    ).filter(this.Filters)) as Result;
 
-    await new DeleteManyQuery(this.Model, this.Options).filter(this.Filters);
+    await new DeleteManyQuery(this.DatabaseModel, this.Options).filter(
+      this.Filters
+    );
 
     return Result;
   }
 
-  constructor(protected Model: Model, protected Options?: DeleteOptions) {
-    super(Model);
+  constructor(
+    protected DatabaseModel: Model,
+    protected Options?: DeleteOptions
+  ) {
+    super(DatabaseModel);
   }
 }

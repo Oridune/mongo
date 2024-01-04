@@ -47,8 +47,10 @@ export class BaseUpdateQuery<
       ...assignDeepValues(
         InsertKeys,
         await e
-          .deepPartial(this.Model.getUpdateSchema())
-          .validate(dotNotationToDeepObject(pickProps(InsertKeys, data))),
+          .deepPartial(this.DatabaseModel.getUpdateSchema())
+          .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
+            name: this.DatabaseModel["FullCollectionName"],
+          }),
         {
           modifier: (value, key) =>
             !(data[key] instanceof Array) && value instanceof Array
@@ -59,11 +61,14 @@ export class BaseUpdateQuery<
       ...assignDeepValues(
         ModifierKeys,
         await e
-          .partial(this.Model.getUpdateSchema())
+          .partial(this.DatabaseModel.getUpdateSchema())
           .validate(
             dotNotationToDeepObject(
               pickProps(ModifierKeys, data, (value) => value.$each)
-            )
+            ),
+            {
+              name: this.DatabaseModel["FullCollectionName"],
+            }
           ),
         { modifier: (value, key) => ({ ...data[key], $each: value }) }
       ),
@@ -79,8 +84,10 @@ export class BaseUpdateQuery<
         updates.$set = assignDeepValues(
           Object.keys(updates.$set),
           await e
-            .deepPartial(this.Model.getUpdateSchema())
-            .validate(dotNotationToDeepObject(updates.$set)),
+            .deepPartial(this.DatabaseModel.getUpdateSchema())
+            .validate(dotNotationToDeepObject(updates.$set), {
+              name: this.DatabaseModel["FullCollectionName"],
+            }),
           {
             resolver: (value, key, parent) => {
               if (key === "$") return parent[0];
@@ -93,8 +100,10 @@ export class BaseUpdateQuery<
         updates.$setOnInsert = assignDeepValues(
           Object.keys(updates.$setOnInsert),
           await e
-            .deepPartial(this.Model.getUpdateSchema())
-            .validate(dotNotationToDeepObject(updates.$setOnInsert)),
+            .deepPartial(this.DatabaseModel.getUpdateSchema())
+            .validate(dotNotationToDeepObject(updates.$setOnInsert), {
+              name: this.DatabaseModel["FullCollectionName"],
+            }),
           {
             resolver: (value, key, parent) => {
               if (key === "$") return parent[0];
@@ -113,7 +122,7 @@ export class BaseUpdateQuery<
     return updates;
   }
 
-  constructor(protected Model: Model) {
+  constructor(protected DatabaseModel: Model) {
     super();
   }
 
@@ -162,7 +171,7 @@ export class UpdateOneQuery<
   }
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.Model["PreHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].update ?? [])
       await Hook({
         event: "update",
         method: "updateOne",
@@ -172,10 +181,10 @@ export class UpdateOneQuery<
 
     const Updates = await this.validate(this.Updates, this.Options);
 
-    this.Model["log"]("updateOne", this.Filters, Updates, this.Options);
+    this.DatabaseModel["log"]("updateOne", this.Filters, Updates, this.Options);
 
     const Result = {
-      ...(await this.Model.collection.updateOne(
+      ...(await this.DatabaseModel.collection.updateOne(
         this.Filters,
         Updates,
         this.Options
@@ -187,7 +196,7 @@ export class UpdateOneQuery<
       },
     } as Result;
 
-    for (const Hook of this.Model["PostHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].update ?? [])
       await Hook({
         event: "update",
         method: "updateOne",
@@ -199,10 +208,10 @@ export class UpdateOneQuery<
   }
 
   constructor(
-    protected Model: Model,
+    protected DatabaseModel: Model,
     protected Options?: UpdateOptions & { validate?: boolean }
   ) {
-    super(Model);
+    super(DatabaseModel);
   }
 }
 
@@ -214,7 +223,7 @@ export class UpdateManyQuery<
   }
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.Model["PreHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].update ?? [])
       await Hook({
         event: "update",
         method: "updateOne",
@@ -224,10 +233,15 @@ export class UpdateManyQuery<
 
     const Updates = await this.validate(this.Updates, this.Options);
 
-    this.Model["log"]("updateMany", this.Filters, Updates, this.Options);
+    this.DatabaseModel["log"](
+      "updateMany",
+      this.Filters,
+      Updates,
+      this.Options
+    );
 
     const Result = {
-      ...(await this.Model.collection.updateMany(
+      ...(await this.DatabaseModel.collection.updateMany(
         this.Filters,
         Updates as any,
         this.Options
@@ -239,7 +253,7 @@ export class UpdateManyQuery<
       },
     } as Result;
 
-    for (const Hook of this.Model["PostHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].update ?? [])
       await Hook({
         event: "update",
         method: "updateOne",
@@ -251,9 +265,9 @@ export class UpdateManyQuery<
   }
 
   constructor(
-    protected Model: Model,
+    protected DatabaseModel: Model,
     protected Options?: UpdateOptions & { validate?: boolean }
   ) {
-    super(Model);
+    super(DatabaseModel);
   }
 }
