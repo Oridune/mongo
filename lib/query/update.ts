@@ -49,7 +49,7 @@ export class BaseUpdateQuery<
         await e
           .deepPartial(this.DatabaseModel.getUpdateSchema())
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
-            name: this.DatabaseModel["FullCollectionName"],
+            name: this.DatabaseModel.Name,
           }),
         {
           modifier: (value, key) =>
@@ -67,7 +67,7 @@ export class BaseUpdateQuery<
               pickProps(ModifierKeys, data, (value) => value.$each)
             ),
             {
-              name: this.DatabaseModel["FullCollectionName"],
+              name: this.DatabaseModel.Name,
             }
           ),
         { modifier: (value, key) => ({ ...data[key], $each: value }) }
@@ -86,7 +86,7 @@ export class BaseUpdateQuery<
           await e
             .deepPartial(this.DatabaseModel.getUpdateSchema())
             .validate(dotNotationToDeepObject(updates.$set), {
-              name: this.DatabaseModel["FullCollectionName"],
+              name: this.DatabaseModel.Name,
             }),
           {
             resolver: (value, key, parent) => {
@@ -102,7 +102,7 @@ export class BaseUpdateQuery<
           await e
             .deepPartial(this.DatabaseModel.getUpdateSchema())
             .validate(dotNotationToDeepObject(updates.$setOnInsert), {
-              name: this.DatabaseModel["FullCollectionName"],
+              name: this.DatabaseModel.Name,
             }),
           {
             resolver: (value, key, parent) => {

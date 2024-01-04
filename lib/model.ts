@@ -6,6 +6,7 @@ import e, {
   inferOutput,
 } from "../validator.ts";
 import {
+  Db,
   CollectionOptions,
   ObjectId,
   InsertOneOptions,
@@ -57,8 +58,7 @@ export class MongoModel<
   InputShape extends object = inferInput<Schema>,
   OutputShape extends object = inferOutput<Schema>
 > extends MongoHooks<InputShape, OutputShape> {
-  protected DatabaseName: string;
-  protected FullCollectionName: string;
+  protected DatabaseInstance?: Db;
   protected PopulateConfig?: {
     field: string;
     model: MongoModel<any, any, any>;
@@ -118,16 +118,13 @@ export class MongoModel<
     public Options: ModelOptions = {}
   ) {
     super();
-
-    this.DatabaseName = this.database.databaseName;
-    this.FullCollectionName = `${this.DatabaseName}.${this.Name}`;
   }
 
   get database() {
     if (!Mongo.client || !Mongo.isConnected())
       throw new Error(`Please connect to the database!`);
 
-    return Mongo.client.db(this.Options.database);
+    return (this.DatabaseInstance ??= Mongo.client.db(this.Options.database));
   }
 
   get collection() {
@@ -178,7 +175,7 @@ export class MongoModel<
       options?.validate === false
         ? doc
         : await this.getSchema().validate(doc, {
-            name: this.FullCollectionName,
+            name: this.Name,
           });
 
     const Ack = await this.collection.insertOne(Doc, options);
@@ -214,7 +211,7 @@ export class MongoModel<
       options?.validate === false
         ? docs
         : await e.array(this.getSchema()).validate(docs, {
-            name: this.FullCollectionName,
+            name: this.Name,
           });
 
     const Ack = await this.collection.insertMany(Docs, options);
@@ -544,7 +541,7 @@ export class MongoModel<
     this.log("replaceOne", Filter, doc, options);
 
     const Doc = await this.getSchema().validate(doc, {
-      name: this.FullCollectionName,
+      name: this.Name,
     });
 
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
