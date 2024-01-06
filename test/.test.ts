@@ -94,6 +94,9 @@ Deno.test({
     // Activity Schema
     const ActivitySchema = () =>
       e.object({
+        _id: e
+          .optional(e.instanceOf(ObjectId, { instantiate: true }))
+          .default(() => new ObjectId()),
         description: e.string(),
         user: e.instanceOf(ObjectId, { instantiate: true }),
       });
@@ -101,7 +104,9 @@ Deno.test({
     // User Schema
     const UserSchema = () =>
       e.object({
-        _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+        _id: e
+          .optional(e.instanceOf(ObjectId, { instantiate: true }))
+          .default(() => new ObjectId()),
         username: e.string(),
         password: e.optional(e.string()).default("topSecret"),
         profile: e.object({
@@ -130,6 +135,9 @@ Deno.test({
     // Activity with Populates
     const ActivityWithPopulatesSchema = () =>
       e.object({
+        _id: e
+          .optional(e.instanceOf(ObjectId, { instantiate: true }))
+          .default(() => new ObjectId()),
         description: e.string(),
         user: UserSchema,
       });
@@ -137,7 +145,9 @@ Deno.test({
     // Post Schema
     const PostSchema = () =>
       e.object({
-        _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+        _id: e
+          .optional(e.instanceOf(ObjectId, { instantiate: true }))
+          .default(() => new ObjectId()),
         title: e.string(),
         description: e.string(),
         drafted: e.optional(e.boolean()).default(true),
@@ -290,6 +300,26 @@ Deno.test({
           },
         }
       ).catch((error) => e.instanceOf(ValidationException).validate(error));
+
+      const User = await UserModel.findOne(User2Id);
+
+      if (!User) throw new Error(`Updated user not found!`);
+
+      if (
+        !(User.followers instanceof Array) ||
+        !User.followers.length ||
+        User.followers.filter((v) => !(v instanceof ObjectId)).length
+      )
+        throw new Error(`Updated user has invalid followers!`);
+
+      if (
+        !(User.activity instanceof Array) ||
+        !User.activity.length ||
+        User.activity.filter(
+          (v) => typeof v !== "object" || !("_id" in v) || !("description" in v)
+        ).length
+      )
+        throw new Error(`Updated user has invalid activity!`);
     });
 
     await t.step("Delete", async () => {

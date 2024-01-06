@@ -1,10 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import e, {
-  ObjectValidator,
-  ArrayValidator,
-  inferInput,
-  inferOutput,
-} from "../validator.ts";
+import e, { ObjectValidator, inferInput, inferOutput } from "../validator.ts";
 import {
   Db,
   CollectionOptions,
@@ -100,12 +95,7 @@ export class MongoModel<
     if (!(Schema instanceof ObjectValidator))
       throw new Error(`Invalid or unexpected schema passed!`);
 
-    return e.deepCast(Schema, {
-      eachValidatorOptions: (validator) => {
-        if (validator instanceof ArrayValidator)
-          return { ignoreNanKeys: true, pushNanKeys: true };
-      },
-    });
+    return e.deepCast(Schema);
   }
 
   public getUpdateSchema() {
