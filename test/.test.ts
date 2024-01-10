@@ -73,7 +73,9 @@ Deno.test({
   async fn(t) {
     Mongo.enableLogs = true;
 
-    await Mongo.connect("mongodb://localhost:27017/mongo");
+    const ConnectionString = "mongodb://localhost:27017/mongo";
+
+    await Mongo.connect(ConnectionString);
     await Mongo.drop();
 
     // Setup Caching
@@ -248,6 +250,11 @@ Deno.test({
       });
     });
 
+    // Restart client connection
+    await Mongo.disconnect();
+
+    await Mongo.connect(ConnectionString);
+
     await t.step("Updates", async () => {
       // Wait for a sec to fix the time issue
       await new Promise((_) => setTimeout(_, 1000));
@@ -410,7 +417,7 @@ Deno.test({
         throw new Error(`Transaction commit not working!`);
     });
 
-    Mongo.disconnect();
+    await Mongo.disconnect();
   },
   sanitizeResources: false,
   sanitizeOps: false,

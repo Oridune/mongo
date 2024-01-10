@@ -111,10 +111,17 @@ export class MongoModel<
   }
 
   get database() {
-    if (!Mongo.client || !Mongo.isConnected())
+    if (!Mongo.isConnected())
       throw new Error(`Please connect to the database!`);
 
-    return (this.DatabaseInstance ??= Mongo.client.db(this.Options.database));
+    if (
+      !this.DatabaseInstance ||
+      ("client" in this.DatabaseInstance &&
+        this.DatabaseInstance.client !== Mongo.client!)
+    )
+      return (this.DatabaseInstance = Mongo.client!.db(this.Options.database));
+
+    return this.DatabaseInstance;
   }
 
   get collection() {

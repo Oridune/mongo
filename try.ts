@@ -131,6 +131,9 @@ try {
   //     console.log("Change Detected!", _);
   // })();
 
+  const User1Id = new ObjectId();
+  const User2Id = new ObjectId();
+
   await Mongo.transaction(async (session) => {
     const Post = await PostModel.create(
       {
@@ -139,9 +142,6 @@ try {
       },
       { session }
     );
-
-    const User1Id = new ObjectId();
-    const User2Id = new ObjectId();
 
     await UserModel.createMany(
       [
@@ -235,24 +235,6 @@ try {
 
     // console.timeEnd("fetch");
 
-    await UserModel.updateMany(
-      {},
-      {
-        password: "revealed!",
-        $push: {
-          attachments: {
-            $each: [{ url: null, sizeInBytes: 1 }],
-            $position: 2,
-          },
-          followers: User1Id,
-        },
-        $setOnInsert: {
-          avatar: { url: null },
-        },
-      },
-      { session }
-    );
-
     // console.log(
     // await UserModel.findOne(
     //   {},
@@ -275,6 +257,31 @@ try {
     //   // .populateOne("latestActivity.user", UserModel)
     // );
   });
+
+  await Mongo.disconnect();
+
+  console.log("Connected:", Mongo.isConnected());
+
+  await Mongo.connect("mongodb://localhost:27017/mongo");
+
+  console.log("Connected:", Mongo.isConnected());
+
+  await UserModel.updateMany(
+    {},
+    {
+      password: "revealed!",
+      $push: {
+        attachments: {
+          $each: [{ url: null, sizeInBytes: 1 }],
+          $position: 2,
+        },
+        followers: User1Id,
+      },
+      $setOnInsert: {
+        avatar: { url: null },
+      },
+    }
+  );
 } catch (error) {
   console.log(error);
 }
