@@ -17,7 +17,6 @@ export type TCacheValue = object | number | boolean | string | null | undefined;
 export enum CacheProvider {
   MAP = "map",
   REDIS = "redis",
-  OTHER = "other",
 }
 
 export type TCacheSetter = (
@@ -59,7 +58,8 @@ export class Mongo {
   protected static postDisconnectEvents: Array<() => void | Promise<void>> = [];
 
   protected static cachingMethods?: {
-    provider: CacheProvider;
+    // deno-lint-ignore ban-types
+    provider: CacheProvider | (string & {});
     set: TCacheSetter;
     get: TCacheGetter;
     del: TCacheDelete;
@@ -213,7 +213,8 @@ export class Mongo {
   }
 
   static setCachingMethods(options: {
-    provider: CacheProvider;
+    // deno-lint-ignore ban-types
+    provider: CacheProvider | (string & {});
     setter: TCacheSetter;
     getter: TCacheGetter;
     deleter: TCacheDelete;
