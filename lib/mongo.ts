@@ -59,7 +59,7 @@ export class Mongo {
 
   protected static cachingMethods?: {
     // deno-lint-ignore ban-types
-    provider: CacheProvider | (string & {});
+    provider?: CacheProvider | (string & {});
     set: TCacheSetter;
     get: TCacheGetter;
     del: TCacheDelete;
@@ -214,7 +214,7 @@ export class Mongo {
 
   static setCachingMethods(options: {
     // deno-lint-ignore ban-types
-    provider: CacheProvider | (string & {});
+    provider?: CacheProvider | (string & {});
     setter: TCacheSetter;
     getter: TCacheGetter;
     deleter: TCacheDelete;
