@@ -5,6 +5,7 @@ import {
   UpdateOptions,
   UpdateResult,
   PushOperator,
+  MatchKeysAndValues,
   SetFields,
 } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
@@ -26,7 +27,7 @@ export class BaseUpdateQuery<
   protected Filters: Record<string, any> = {};
   protected Updates: UpdateFilter<InputDocument<Shape>> = {};
 
-  protected async validatePushOrSet(
+  protected async validatePushOrAddToSet(
     data: PushOperator<InputDocument<Shape>> | SetFields<InputDocument<Shape>>
   ) {
     const ModifierKeys: string[] = [];
@@ -75,112 +76,65 @@ export class BaseUpdateQuery<
     };
   }
 
+  protected async validateSet(data: MatchKeysAndValues<InputDocument<Shape>>) {
+    const Keys = Object.keys(data);
+    const IgnoreKeys: string[] = [];
+
+    for (const [Key, Value] of Object.entries(data))
+      if (typeof Value === "object" && !!Value)
+        if (Object.keys(Value).find((_) => /^\$(.+)/.test(_)))
+          IgnoreKeys.push(Key);
+
+    const Schema = this.DatabaseModel.getUpdateSchema({
+      validatorOptions: (validator) => ({
+        allowUnexpectedProps: [
+          ...(validator["Options"]?.allowUnexpectedProps ?? []),
+          ...IgnoreKeys,
+        ],
+      }),
+      eachValidatorOptions: (validator) => {
+        if (validator instanceof ArrayValidator)
+          return {
+            ignoreNanKeys: true,
+            pushNanKeys: true,
+          };
+      },
+    });
+
+    return assignDeepValues(
+      Keys,
+      await e
+        .deepPartial(e.omit(Schema, { keys: IgnoreKeys }))
+        .validate(dotNotationToDeepObject(data), {
+          name: this.DatabaseModel.Name,
+        }),
+      {
+        resolver: (value, key, parent) => {
+          if (key === "$") return parent[0];
+          return value;
+        },
+      }
+    );
+  }
+
   protected async validate<T extends UpdateFilter<InputDocument<Shape>>>(
     updates: T,
     options?: { validate?: boolean }
   ): Promise<T> {
     if (options?.validate !== false) {
-      if (typeof updates.$set === "object") {
-        const Keys = Object.keys(updates.$set);
-        const IgnoreKeys: string[] = [];
+      if (typeof updates.$set === "object")
+        updates.$set = await this.validateSet(updates.$set);
 
-        Object.values(updates.$set).forEach((value, index) => {
-          if (
-            typeof value === "object" &&
-            value !== null &&
-            Object.keys(value).find((_) => /^\$(.*)/.test(_))
-          )
-            IgnoreKeys.push(Keys[index]);
-        });
-
-        updates.$set = assignDeepValues(
-          Keys,
-          await e
-            .deepPartial(
-              e.omit(
-                this.DatabaseModel.getUpdateSchema({
-                  validatorOptions: (validator) => ({
-                    allowUnexpectedProps: [
-                      ...(validator["Options"]?.allowUnexpectedProps ?? []),
-                      ...IgnoreKeys,
-                    ],
-                  }),
-                  eachValidatorOptions: (validator) => {
-                    if (validator instanceof ArrayValidator)
-                      return {
-                        ignoreNanKeys: true,
-                        pushNanKeys: true,
-                      };
-                  },
-                }),
-                { keys: IgnoreKeys }
-              )
-            )
-            .validate(dotNotationToDeepObject(updates.$set), {
-              name: this.DatabaseModel.Name,
-            }),
-          {
-            resolver: (value, key, parent) => {
-              if (key === "$") return parent[0];
-              return value;
-            },
-          }
-        );
-      }
-
-      if (typeof updates.$setOnInsert === "object") {
-        const Keys = Object.keys(updates.$setOnInsert);
-        const IgnoreKeys: string[] = [];
-
-        Object.values(updates.$setOnInsert).forEach((value, index) => {
-          if (
-            typeof value === "object" &&
-            value !== null &&
-            Object.keys(value).find((_) => /^\$(.*)/.test(_))
-          )
-            IgnoreKeys.push(Keys[index]);
-        });
-
-        updates.$setOnInsert = assignDeepValues(
-          Keys,
-          await e
-            .deepPartial(
-              e.omit(
-                this.DatabaseModel.getUpdateSchema({
-                  validatorOptions: (validator) => ({
-                    allowUnexpectedProps: [
-                      ...(validator["Options"]?.allowUnexpectedProps ?? []),
-                      ...IgnoreKeys,
-                    ],
-                  }),
-                  eachValidatorOptions: (validator) => {
-                    if (validator instanceof ArrayValidator)
-                      return {
-                        ignoreNanKeys: true,
-                        pushNanKeys: true,
-                      };
-                  },
-                }),
-                { keys: IgnoreKeys }
-              )
-            )
-            .validate(dotNotationToDeepObject(updates.$setOnInsert), {
-              name: this.DatabaseModel.Name,
-            }),
-          {
-            resolver: (value, key, parent) => {
-              if (key === "$") return parent[0];
-              return value;
-            },
-          }
-        );
-      }
+      if (typeof updates.$setOnInsert === "object")
+        updates.$setOnInsert = await this.validateSet(updates.$setOnInsert);
 
       if (typeof updates.$push === "object")
-        updates.$push = await this.validatePushOrSet(updates.$push);
+        updates.$push = await this.validatePushOrAddToSet(updates.$push);
 
       if (typeof updates.$addToSet === "object")
-        updates.$addToSet = await this.validatePushOrSet(updates.$addToSet);
+        updates.$addToSet = await this.validatePushOrAddToSet(
+          updates.$addToSet
+        );
     }
 
     return updates;
