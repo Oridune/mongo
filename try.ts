@@ -1,12 +1,12 @@
 import e from "./validator.ts";
 import { ObjectId } from "./deps.ts";
-import { Mongo } from "./mod.ts";
+import { Mongo, CacheProvider } from "./mod.ts";
 
 const Cache = new Map<
   string,
   {
     value: any;
-    ttl: number;
+    ttl?: number;
     time: number;
   }
 >();
@@ -112,19 +112,20 @@ try {
 
   await Mongo.connect("mongodb://localhost:27017/mongo");
 
-  Mongo.setCachingMethods(
-    (key, value, ttl) => {
+  Mongo.setCachingMethods({
+    provider: CacheProvider.MAP,
+    setter: (key, value, ttl) => {
       Cache.set(key, { value, ttl, time: Date.now() / 1000 });
     },
-    (key) => {
+    getter: (key) => {
       const Value = Cache.get(key);
-      if (Value && Value.ttl + Value.time >= Date.now() / 1000)
+      if (Value && (!Value.ttl || Value.ttl + Value.time >= Date.now() / 1000))
         return Value.value;
     },
-    (key) => {
+    deleter: (key) => {
       Cache.delete(key);
-    }
-  );
+    },
+  });
 
   // (async () => {
   //   for await (const _ of UserModel.watch({}, { fullDocument: "updateLookup" }))

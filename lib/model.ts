@@ -86,7 +86,7 @@ export class MongoModel<
       );
   }
 
-  public getSchema() {
+  public getSchema(options?: Parameters<typeof e.deepCast>[1]) {
     const Schema =
       typeof this.ModelSchema === "function"
         ? this.ModelSchema()
@@ -95,11 +95,11 @@ export class MongoModel<
     if (!(Schema instanceof ObjectValidator))
       throw new Error(`Invalid or unexpected schema passed!`);
 
-    return e.deepCast(Schema);
+    return e.deepCast(Schema, options);
   }
 
-  public getUpdateSchema() {
-    return this.getSchema();
+  public getUpdateSchema(options?: Parameters<typeof e.deepCast>[1]) {
+    return this.getSchema(options);
   }
 
   constructor(

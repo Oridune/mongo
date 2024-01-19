@@ -1,13 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
 import { FindQuery, FindOneQuery } from "../lib/query/find.ts";
-import { Mongo, ObjectId } from "../mod.ts";
+import { Mongo, CacheProvider, ObjectId } from "../mod.ts";
 import e, { ValidationException } from "../validator.ts";
 
 const Cache = new Map<
   string,
   {
     value: any;
-    ttl: number;
+    ttl?: number;
     time: number;
   }
 >();
@@ -79,19 +79,23 @@ Deno.test({
     await Mongo.drop();
 
     // Setup Caching
-    Mongo.setCachingMethods(
-      (key, value, ttl) => {
+    Mongo.setCachingMethods({
+      provider: CacheProvider.MAP,
+      setter: (key, value, ttl) => {
         Cache.set(key, { value, ttl, time: Date.now() / 1000 });
       },
-      (key) => {
+      getter: (key) => {
         const Value = Cache.get(key);
-        if (Value && Value.ttl + Value.time >= Date.now() / 1000)
+        if (
+          Value &&
+          (!Value.ttl || Value.ttl + Value.time >= Date.now() / 1000)
+        )
           return Value.value;
       },
-      (key) => {
+      deleter: (key) => {
         Cache.delete(key);
-      }
-    );
+      },
+    });
 
     // Activity Schema
     const ActivitySchema = () =>
@@ -101,6 +105,7 @@ Deno.test({
           .default(() => new ObjectId()),
         description: e.string(),
         user: e.instanceOf(ObjectId, { instantiate: true }),
+        enabled: e.optional(e.boolean),
       });
 
     // User Schema
@@ -280,7 +285,7 @@ Deno.test({
       )
         throw new Error(`Hook didn't update the modification time!`);
 
-      const { modifications } = await UserModel.updateOne(User2Id, {
+      const { modifications: m1 } = await UserModel.updateOne(User2Id, {
         $push: {
           followers: User1Id,
         },
@@ -291,11 +296,29 @@ Deno.test({
 
       await e
         .partial(UserSchema)
-        .validate(modifications)
+        .validate(m1)
         .catch((error) => {
           console.error(error);
           throw error;
         });
+
+      const NewActivityMessage = "Really waved by someone!";
+
+      await UserModel.updateOne(
+        {
+          _id: User2Id,
+          ["activity.user"]: User1Id,
+        },
+        {
+          ["activity.$.description"]: NewActivityMessage,
+          ["activity.$.enabled"]: {
+            $eq: [false, "activity.$.enabled"],
+          },
+        }
+      ).catch((error) => {
+        console.error(error);
+        throw error;
+      });
 
       await UserModel.updateMany(
         {},
@@ -327,6 +350,11 @@ Deno.test({
         ).length
       )
         throw new Error(`Updated user has invalid activity!`);
+
+      if (User.activity[0].description !== NewActivityMessage)
+        throw new Error(
+          `The activity message was not correct! "${User.activity[0].description}" didn't match "${NewActivityMessage}"`
+        );
     });
 
     await t.step("Delete", async () => {

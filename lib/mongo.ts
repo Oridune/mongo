@@ -14,15 +14,38 @@ import { performanceStats } from "./utility.ts";
 
 export type TCacheValue = object | number | boolean | string | null | undefined;
 
+export enum CacheProvider {
+  MAP = "map",
+  REDIS = "redis",
+  OTHER = "other",
+}
+
 export type TCacheSetter = (
   key: string,
   value: TCacheValue,
-  ttl: number
+  ttl?: number
 ) => void | Promise<void>;
 export type TCacheGetter = (key: string) => TCacheValue | Promise<TCacheValue>;
 export type TCacheDelete = (key: string) => void | Promise<void>;
 
-export type TCacheOptions = { key: string; ttl: number; logs?: boolean };
+export type TCacheOptions = {
+  key: string;
+
+  /**
+   * Time to live in seconds. The data might be cached for ever if not passed!
+   */
+  ttl?: number;
+
+  /**
+   * You can optionally pass dependencies to watch. The cache will be invalidated if the dependency changed.
+   */
+  deps?: Array<any>;
+
+  /**
+   * Enable logs to see the performance improvements.
+   */
+  logs?: boolean;
+};
 
 export class Mongo {
   static enableLogs = false;
@@ -36,12 +59,13 @@ export class Mongo {
   protected static postDisconnectEvents: Array<() => void | Promise<void>> = [];
 
   protected static cachingMethods?: {
+    provider: CacheProvider;
     set: TCacheSetter;
     get: TCacheGetter;
     del: TCacheDelete;
   };
 
-  protected static setCache(key: string, value: TCacheValue, ttl: number) {
+  protected static setCache(key: string, value: TCacheValue, ttl?: number) {
     if (typeof this.cachingMethods?.set !== "function")
       throw new Error(`Caching methods are not provided!`);
 
@@ -188,20 +212,22 @@ export class Mongo {
     }
   }
 
-  static setCachingMethods(
-    setter: TCacheSetter,
-    getter: TCacheGetter,
-    deleter: TCacheDelete
-  ) {
+  static setCachingMethods(options: {
+    provider: CacheProvider;
+    setter: TCacheSetter;
+    getter: TCacheGetter;
+    deleter: TCacheDelete;
+  }) {
     if (
-      typeof setter === "function" &&
-      typeof getter === "function" &&
-      typeof deleter === "function"
+      typeof options.setter === "function" &&
+      typeof options.getter === "function" &&
+      typeof options.deleter === "function"
     )
       this.cachingMethods = {
-        set: setter,
-        get: getter,
-        del: deleter,
+        provider: options.provider,
+        set: options.setter,
+        get: options.getter,
+        del: options.deleter,
       };
   }
 
@@ -209,31 +235,34 @@ export class Mongo {
     callback: () => Promise<T>,
     cache?: TCacheOptions
   ) {
-    const Cached = cache?.key
-      ? (
-          await performanceStats(
-            `cache-fetch:${cache.key}`,
-            () => this.getCache(cache.key),
-            {
-              enabled: cache.logs,
-              logs: cache.logs,
-            }
-          )
-        ).result
-      : undefined;
+    if (typeof cache === "object" && cache !== null) {
+      const CacheKey = cache.key;
 
-    const Result = (Cached ?? (await callback())) as T;
+      const Cached = (
+        await performanceStats(
+          `cache-fetch:${CacheKey}`,
+          () => this.getCache(CacheKey),
+          {
+            enabled: cache.logs,
+            logs: cache.logs,
+          }
+        )
+      ).result;
 
-    const EmptyResults = [null, undefined];
+      const Result = (Cached ?? (await callback())) as T;
 
-    if (
-      cache?.key &&
-      EmptyResults.includes(Cached as any) &&
-      Result !== undefined &&
-      Result !== Cached
-    )
-      await this.setCache(cache.key, Result, cache.ttl ?? 0);
+      const EmptyResults = [null, undefined];
 
-    return Result;
+      if (
+        EmptyResults.includes(Cached as any) &&
+        Result !== undefined &&
+        Result !== Cached
+      )
+        await this.setCache(CacheKey, Result, cache.ttl);
+
+      return Result;
+    }
+
+    return callback();
   }
 }
