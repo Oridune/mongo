@@ -15,6 +15,7 @@ import {
   assignDeepValues,
   dotNotationToDeepObject,
   mongodbModifiersToObject,
+  omitProps,
   pickProps,
 } from "../utility.ts";
 import e, { ArrayValidator } from "../../validator.ts";
@@ -48,7 +49,7 @@ export class BaseUpdateQuery<
       ...assignDeepValues(
         InsertKeys,
         await e
-          .deepPartial(this.DatabaseModel.getUpdateSchema())
+          .partial(this.DatabaseModel.getUpdateSchema())
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
             name: this.DatabaseModel.Name,
           }),
@@ -78,20 +79,18 @@ export class BaseUpdateQuery<
 
   protected async validateSet(data: MatchKeysAndValues<InputDocument<Shape>>) {
     const Keys = Object.keys(data);
-    const IgnoreKeys: string[] = [];
+    const ExpressionKeys: string[] = [];
+    const ReplacementKeys: string[] = [];
 
-    for (const [Key, Value] of Object.entries(data))
+    for (const [Key, Value] of Object.entries(data)) {
       if (typeof Value === "object" && !!Value)
         if (Object.keys(Value).find((_) => /^\$(.+)/.test(_)))
-          IgnoreKeys.push(Key);
+          ExpressionKeys.push(Key);
+
+      if (/\.\$$/.test(Key)) ReplacementKeys.push(Key);
+    }
 
     const Schema = this.DatabaseModel.getUpdateSchema({
-      validatorOptions: (validator) => ({
-        allowUnexpectedProps: [
-          ...(validator["Options"]?.allowUnexpectedProps ?? []),
-          ...IgnoreKeys,
-        ],
-      }),
       eachValidatorOptions: (validator) => {
         if (validator instanceof ArrayValidator)
           return {
@@ -101,20 +100,25 @@ export class BaseUpdateQuery<
       },
     });
 
-    return assignDeepValues(
-      Keys,
-      await e
-        .deepPartial(e.omit(Schema, { keys: IgnoreKeys }))
-        .validate(dotNotationToDeepObject(data), {
-          name: this.DatabaseModel.Name,
-        }),
-      {
-        resolver: (value, key, parent) => {
-          if (key === "$") return parent[0];
-          return value;
-        },
-      }
-    );
+    return {
+      ...assignDeepValues(
+        Keys,
+        await e
+          .deepPartial(Schema, {
+            ignoreKeys: ReplacementKeys.map((key) => key.replace(/\.\$$/, "")),
+          })
+          .validate(dotNotationToDeepObject(omitProps(ExpressionKeys, data)), {
+            name: this.DatabaseModel.Name,
+          }),
+        {
+          resolver: (value, key, parent) => {
+            if (key === "$") return parent[0];
+            return value;
+          },
+        }
+      ),
+      ...pickProps(ExpressionKeys, data),
+    };
   }
 
   protected async validate<T extends UpdateFilter<InputDocument<Shape>>>(

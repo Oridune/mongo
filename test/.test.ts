@@ -46,6 +46,7 @@ const UsersData = [
       description: "Waved by someone!",
       user: User2Id,
     },
+    timeline: [{ message: "Hello world!" }],
   },
   {
     _id: User2Id,
@@ -124,10 +125,24 @@ Deno.test({
         followers: e.optional(e.array(e.if(ObjectId.isValid))),
         posts: e.optional(e.array(e.if(ObjectId.isValid))),
         latestPost: e.optional(e.if(ObjectId.isValid)),
-        activity: e.optional(e.array(ActivitySchema)),
-        latestActivity: e.optional(ActivitySchema),
+        activity: e.optional(e.array(ActivitySchema())),
+        latestActivity: e.optional(ActivitySchema()),
         createdAt: e.optional(e.date()).default(() => new Date()),
         updatedAt: e.optional(e.date()).default(() => new Date()),
+        timeline: e.optional(
+          e
+            .array(
+              e.object({
+                _id: e
+                  .optional(e.instanceOf(ObjectId, { instantiate: true }))
+                  .default(() => new ObjectId()),
+                message: e.string(),
+                priority: e.value(100),
+                createdAt: e.optional(e.date()).default(() => new Date()),
+              })
+            )
+            .min(1)
+        ),
       });
 
     const UserModel = Mongo.model("user", UserSchema);
@@ -146,7 +161,7 @@ Deno.test({
           .optional(e.instanceOf(ObjectId, { instantiate: true }))
           .default(() => new ObjectId()),
         description: e.string(),
-        user: UserSchema,
+        user: UserSchema(),
       });
 
     // Post Schema
@@ -173,7 +188,7 @@ Deno.test({
 
     // User with Populates
     const UserWithPopulatesSchema = e
-      .omit(e.required(UserSchema, { ignore: ["followers"] }), {
+      .omit(e.required(UserSchema, { ignore: ["followers", "timeline"] }), {
         keys: ["posts", "latestPost", "activity", "latestActivity"],
       })
       .extends(
@@ -302,6 +317,8 @@ Deno.test({
           throw error;
         });
 
+      console.log("Attempt to update the user's activity details...");
+
       const NewActivityMessage = "Really waved by someone!";
 
       await UserModel.updateOne(
@@ -319,6 +336,22 @@ Deno.test({
         console.error(error);
         throw error;
       });
+
+      console.log("Attempt to update the user's timeline details...");
+
+      await UserModel.updateOne(
+        {
+          _id: User1Id,
+          ["timeline.message"]: UsersData[0].timeline![0].message,
+        },
+        {
+          ["timeline.$"]: {
+            message: "Hello again!",
+          },
+        }
+      ).then(({ modifications }) =>
+        console.log("Timeline Modifications:", modifications)
+      );
 
       await UserModel.updateMany(
         {},

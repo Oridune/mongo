@@ -172,6 +172,23 @@ export const pickProps = (
   return Result;
 };
 
+export const omitProps = (
+  keys: string[],
+  object: any,
+  modifier?: (value: any, key: string) => any
+) => {
+  const Result: any = {};
+
+  for (const Key in object)
+    if (!keys.includes(Key))
+      Result[Key] =
+        typeof modifier === "function"
+          ? modifier(object[Key], Key)
+          : object[Key];
+
+  return Result;
+};
+
 export const performanceStats = async <T>(
   key: string,
   callback: () => T,
