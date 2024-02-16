@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { FindQuery, FindOneQuery } from "../lib/query/find.ts";
-import { Mongo, CacheProvider, ObjectId } from "../mod.ts";
+import { FindOneQuery, FindQuery } from "../lib/query/find.ts";
+import { CacheProvider, Mongo, ObjectId } from "../mod.ts";
 import e, { ValidationException } from "../validator.ts";
 
 const Cache = new Map<
@@ -90,8 +90,9 @@ Deno.test({
         if (
           Value &&
           (!Value.ttl || Value.ttl + Value.time >= Date.now() / 1000)
-        )
+        ) {
           return Value.value;
+        }
       },
       deleter: (key) => {
         Cache.delete(key);
@@ -139,9 +140,9 @@ Deno.test({
                 message: e.string(),
                 priority: e.value(100),
                 createdAt: e.optional(e.date()).default(() => new Date()),
-              })
+              }),
             )
-            .min(1)
+            .min(1),
         ),
       });
 
@@ -198,8 +199,8 @@ Deno.test({
             latestPost: PostSchema,
             activity: e.array(ActivityWithPopulatesSchema),
             latestActivity: ActivityWithPopulatesSchema,
-          })
-        )
+          }),
+        ),
       );
 
     await t.step("Create Indexes", async () => {
@@ -213,7 +214,7 @@ Deno.test({
         {
           key: { username: "text", "profile.name": "text" },
           background: true,
-        }
+        },
       );
     });
 
@@ -281,14 +282,15 @@ Deno.test({
 
       const Users = await UserModel.updateAndFindMany(
         {},
-        { "profile.dob": new Date() }
+        { "profile.dob": new Date() },
       );
 
       Users.map((user, i) => {
         if (
           user.profile.dob.toString() === UsersData[i].profile.dob?.toString()
-        )
+        ) {
           throw new Error(`Date of birth not updated!`);
+        }
       });
 
       const Post = await PostModel.updateAndFindOne({}, {});
@@ -297,8 +299,9 @@ Deno.test({
         Post &&
         (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
           Post.createdAt.toString() !== PostsData[0].createdAt.toString())
-      )
+      ) {
         throw new Error(`Hook didn't update the modification time!`);
+      }
 
       const { modifications: m1 } = await UserModel.updateOne(User2Id, {
         $push: {
@@ -321,18 +324,51 @@ Deno.test({
 
       const NewActivityMessage = "Really waved by someone!";
 
-      await UserModel.updateOne(
+      await UserModel.updateAndFindOne(
         {
           _id: User2Id,
           ["activity.user"]: User1Id,
         },
         {
           ["activity.$.description"]: NewActivityMessage,
-          ["activity.$.enabled"]: {
-            $eq: [false, "activity.$.enabled"],
-          },
-        }
-      ).catch((error) => {
+          ["activity.$.enabled"]: false,
+        },
+      ).then((document) => {
+        document?.activity?.map((act, index) => {
+          if (!["undefined", "boolean"].includes(typeof act.enabled)) {
+            console.log(act.enabled);
+
+            throw new Error(
+              `The activity ${index} => ${act.enabled} is not valid!`,
+            );
+          }
+        });
+      }).catch((error) => {
+        console.error(error);
+        throw error;
+      });
+
+      await UserModel.updateAndFindOne(
+        {
+          _id: User2Id,
+        },
+        {
+          ["activity.$[act].enabled"]: true,
+        },
+        {
+          arrayFilters: [{ "act.user": User1Id, "act.enabled": false }],
+        },
+      ).then((document) => {
+        document?.activity?.map((act, index) => {
+          if (act.enabled !== true) {
+            console.log(act.enabled);
+
+            throw new Error(
+              `The activity ${index} => ${act.enabled} is not valid!`,
+            );
+          }
+        });
+      }).catch((error) => {
         console.error(error);
         throw error;
       });
@@ -348,7 +384,7 @@ Deno.test({
           ["timeline.$"]: {
             message: "Hello again!",
           },
-        }
+        },
       ).then(({ modifications }) =>
         console.log("Timeline Modifications:", modifications)
       );
@@ -361,7 +397,7 @@ Deno.test({
               description: "This is a test...",
             },
           },
-        }
+        },
       ).catch((error) => e.instanceOf(ValidationException).validate(error));
 
       const User = await UserModel.findOne(User2Id);
@@ -372,39 +408,48 @@ Deno.test({
         !(User.followers instanceof Array) ||
         !User.followers.length ||
         User.followers.filter((v) => !(v instanceof ObjectId)).length
-      )
+      ) {
         throw new Error(`Updated user has invalid followers!`);
+      }
 
       if (
         !(User.activity instanceof Array) ||
         !User.activity.length ||
         User.activity.filter(
-          (v) => typeof v !== "object" || !("_id" in v) || !("description" in v)
+          (v) =>
+            typeof v !== "object" || !("_id" in v) || !("description" in v),
         ).length
-      )
+      ) {
         throw new Error(`Updated user has invalid activity!`);
+      }
 
-      if (User.activity[0].description !== NewActivityMessage)
+      if (User.activity[0].description !== NewActivityMessage) {
         throw new Error(
-          `The activity message was not correct! "${User.activity[0].description}" didn't match "${NewActivityMessage}"`
+          `The activity message was not correct! "${
+            User.activity[0].description
+          }" didn't match "${NewActivityMessage}"`,
         );
+      }
     });
 
     await t.step("Delete", async () => {
       await UserModel.deleteOne({});
 
-      if ((await UserModel.count()) !== 1)
+      if ((await UserModel.count()) !== 1) {
         throw new Error(`First user deletion failed!`);
+      }
 
       await UserModel.deleteMany();
 
-      if ((await UserModel.count()) !== 0)
+      if ((await UserModel.count()) !== 0) {
         throw new Error(`Deletion not correct!`);
+      }
 
       await PostModel.deleteMany();
 
-      if ((await PostModel.count()) !== 0)
+      if ((await PostModel.count()) !== 0) {
         throw new Error(`Deletion not correct!`);
+      }
     });
 
     await t.step("Transaction Rollback Test", async () => {
@@ -429,7 +474,7 @@ Deno.test({
               $push: { posts: Post._id },
               latestPost: Post._id,
             },
-            { session }
+            { session },
           );
 
           throw new Error(`Transaction cancelled!`);
@@ -437,8 +482,11 @@ Deno.test({
 
         throw new Error(`This transaction should not execute!`);
       } catch {
-        if ((await UserModel.count()) !== 0 || (await PostModel.count()) !== 0)
+        if (
+          (await UserModel.count()) !== 0 || (await PostModel.count()) !== 0
+        ) {
           throw new Error(`Transaction rollback not working!`);
+        }
       }
     });
 
@@ -460,8 +508,9 @@ Deno.test({
         if (
           (await UserModel.count({}, { session })) === 0 ||
           (await PostModel.count({}, { session })) === 0
-        )
+        ) {
           throw new Error(`Transaction commit not working!`);
+        }
 
         // Relate first User with the Post
         await UserModel.updateOne(
@@ -470,12 +519,13 @@ Deno.test({
             $push: { posts: Post._id },
             latestPost: Post._id,
           },
-          { session }
+          { session },
         );
       });
 
-      if ((await UserModel.count()) === 0 || (await PostModel.count()) === 0)
+      if ((await UserModel.count()) === 0 || (await PostModel.count()) === 0) {
         throw new Error(`Transaction commit not working!`);
+      }
     });
 
     await Mongo.disconnect();

@@ -1,19 +1,19 @@
 // deno-lint-ignore-file no-explicit-any
 import {
   Filter,
+  MatchKeysAndValues,
+  PushOperator,
+  SetFields,
   UpdateFilter,
   UpdateOptions,
   UpdateResult,
-  PushOperator,
-  MatchKeysAndValues,
-  SetFields,
 } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
 import {
-  InputDocument,
   assignDeepValues,
   dotNotationToDeepObject,
+  InputDocument,
   mongodbModifiersToObject,
   omitProps,
   pickProps,
@@ -23,27 +23,28 @@ import e, { ArrayValidator } from "../../validator.ts";
 export class BaseUpdateQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = UpdateResult<InputDocument<Shape>>
+  Result = UpdateResult<InputDocument<Shape>>,
 > extends BaseQuery<Result> {
   protected Filters: Record<string, any> = {};
   protected Updates: UpdateFilter<InputDocument<Shape>> = {};
 
   protected async validatePushOrAddToSet(
-    data: PushOperator<InputDocument<Shape>> | SetFields<InputDocument<Shape>>
+    data: PushOperator<InputDocument<Shape>> | SetFields<InputDocument<Shape>>,
   ) {
     const ModifierKeys: string[] = [];
     const InsertKeys: string[] = [];
 
-    for (const [Key, Value] of Object.entries(data))
+    for (const [Key, Value] of Object.entries(data)) {
       if (
         typeof Value === "object" &&
         !!Value &&
         !!Object.keys(Value).find((_) =>
           /^\$(each|slice|position|sort)/.test(_)
         )
-      )
+      ) {
         ModifierKeys.push(Key);
-      else InsertKeys.push(Key);
+      } else InsertKeys.push(Key);
+    }
 
     return {
       ...assignDeepValues(
@@ -58,7 +59,7 @@ export class BaseUpdateQuery<
             !(data[key] instanceof Array) && value instanceof Array
               ? value[0]
               : value,
-        }
+        },
       ),
       ...assignDeepValues(
         ModifierKeys,
@@ -66,13 +67,13 @@ export class BaseUpdateQuery<
           .partial(this.DatabaseModel.getUpdateSchema())
           .validate(
             dotNotationToDeepObject(
-              pickProps(ModifierKeys, data, (value) => value.$each)
+              pickProps(ModifierKeys, data, (value) => value.$each),
             ),
             {
               name: this.DatabaseModel.Name,
-            }
+            },
           ),
-        { modifier: (value, key) => ({ ...data[key], $each: value }) }
+        { modifier: (value, key) => ({ ...data[key], $each: value }) },
       ),
     };
   }
@@ -83,20 +84,23 @@ export class BaseUpdateQuery<
     const ReplacementKeys: string[] = [];
 
     for (const [Key, Value] of Object.entries(data)) {
-      if (typeof Value === "object" && !!Value)
-        if (Object.keys(Value).find((_) => /^\$(.+)/.test(_)))
+      if (typeof Value === "object" && !!Value) {
+        if (Object.keys(Value).find((_) => /^\$(.+)/.test(_))) {
           ExpressionKeys.push(Key);
+        }
+      }
 
-      if (/\.\$$/.test(Key)) ReplacementKeys.push(Key);
+      if (/\.\$$/.test(Key)) ReplacementKeys.push(Key.replace(/\.\$$/, ""));
     }
 
     const Schema = this.DatabaseModel.getUpdateSchema({
       eachValidatorOptions: (validator) => {
-        if (validator instanceof ArrayValidator)
+        if (validator instanceof ArrayValidator) {
           return {
             ignoreNanKeys: true,
             pushNanKeys: true,
           };
+        }
       },
     });
 
@@ -105,17 +109,17 @@ export class BaseUpdateQuery<
         Keys,
         await e
           .deepPartial(Schema, {
-            ignoreKeys: ReplacementKeys.map((key) => key.replace(/\.\$$/, "")),
+            ignoreKeys: ReplacementKeys,
           })
           .validate(dotNotationToDeepObject(omitProps(ExpressionKeys, data)), {
             name: this.DatabaseModel.Name,
           }),
         {
           resolver: (value, key, parent) => {
-            if (key === "$") return parent[0];
+            if (/^\$(\[.*\])?$/.test(key)) return parent[0];
             return value;
           },
-        }
+        },
       ),
       ...pickProps(ExpressionKeys, data),
     };
@@ -123,22 +127,26 @@ export class BaseUpdateQuery<
 
   protected async validate<T extends UpdateFilter<InputDocument<Shape>>>(
     updates: T,
-    options?: { validate?: boolean }
+    options?: { validate?: boolean },
   ): Promise<T> {
     if (options?.validate !== false) {
-      if (typeof updates.$set === "object")
+      if (typeof updates.$set === "object") {
         updates.$set = await this.validateSet(updates.$set);
+      }
 
-      if (typeof updates.$setOnInsert === "object")
+      if (typeof updates.$setOnInsert === "object") {
         updates.$setOnInsert = await this.validateSet(updates.$setOnInsert);
+      }
 
-      if (typeof updates.$push === "object")
+      if (typeof updates.$push === "object") {
         updates.$push = await this.validatePushOrAddToSet(updates.$push);
+      }
 
-      if (typeof updates.$addToSet === "object")
+      if (typeof updates.$addToSet === "object") {
         updates.$addToSet = await this.validatePushOrAddToSet(
-          updates.$addToSet
+          updates.$addToSet,
         );
+      }
     }
 
     return updates;
@@ -154,15 +162,15 @@ export class BaseUpdateQuery<
   }
 
   public updates(
-    updates: UpdateFilter<InputDocument<Shape>> & Partial<InputDocument<Shape>>
+    updates: UpdateFilter<InputDocument<Shape>> & Partial<InputDocument<Shape>>,
   ) {
     if (typeof updates === "object") {
       this.Updates = { ...this.Updates };
 
-      for (const [Key, Value] of Object.entries(updates))
-        if (/^\$.*/.test(Key))
+      for (const [Key, Value] of Object.entries(updates)) {
+        if (/^\$.*/.test(Key)) {
           this.Updates[Key] = { ...this.Updates[Key], ...Value };
-        else
+        } else {
           this.Updates = {
             ...this.Updates,
             $set: {
@@ -170,6 +178,8 @@ export class BaseUpdateQuery<
               [Key]: Value,
             },
           };
+        }
+      }
     }
 
     return this;
@@ -190,16 +200,17 @@ export class UpdateOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = UpdateResult<InputDocument<Shape>> & {
     modifications: InputDocument<Shape>;
-  }
+  },
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.DatabaseModel["PreHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].update ?? []) {
       await Hook({
         event: "update",
         method: "updateOne",
         filter: this.Filters,
         updates: this.Updates as any,
       });
+    }
 
     const Updates = await this.validate(this.Updates, this.Options);
 
@@ -209,29 +220,30 @@ export class UpdateOneQuery<
       ...(await this.DatabaseModel.collection.updateOne(
         this.Filters,
         Updates,
-        this.Options
+        this.Options,
       )),
       get modifications() {
         return dotNotationToDeepObject(
-          mongodbModifiersToObject(Updates as any)
+          mongodbModifiersToObject(Updates as any),
         );
       },
     } as Result;
 
-    for (const Hook of this.DatabaseModel["PostHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].update ?? []) {
       await Hook({
         event: "update",
         method: "updateOne",
         updates: Updates as any,
         data: Result as any,
       });
+    }
 
     return Result;
   }
 
   constructor(
     protected DatabaseModel: Model,
-    protected Options?: UpdateOptions & { validate?: boolean }
+    protected Options?: UpdateOptions & { validate?: boolean },
   ) {
     super(DatabaseModel);
   }
@@ -242,16 +254,17 @@ export class UpdateManyQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = UpdateResult<InputDocument<Shape>> & {
     modifications: InputDocument<Shape>;
-  }
+  },
 > extends BaseUpdateQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.DatabaseModel["PreHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].update ?? []) {
       await Hook({
         event: "update",
         method: "updateOne",
         filter: this.Filters,
         updates: this.Updates as any,
       });
+    }
 
     const Updates = await this.validate(this.Updates, this.Options);
 
@@ -259,36 +272,37 @@ export class UpdateManyQuery<
       "updateMany",
       this.Filters,
       Updates,
-      this.Options
+      this.Options,
     );
 
     const Result = {
       ...(await this.DatabaseModel.collection.updateMany(
         this.Filters,
         Updates as any,
-        this.Options
+        this.Options,
       )),
       get modifications() {
         return dotNotationToDeepObject(
-          mongodbModifiersToObject(Updates as any)
+          mongodbModifiersToObject(Updates as any),
         );
       },
     } as Result;
 
-    for (const Hook of this.DatabaseModel["PostHooks"].update ?? [])
+    for (const Hook of this.DatabaseModel["PostHooks"].update ?? []) {
       await Hook({
         event: "update",
         method: "updateOne",
         updates: Updates as any,
         data: Result as any,
       });
+    }
 
     return Result;
   }
 
   constructor(
     protected DatabaseModel: Model,
-    protected Options?: UpdateOptions & { validate?: boolean }
+    protected Options?: UpdateOptions & { validate?: boolean },
   ) {
     super(DatabaseModel);
   }
