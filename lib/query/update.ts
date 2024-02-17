@@ -83,14 +83,20 @@ export class BaseUpdateQuery<
     const ExpressionKeys: string[] = [];
     const ReplacementKeys: string[] = [];
 
+    const ExpressionRegex = /^\$(.+)/;
+    const ReplacerRegex = /\.\$(\[.*\])?$/;
+    const PositionalRegex = /^\$(\[.*\])?$/;
+
     for (const [Key, Value] of Object.entries(data)) {
       if (typeof Value === "object" && !!Value) {
-        if (Object.keys(Value).find((_) => /^\$(.+)/.test(_))) {
+        if (Object.keys(Value).find((_) => ExpressionRegex.test(_))) {
           ExpressionKeys.push(Key);
         }
       }
 
-      if (/\.\$$/.test(Key)) ReplacementKeys.push(Key.replace(/\.\$$/, ""));
+      if (ReplacerRegex.test(Key)) {
+        ReplacementKeys.push(Key.replace(ReplacerRegex, ""));
+      }
     }
 
     const Schema = this.DatabaseModel.getUpdateSchema({
@@ -116,7 +122,7 @@ export class BaseUpdateQuery<
           }),
         {
           resolver: (value, key, parent) => {
-            if (/^\$(\[.*\])?$/.test(key)) return parent[0];
+            if (PositionalRegex.test(key)) return parent[0];
             return value;
           },
         },
