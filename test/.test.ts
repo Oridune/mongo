@@ -269,6 +269,17 @@ Deno.test({
         console.error(error, Users);
         throw error;
       });
+
+      const User = await UserModel.findOne().populateOne(
+        "latestActivity.user",
+        UserModel,
+        { project: { username: 1 } },
+      );
+
+      if (Object.keys(User?.latestActivity?.user ?? {}).length > 2) {
+        console.log("Sub Projection Results:", User);
+        throw new Error("Unexpected projection result!");
+      }
     });
 
     // Restart client connection

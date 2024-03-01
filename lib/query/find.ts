@@ -5,17 +5,21 @@ import { MongoModel } from "../model.ts";
 import { InputDocument, OutputDocument } from "../utility.ts";
 import { Mongo, TCacheOptions } from "../mongo.ts";
 
-export type Sorting<T> = Partial<
-  Record<"_id" | keyof T, 1 | -1 | (number & {})>
-> & {
-  [K: string]: number;
-};
+export type Sorting<T> =
+  & Partial<
+    Record<"_id" | keyof T, 1 | -1 | (number & {})>
+  >
+  & {
+    [K: string]: number;
+  };
 
-export type Projection<T> = Partial<
-  Record<"_id" | keyof T, 1 | 0 | (number & {})>
-> & {
-  [K: string]: number;
-};
+export type Projection<T> =
+  & Partial<
+    Record<"_id" | keyof T, 1 | 0 | (number & {})>
+  >
+  & {
+    [K: string]: number;
+  };
 
 type NestedPopulatedDocument<
   Doc,
@@ -24,7 +28,7 @@ type NestedPopulatedDocument<
   SDoc = Doc extends Array<infer S> ? S : Doc,
   Result = {
     [K in keyof SDoc]: K extends Field ? Value : SDoc[K];
-  }
+  },
 > = Doc extends Array<any> ? Result[] : Result;
 
 export type PopulatedDocument<
@@ -32,22 +36,20 @@ export type PopulatedDocument<
   Field extends string,
   Value,
   F1 = Field extends `${infer R}.${string}` ? R : Field,
-  F2 = Field extends `${string}.${infer R}` ? R : false
+  F2 = Field extends `${string}.${infer R}` ? R : false,
 > = {
   [K in keyof Doc]: K extends F1
-    ? F2 extends string
-      ? undefined extends Doc[K]
-        ?
-            | NestedPopulatedDocument<Exclude<Doc[K], undefined>, F2, Value>
-            | undefined
-        : NestedPopulatedDocument<Doc[K], F2, Value>
-      : Value
+    ? F2 extends string ? undefined extends Doc[K] ?
+          | NestedPopulatedDocument<Exclude<Doc[K], undefined>, F2, Value>
+          | undefined
+      : NestedPopulatedDocument<Doc[K], F2, Value>
+    : Value
     : Doc[K];
 };
 
 export type PopulateOptions<
   M extends MongoModel<any, any, any>,
-  I = M extends MongoModel<any, infer R, any> ? R : never
+  I = M extends MongoModel<any, infer R, any> ? R : never,
 > = {
   foreignField?: string;
   filter?: Filter<InputDocument<I>>;
@@ -61,7 +63,7 @@ export type PopulateOptions<
 export class BaseFindQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = OutputDocument<Shape>[]
+  Result = OutputDocument<Shape>[],
 > extends BaseQuery<Result> {
   protected Aggregation: Record<string, any>[] = [];
 
@@ -70,7 +72,7 @@ export class BaseFindQuery<
     model: MongoModel<any, any, any>,
     options?: PopulateOptions<any> & {
       unwind?: boolean;
-    }
+    },
   ): any[] {
     const SubPopulateConfig = model["PopulateConfig"];
 
@@ -80,25 +82,25 @@ export class BaseFindQuery<
     return [
       ...(IsNestedPopulate
         ? [
-            {
-              $addFields: {
-                [`isNull_${ParentField}`]: {
-                  $cond: [`$${ParentField}`, false, true],
-                },
+          {
+            $addFields: {
+              [`isNull_${ParentField}`]: {
+                $cond: [`$${ParentField}`, false, true],
               },
             },
-            {
-              $addFields: {
-                [`isArray_${ParentField}`]: { $isArray: `$${ParentField}` },
-              },
+          },
+          {
+            $addFields: {
+              [`isArray_${ParentField}`]: { $isArray: `$${ParentField}` },
             },
-            {
-              $unwind: {
-                path: `$${ParentField}`,
-                preserveNullAndEmptyArrays: true,
-              },
+          },
+          {
+            $unwind: {
+              path: `$${ParentField}`,
+              preserveNullAndEmptyArrays: true,
             },
-          ]
+          },
+        ]
         : []),
       {
         $lookup: {
@@ -106,87 +108,91 @@ export class BaseFindQuery<
           localField: field,
           foreignField: options?.foreignField ?? "_id",
           as: field,
-          ...(typeof SubPopulateConfig === "object"
-            ? {
-                pipeline: (() => {
-                  const Pipeline = this.createPopulateAggregation(
-                    SubPopulateConfig.field,
-                    SubPopulateConfig.model,
-                    SubPopulateConfig.options
-                  );
+          pipeline: (() => {
+            const Pipeline = typeof SubPopulateConfig === "object"
+              ? this.createPopulateAggregation(
+                SubPopulateConfig.field,
+                SubPopulateConfig.model,
+                SubPopulateConfig.options,
+              )
+              : [];
 
-                  if (typeof options?.filter === "object")
-                    Pipeline.push({ $match: options.filter });
+            if (typeof options?.filter === "object") {
+              Pipeline.push({ $match: options.filter });
+            }
 
-                  if (typeof options?.sort === "object")
-                    Pipeline.push({ $sort: options.sort });
+            if (typeof options?.sort === "object") {
+              Pipeline.push({ $sort: options.sort });
+            }
 
-                  if (typeof options?.project === "object")
-                    Pipeline.push({ $project: options.project });
+            if (typeof options?.project === "object") {
+              Pipeline.push({ $project: options.project });
+            }
 
-                  if (typeof options?.skip === "number")
-                    Pipeline.push({ $skip: options.skip });
+            if (typeof options?.skip === "number") {
+              Pipeline.push({ $skip: options.skip });
+            }
 
-                  if (typeof options?.limit === "number")
-                    Pipeline.push({ $limit: options.limit });
+            if (typeof options?.limit === "number") {
+              Pipeline.push({ $limit: options.limit });
+            }
 
-                  if (typeof options?.having === "object")
-                    Pipeline.push({ $match: options.having });
+            if (typeof options?.having === "object") {
+              Pipeline.push({ $match: options.having });
+            }
 
-                  return Pipeline;
-                })(),
-              }
-            : {}),
+            return Pipeline;
+          })(),
         },
       },
       ...(options?.unwind
         ? [
-            {
-              $unwind: {
-                path: `$${field}`,
-                preserveNullAndEmptyArrays: true,
-              },
+          {
+            $unwind: {
+              path: `$${field}`,
+              preserveNullAndEmptyArrays: true,
             },
-          ]
+          },
+        ]
         : []),
       ...(IsNestedPopulate
         ? [
-            {
-              $group: {
-                _id: "$_id",
-                [ParentField]: { $push: `$${ParentField}` },
-                otherFields: { $mergeObjects: "$$ROOT" },
+          {
+            $group: {
+              _id: "$_id",
+              [ParentField]: { $push: `$${ParentField}` },
+              otherFields: { $mergeObjects: "$$ROOT" },
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $mergeObjects: [
+                  "$otherFields",
+                  { _id: "$_id", [ParentField]: `$${ParentField}` },
+                ],
               },
             },
-            {
-              $replaceRoot: {
-                newRoot: {
-                  $mergeObjects: [
-                    "$otherFields",
-                    { _id: "$_id", [ParentField]: `$${ParentField}` },
-                  ],
-                },
+          },
+          {
+            $addFields: {
+              [ParentField]: {
+                $cond: [
+                  { $eq: [`$isNull_${ParentField}`, true] },
+                  "$$REMOVE",
+                  {
+                    $cond: [
+                      { $eq: [`$isArray_${ParentField}`, true] },
+                      `$${ParentField}`,
+                      { $arrayElemAt: [`$${ParentField}`, 0] },
+                    ],
+                  },
+                ],
               },
             },
-            {
-              $addFields: {
-                [ParentField]: {
-                  $cond: [
-                    { $eq: [`$isNull_${ParentField}`, true] },
-                    "$$REMOVE",
-                    {
-                      $cond: [
-                        { $eq: [`$isArray_${ParentField}`, true] },
-                        `$${ParentField}`,
-                        { $arrayElemAt: [`$${ParentField}`, 0] },
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-            { $unset: [`isNull_${ParentField}`, `isArray_${ParentField}`] },
-          ]
+          },
+          { $unset: [`isNull_${ParentField}`, `isArray_${ParentField}`] },
+        ]
         : []),
     ];
   }
@@ -196,22 +202,25 @@ export class BaseFindQuery<
   }
 
   public filter(filter: Filter<InputDocument<Shape>>) {
-    if (typeof filter === "object" && Object.keys(filter).length)
+    if (typeof filter === "object" && Object.keys(filter).length) {
       this.Aggregation.push({ $match: filter });
+    }
 
     return this;
   }
 
   public sort(sort: Sorting<Shape>) {
-    if (typeof sort === "object" && Object.keys(sort).length)
+    if (typeof sort === "object" && Object.keys(sort).length) {
       this.Aggregation.push({ $sort: sort });
+    }
 
     return this;
   }
 
   public project(project: Projection<Shape>) {
-    if (typeof project === "object" && Object.keys(project).length)
+    if (typeof project === "object" && Object.keys(project).length) {
       this.Aggregation.push({ $project: project });
+    }
 
     return this;
   }
@@ -229,20 +238,20 @@ export class BaseFindQuery<
   public populate<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
   >(field: F, model: M, options?: PopulateOptions<M>) {
-    if (!(model instanceof MongoModel))
+    if (!(model instanceof MongoModel)) {
       throw new Error("Invalid population model!");
+    }
 
     this.Aggregation.push(
-      ...this.createPopulateAggregation(field, model, options as any)
+      ...this.createPopulateAggregation(field, model, options as any),
     );
 
     return this as unknown as BaseFindQuery<
       Model,
       Shape,
-      Result extends Array<infer R>
-        ? PopulatedDocument<R, F, S[]>[]
+      Result extends Array<infer R> ? PopulatedDocument<R, F, S[]>[]
         : PopulatedDocument<Result, F, S[]>
     >;
   }
@@ -250,20 +259,19 @@ export class BaseFindQuery<
   public populateOne<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
-    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
   >(field: F, model: M, options?: PopulateOptions<M>) {
     this.Aggregation.push(
       ...this.createPopulateAggregation(field, model, {
         ...(options as any),
         unwind: true,
-      })
+      }),
     );
 
     return this as unknown as BaseFindQuery<
       Model,
       Shape,
-      Result extends Array<infer R>
-        ? PopulatedDocument<R, F, S>[]
+      Result extends Array<infer R> ? PopulatedDocument<R, F, S>[]
         : PopulatedDocument<Result, F, S>
     >;
   }
@@ -272,15 +280,16 @@ export class BaseFindQuery<
 export class FindQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result extends any[] = OutputDocument<Shape>[]
+  Result extends any[] = OutputDocument<Shape>[],
 > extends BaseFindQuery<Model, Shape, Result> {
   protected async exec(): Promise<Result> {
-    for (const Hook of this.DatabaseModel["PreHooks"].read ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].read ?? []) {
       await Hook({
         event: "read",
         method: "find",
         aggregationPipeline: this.Aggregation,
       });
+    }
 
     this.DatabaseModel["log"]("find", this.Aggregation, this.Options);
 
@@ -289,7 +298,7 @@ export class FindQuery<
         this.DatabaseModel.collection
           .aggregate(this.Aggregation, this.Options)
           .toArray() as Promise<Result>,
-      this.Options?.cache
+      this.Options?.cache,
     );
 
     return Promise.all(
@@ -300,9 +309,9 @@ export class FindQuery<
           >(
             async (doc, hook) =>
               hook({ event: "read", method: "find", data: await doc }) as any,
-            Promise.resolve(doc)
-          ) ?? doc
-      )
+            Promise.resolve(doc),
+          ) ?? doc,
+      ),
     ) as any;
   }
 
@@ -310,7 +319,7 @@ export class FindQuery<
     protected DatabaseModel: Model,
     protected Options?: AggregateOptions & {
       cache?: TCacheOptions;
-    }
+    },
   ) {
     super(DatabaseModel);
   }
@@ -319,7 +328,7 @@ export class FindQuery<
 export class FindOneQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
-  Result = OutputDocument<Shape> | null
+  Result = OutputDocument<Shape> | null,
 > extends BaseFindQuery<Model, Shape, Result> {
   protected LimitApplied = false;
 
@@ -329,12 +338,13 @@ export class FindOneQuery<
       this.LimitApplied = true;
     }
 
-    for (const Hook of this.DatabaseModel["PreHooks"].read ?? [])
+    for (const Hook of this.DatabaseModel["PreHooks"].read ?? []) {
       await Hook({
         event: "read",
         method: "findOne",
         aggregationPipeline: this.Aggregation,
       });
+    }
 
     this.DatabaseModel["log"]("findOne", this.Aggregation, this.Options);
 
@@ -343,12 +353,13 @@ export class FindOneQuery<
         this.DatabaseModel.collection
           .aggregate(this.Aggregation, this.Options)
           .toArray() as Promise<OutputDocument<Shape>[]>,
-      this.Options?.cache
+      this.Options?.cache,
     );
 
-    if (!Result.length)
+    if (!Result.length) {
       if (this.Options?.errorOnNull) throw new Error("Record not found!");
       else return null as Result;
+    }
 
     return (
       await Promise.all(
@@ -363,9 +374,9 @@ export class FindOneQuery<
                   method: "findOne",
                   data: await doc,
                 }) as any,
-              Promise.resolve(doc)
-            ) ?? doc
-        )
+              Promise.resolve(doc),
+            ) ?? doc,
+        ),
       )
     )[0] as Result;
   }
@@ -375,7 +386,7 @@ export class FindOneQuery<
     protected Options?: AggregateOptions & {
       cache?: TCacheOptions;
       errorOnNull?: boolean;
-    }
+    },
   ) {
     super(DatabaseModel);
   }
