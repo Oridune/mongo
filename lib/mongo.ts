@@ -1,15 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
+import pluralize from "npm:pluralize@8.0.0";
 import { ObjectValidator } from "../validator.ts";
 import {
-  plural,
-  MongoClient,
-  MongoClientOptions,
   ClientSession,
   ClientSessionOptions,
-  TransactionOptions,
   EndSessionOptions,
+  MongoClient,
+  MongoClientOptions,
+  TransactionOptions,
 } from "../deps.ts";
-import { MongoModel, ModelOptions } from "./model.ts";
+import { ModelOptions, MongoModel } from "./model.ts";
 import { performanceStats } from "./utility.ts";
 
 export type TCacheValue = object | number | boolean | string | null | undefined;
@@ -22,7 +22,7 @@ export enum CacheProvider {
 export type TCacheSetter = (
   key: string,
   value: TCacheValue,
-  ttl?: number
+  ttl?: number,
 ) => void | Promise<void>;
 export type TCacheGetter = (key: string) => TCacheValue | Promise<TCacheValue>;
 export type TCacheDelete = (key: string) => void | Promise<void>;
@@ -66,29 +66,32 @@ export class Mongo {
   };
 
   protected static setCache(key: string, value: TCacheValue, ttl?: number) {
-    if (typeof this.cachingMethods?.set !== "function")
+    if (typeof this.cachingMethods?.set !== "function") {
       throw new Error(`Caching methods are not provided!`);
+    }
 
     return this.cachingMethods.set(key, value, ttl);
   }
 
   protected static getCache(key: string) {
-    if (typeof this.cachingMethods?.get !== "function")
+    if (typeof this.cachingMethods?.get !== "function") {
       throw new Error(`Caching methods are not provided!`);
+    }
 
     return this.cachingMethods.get(key);
   }
 
   protected static deleteCache(key: string) {
-    if (typeof this.cachingMethods?.del !== "function")
+    if (typeof this.cachingMethods?.del !== "function") {
       throw new Error(`Caching methods are not provided!`);
+    }
 
     return this.cachingMethods.del(key);
   }
 
   static pre(
     event: "connect" | "disconnect",
-    callback: () => void | Promise<void>
+    callback: () => void | Promise<void>,
   ) {
     switch (event) {
       case "connect":
@@ -107,7 +110,7 @@ export class Mongo {
 
   static post(
     event: "connect" | "disconnect",
-    callback: () => void | Promise<void>
+    callback: () => void | Promise<void>,
   ) {
     switch (event) {
       case "connect":
@@ -168,9 +171,9 @@ export class Mongo {
   static model<T extends ObjectValidator<any, any, any>>(
     name: string,
     schema: T | (() => T),
-    options?: ModelOptions
+    options?: ModelOptions,
   ) {
-    return new MongoModel(plural(name), schema, options);
+    return new MongoModel(pluralize(name), schema, options);
   }
 
   /**
@@ -183,11 +186,11 @@ export class Mongo {
     callback: (session: ClientSession) => Promise<T>,
     opts?:
       | {
-          sessionOpts?: ClientSessionOptions;
-          transactionOpts?: TransactionOptions;
-          sessionEndOpts?: EndSessionOptions;
-        }
-      | ClientSession
+        sessionOpts?: ClientSessionOptions;
+        transactionOpts?: TransactionOptions;
+        sessionEndOpts?: EndSessionOptions;
+      }
+      | ClientSession,
   ) {
     if (opts instanceof ClientSession) return callback(opts);
 
@@ -223,18 +226,19 @@ export class Mongo {
       typeof options.setter === "function" &&
       typeof options.getter === "function" &&
       typeof options.deleter === "function"
-    )
+    ) {
       this.cachingMethods = {
         provider: options.provider,
         set: options.setter,
         get: options.getter,
         del: options.deleter,
       };
+    }
   }
 
   static async useCaching<T extends TCacheValue>(
     callback: () => Promise<T>,
-    cache?: TCacheOptions
+    cache?: TCacheOptions,
   ) {
     if (typeof cache === "object" && cache !== null) {
       const CacheKey = cache.key;
@@ -246,7 +250,7 @@ export class Mongo {
           {
             enabled: cache.logs,
             logs: cache.logs,
-          }
+          },
         )
       ).result;
 
@@ -258,8 +262,9 @@ export class Mongo {
         EmptyResults.includes(Cached as any) &&
         Result !== undefined &&
         Result !== Cached
-      )
+      ) {
         await this.setCache(CacheKey, Result, cache.ttl);
+      }
 
       return Result;
     }

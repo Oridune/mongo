@@ -3,6 +3,6 @@
   "version": "0.0.61",
   "exports": {
     ".": "./mod.ts",
-    "validator": "./validator.ts"
+    "./validator": "./validator.ts"
   }
 }

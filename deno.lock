@@ -5,7 +5,8 @@
       "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
-      "npm:mongodb@6.3.0": "npm:mongodb@6.3.0"
+      "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
+      "npm:pluralize@8.0.0": "npm:pluralize@8.0.0"
     },
     "jsr": {
       "@oridune/validator@0.2.50": {
@@ -125,6 +126,10 @@
           "bson": "bson@6.2.0",
           "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
         }
+      },
+      "pluralize@8.0.0": {
+        "integrity": "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==",
+        "dependencies": {}
       },
       "punycode@2.3.0": {
         "integrity": "sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==",
