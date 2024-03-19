@@ -3,6 +3,7 @@
   "packages": {
     "specifiers": {
       "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
+      "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
       "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
@@ -11,6 +12,9 @@
     "jsr": {
       "@oridune/validator@0.2.50": {
         "integrity": "8a6bf6c36da1c9cb7ee7f879b2234d855c1aba2549c5db47f685cdbae3a6d6f9"
+      },
+      "@oridune/validator@0.2.51": {
+        "integrity": "a08f72ddb909524dbe33c2d16d9c1ba319b491b1b133570f00ea057feeeda87a"
       }
     },
     "npm": {
