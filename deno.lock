@@ -2,9 +2,15 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
       "npm:mongodb@6.3.0": "npm:mongodb@6.3.0"
+    },
+    "jsr": {
+      "@oridune/validator@0.2.50": {
+        "integrity": "8a6bf6c36da1c9cb7ee7f879b2234d855c1aba2549c5db47f685cdbae3a6d6f9"
+      }
     },
     "npm": {
       "@mongodb-js/saslprep@1.1.0": {
