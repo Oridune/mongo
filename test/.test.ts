@@ -294,9 +294,14 @@ Deno.test({
       const Users = await UserModel.updateAndFindMany(
         {},
         { "profile.dob": new Date() },
-      );
+      )
+        .project({ profile: 1 });
 
       Users.map((user, i) => {
+        if (Object.keys(user).length > 2) {
+          throw new Error(`Projection for for updateAndFindMany not working!`);
+        }
+
         if (
           user.profile.dob.toString() === UsersData[i].profile.dob?.toString()
         ) {
@@ -344,7 +349,11 @@ Deno.test({
           ["activity.$.description"]: NewActivityMessage,
           ["activity.$.enabled"]: false,
         },
-      ).then((document) => {
+      ).project({ activity: 1 }).then((document) => {
+        if (document && Object.keys(document).length > 2) {
+          throw new Error(`Projection for for updateAndFindOne not working!`);
+        }
+
         document?.activity?.map((act, index) => {
           if (!["undefined", "boolean"].includes(typeof act.enabled)) {
             console.log(act.enabled);
