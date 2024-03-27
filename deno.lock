@@ -4,6 +4,7 @@
     "specifiers": {
       "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
       "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
+      "jsr:@oridune/validator@^0.2.52": "jsr:@oridune/validator@0.2.52",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
       "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
@@ -15,6 +16,9 @@
       },
       "@oridune/validator@0.2.51": {
         "integrity": "a08f72ddb909524dbe33c2d16d9c1ba319b491b1b133570f00ea057feeeda87a"
+      },
+      "@oridune/validator@0.2.52": {
+        "integrity": "9983cc761024fe9292459fe0e44557eb1544717fa65b0b6774134246368178be"
       }
     },
     "npm": {
