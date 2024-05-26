@@ -1,16 +1,16 @@
 // deno-lint-ignore-file no-explicit-any
-import { DeleteOptions, UpdateOptions } from "../../deps.ts";
-import { MongoModel } from "../model.ts";
+import type { DeleteOptions, UpdateOptions } from "../../deps.ts";
+import type { MongoModel } from "../model.ts";
 import { BaseUpdateQuery, UpdateManyQuery, UpdateOneQuery } from "./update.ts";
 import {
-  BaseFindQuery,
+  type BaseFindQuery,
   FindOneQuery,
   FindQuery,
-  PopulatedDocument,
-  PopulateOptions,
+  type PopulatedDocument,
+  type PopulateOptions,
 } from "./find.ts";
 import { BaseDeleteQuery, DeleteManyQuery, DeleteOneQuery } from "./delete.ts";
-import { OutputDocument } from "../utility.ts";
+import type { OutputDocument } from "../utility.ts";
 
 export class BaseFindAndUpdateQuery<
   Model extends MongoModel<any, any, any>,

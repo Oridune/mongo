@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { BaseQuery } from "./base.ts";
-import { DeleteOptions, DeleteResult, Filter } from "../../deps.ts";
-import { MongoModel } from "../model.ts";
-import { InputDocument } from "../utility.ts";
+import type { DeleteOptions, DeleteResult, Filter } from "../../deps.ts";
+import type { MongoModel } from "../model.ts";
+import type { InputDocument } from "../utility.ts";
 
 export class BaseDeleteQuery<
   Model extends MongoModel<any, any, any>,

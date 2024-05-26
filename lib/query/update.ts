@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import {
+import type {
   Filter,
   MatchKeysAndValues,
   PushOperator,
@@ -9,11 +9,11 @@ import {
   UpdateResult,
 } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
-import { MongoModel } from "../model.ts";
+import type { MongoModel } from "../model.ts";
 import {
   assignDeepValues,
   dotNotationToDeepObject,
-  InputDocument,
+  type InputDocument,
   mongodbModifiersToObject,
   omitProps,
   pickProps,

@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import { AggregateOptions, Filter } from "../../deps.ts";
+import type { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
-import { InputDocument, OutputDocument } from "../utility.ts";
-import { Mongo, TCacheOptions } from "../mongo.ts";
+import type { InputDocument, OutputDocument } from "../utility.ts";
+import { Mongo, type TCacheOptions } from "../mongo.ts";
 
 export type Sorting<T> =
   & Partial<

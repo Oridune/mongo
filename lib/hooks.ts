@@ -1,12 +1,12 @@
 // deno-lint-ignore-file no-explicit-any
-import {
+import type {
   DeleteResult,
   Document,
   Filter,
   UpdateResult,
   UpdateFilter,
 } from "../deps.ts";
-import { InputDocument, OutputDocument } from "./utility.ts";
+import type { InputDocument, OutputDocument } from "./utility.ts";
 
 export type THooksDetails<InputShape, OutputShape> = {
   create: {

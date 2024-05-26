@@ -1,15 +1,15 @@
 // deno-lint-ignore-file no-explicit-any
 import pluralize from "npm:pluralize@8.0.0";
-import { ObjectValidator } from "../validator.ts";
+import type { ObjectValidator } from "../validator.ts";
 import {
   ClientSession,
-  ClientSessionOptions,
-  EndSessionOptions,
+  type ClientSessionOptions,
+  type EndSessionOptions,
   MongoClient,
-  MongoClientOptions,
-  TransactionOptions,
+  type MongoClientOptions,
+  type TransactionOptions,
 } from "../deps.ts";
-import { ModelOptions, MongoModel } from "./model.ts";
+import { type ModelOptions, MongoModel } from "./model.ts";
 import { performanceStats } from "./utility.ts";
 
 export type TCacheValue = object | number | boolean | string | null | undefined;
