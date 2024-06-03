@@ -5,6 +5,10 @@
       "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
       "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
       "jsr:@oridune/validator@^0.2.52": "jsr:@oridune/validator@0.2.52",
+      "jsr:@oridune/validator@^0.3.0": "jsr:@oridune/validator@0.3.0",
+      "jsr:@oridune/validator@^0.3.1": "jsr:@oridune/validator@0.3.1",
+      "jsr:@std/fmt@^0.225.3": "jsr:@std/fmt@0.225.3",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
       "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
@@ -19,6 +23,21 @@
       },
       "@oridune/validator@0.2.52": {
         "integrity": "9983cc761024fe9292459fe0e44557eb1544717fa65b0b6774134246368178be"
+      },
+      "@oridune/validator@0.3.0": {
+        "integrity": "a329055a7fbe610ddebf68ca3cb933f8b4aac806398233f3b46de7a7048d518e",
+        "dependencies": [
+          "jsr:@std/fmt@^0.225.3"
+        ]
+      },
+      "@oridune/validator@0.3.1": {
+        "integrity": "af03260983310dc0e339deea2e07ff1394960a0111ec9a000eb8af4777caeae9",
+        "dependencies": [
+          "jsr:@std/fmt@^0.225.3"
+        ]
+      },
+      "@std/fmt@0.225.3": {
+        "integrity": "cb6ea567155f9865b80b502b2dde7671803eddd6dad743d8851d0de2c40bd349"
       }
     },
     "npm": {
@@ -1046,5 +1065,10 @@
     "https://deno.land/x/ts_morph@18.0.0/common/mod.ts": "01985d2ee7da8d1caee318a9d07664774fbee4e31602bc2bb6bb62c3489555ed",
     "https://deno.land/x/ts_morph@18.0.0/common/ts_morph_common.js": "845671ca951073400ce142f8acefa2d39ea9a51e29ca80928642f3f8cf2b7700",
     "https://deno.land/x/ts_morph@18.0.0/common/typescript.js": "d5c598b6a2db2202d0428fca5fd79fc9a301a71880831a805d778797d2413c59"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@oridune/validator@^0.3.1"
+    ]
   }
 }

@@ -188,20 +188,19 @@ Deno.test({
     });
 
     // User with Populates
-    const UserWithPopulatesSchema = e
-      .omit(e.required(UserSchema, { ignore: ["followers", "timeline"] }), {
-        keys: ["posts", "latestPost", "activity", "latestActivity"],
-      })
-      .extends(
-        e.partial(
-          e.object({
-            posts: e.array(PostSchema),
-            latestPost: PostSchema,
-            activity: e.array(ActivityWithPopulatesSchema),
-            latestActivity: ActivityWithPopulatesSchema,
-          }),
-        ),
-      );
+    const UserWithPopulatesSchema = e.object().extends(e.omit(
+      e.object().extends(
+        e.required(e.omit(UserSchema, ["followers", "timeline"])),
+      ).extends(e.pick(UserSchema, ["followers", "timeline"])),
+      ["posts", "latestPost", "activity", "latestActivity"],
+    )).extends(e.partial(
+      e.object({
+        posts: e.array(PostSchema),
+        latestPost: PostSchema,
+        activity: e.array(ActivityWithPopulatesSchema),
+        latestActivity: ActivityWithPopulatesSchema,
+      }),
+    ));
 
     await t.step("Create Indexes", async () => {
       await UserModel.createIndex(
@@ -220,7 +219,10 @@ Deno.test({
 
     await t.step("Create Users and Posts", async () => {
       // Create Users
-      const Users = await UserModel.createMany(UsersData);
+      const Users = await UserModel.createMany(UsersData).catch((error) => {
+        console.error(error);
+        throw error;
+      });
 
       // Check if the result is a valid Users list
       await e.array(UserSchema).validate(Users);

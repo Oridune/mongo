@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { type UpdateFilter, type ObjectId, type Document } from "../deps.ts";
-import { type IsObject as _IsObject } from "../validator.ts";
+import type { Document, ObjectId, UpdateFilter } from "../deps.ts";
+import type { IsObject as _IsObject } from "../validator.ts";
 
 type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
 
@@ -51,7 +51,7 @@ export type Optionalize<
   RequiredT = Omit<T, UndefinedKeys>,
   DeepRequired = OptionalizeEach<RequiredT>,
   OptionalT = Pick<T, UndefinedKeys>,
-  DeepOptional = OptionalizeEach<OptionalT>
+  DeepOptional = OptionalizeEach<OptionalT>,
 > = DeepRequired & Partial<DeepOptional>;
 
 export type InputDocument<T> = { _id?: ObjectId } & Omit<Optionalize<T>, "_id">;
@@ -73,7 +73,7 @@ export const circularReplacer = () => {
 
 export const deepObjectToFlatten = (
   obj: Record<string, any>,
-  prefix = ""
+  prefix = "",
 ): Record<string, any> => {
   return Object.keys(obj).reduce((acc, key) => {
     const propName = prefix ? `${prefix}.${key}` : key;
@@ -81,9 +81,9 @@ export const deepObjectToFlatten = (
       typeof obj[key] === "object" &&
       obj[key] !== null &&
       obj[key].constructor === Object
-    )
+    ) {
       return { ...acc, ...deepObjectToFlatten(obj[key], propName) };
-    else return { ...acc, [propName]: obj[key] };
+    } else return { ...acc, [propName]: obj[key] };
   }, {});
 };
 
@@ -117,7 +117,7 @@ export const assignDeepValues = (
   options?: {
     modifier?: (value: any, key: string, parent: any) => any;
     resolver?: (value: any, key: string, parent: any) => any;
-  }
+  },
 ) => {
   const Result: any = {};
 
@@ -130,10 +130,9 @@ export const assignDeepValues = (
     let exists = true;
 
     for (const NestedKey of NestedKeys) {
-      const Target =
-        typeof options?.resolver === "function"
-          ? options.resolver(value[NestedKey], NestedKey, value)
-          : value[NestedKey];
+      const Target = typeof options?.resolver === "function"
+        ? options.resolver(value[NestedKey], NestedKey, value)
+        : value[NestedKey];
 
       if (Target !== undefined) {
         parent = value;
@@ -146,10 +145,9 @@ export const assignDeepValues = (
 
     const Value = exists ? value : undefined;
 
-    Result[key] =
-      typeof options?.modifier === "function"
-        ? options?.modifier(Value, key, parent)
-        : Value;
+    Result[key] = typeof options?.modifier === "function"
+      ? options?.modifier(Value, key, parent)
+      : Value;
   });
 
   return Result;
@@ -158,16 +156,17 @@ export const assignDeepValues = (
 export const pickProps = (
   keys: string[],
   object: any,
-  modifier?: (value: any, key: string) => any
+  modifier?: (value: any, key: string) => any,
 ) => {
   const Result: any = {};
 
-  for (const Key in object)
-    if (keys.includes(Key))
-      Result[Key] =
-        typeof modifier === "function"
-          ? modifier(object[Key], Key)
-          : object[Key];
+  for (const Key in object) {
+    if (keys.includes(Key)) {
+      Result[Key] = typeof modifier === "function"
+        ? modifier(object[Key], Key)
+        : object[Key];
+    }
+  }
 
   return Result;
 };
@@ -175,16 +174,17 @@ export const pickProps = (
 export const omitProps = (
   keys: string[],
   object: any,
-  modifier?: (value: any, key: string) => any
+  modifier?: (value: any, key: string) => any,
 ) => {
   const Result: any = {};
 
-  for (const Key in object)
-    if (!keys.includes(Key))
-      Result[Key] =
-        typeof modifier === "function"
-          ? modifier(object[Key], Key)
-          : object[Key];
+  for (const Key in object) {
+    if (!keys.includes(Key)) {
+      Result[Key] = typeof modifier === "function"
+        ? modifier(object[Key], Key)
+        : object[Key];
+    }
+  }
 
   return Result;
 };
@@ -192,12 +192,13 @@ export const omitProps = (
 export const performanceStats = async <T>(
   key: string,
   callback: () => T,
-  options?: { enabled?: boolean; logs?: boolean }
+  options?: { enabled?: boolean; logs?: boolean },
 ) => {
-  if (!options?.enabled)
+  if (!options?.enabled) {
     return {
       result: await callback(),
     };
+  }
 
   const TimeStart = new Date();
 
@@ -220,7 +221,7 @@ export const performanceStats = async <T>(
 
 export const mongodbModifiersToObject = (
   updates: UpdateFilter<Document>,
-  result: Record<string, any> = {}
+  result: Record<string, any> = {},
 ) => {
   if (typeof updates.$set === "object") {
     result = updates.$set;
@@ -231,14 +232,17 @@ export const mongodbModifiersToObject = (
     }
   }
 
-  for (const Mode of ["$push", "$addToSet"])
-    if (typeof updates[Mode] === "object")
-      for (const SetterKey of Object.keys(updates[Mode]))
+  for (const Mode of ["$push", "$addToSet"]) {
+    if (typeof updates[Mode] === "object") {
+      for (const SetterKey of Object.keys(updates[Mode])) {
         result[SetterKey] = (() => {
           const Target = updates[Mode][SetterKey];
           if ("$each" in Target) return Target.$each;
           return [Target];
         })();
+      }
+    }
+  }
 
   return result;
 };

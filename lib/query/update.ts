@@ -18,7 +18,7 @@ import {
   omitProps,
   pickProps,
 } from "../utility.ts";
-import e, { ArrayValidator } from "../../validator.ts";
+import e from "../../validator.ts";
 
 export class BaseUpdateQuery<
   Model extends MongoModel<any, any, any>,
@@ -99,26 +99,23 @@ export class BaseUpdateQuery<
       }
     }
 
-    const Schema = this.DatabaseModel.getUpdateSchema({
-      eachValidatorOptions: (validator) => {
-        if (validator instanceof ArrayValidator) {
-          return {
-            ignoreNanKeys: true,
-            pushNanKeys: true,
-          };
-        }
-      },
-    });
+    const Schema = this.DatabaseModel.getUpdateSchema();
+    const ResolvedSchema = e.object().extends(
+      e.deepPartial(e.omit(Schema, ReplacementKeys)),
+    ).extends(e.pick(Schema, ReplacementKeys));
+
+    console.log("ReP:", ReplacementKeys);
 
     return {
       ...assignDeepValues(
         Keys,
-        await e
-          .deepPartial(Schema, {
-            ignoreKeys: ReplacementKeys,
-          })
+        await ResolvedSchema
           .validate(dotNotationToDeepObject(omitProps(ExpressionKeys, data)), {
             name: this.DatabaseModel.Name,
+            deepOptions: {
+              ignoreNanKeys: true,
+              pushNanKeys: true,
+            },
           }),
         {
           resolver: (value, key, parent) => {

@@ -100,7 +100,7 @@ export class MongoModel<
     }
   }
 
-  public getSchema(options?: Parameters<typeof e.deepCast>[1]) {
+  public getSchema() {
     const Schema = typeof this.ModelSchema === "function"
       ? this.ModelSchema()
       : this.ModelSchema;
@@ -109,11 +109,11 @@ export class MongoModel<
       throw new Error(`Invalid or unexpected schema passed!`);
     }
 
-    return e.deepCast(Schema, options);
+    return e.deepCast(Schema);
   }
 
-  public getUpdateSchema(options?: Parameters<typeof e.deepCast>[1]) {
-    return this.getSchema(options);
+  public getUpdateSchema() {
+    return this.getSchema();
   }
 
   constructor(
@@ -205,7 +205,7 @@ export class MongoModel<
     const Result = { _id: Ack.insertedId, ...Doc };
 
     return (
-      this.PostHooks.create?.reduce<Promise<OutputDocument<OutputShape>>>(
+      this.PostHooks.create?.reduce<any>(
         async (doc, hook) =>
           hook({ event: "create", method: "create", data: await doc }),
         Promise.resolve(Result),
