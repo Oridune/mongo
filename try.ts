@@ -1,6 +1,6 @@
 import e from "./validator.ts";
 import { ObjectId } from "./deps.ts";
-import { Mongo, CacheProvider } from "./mod.ts";
+import { CacheProvider, Mongo } from "./mod.ts";
 
 const Cache = new Map<
   string,
@@ -12,7 +12,7 @@ const Cache = new Map<
 >();
 
 try {
-  Mongo.post("connect", () => Mongo.drop());
+  Mongo.post("connect", (i) => Mongo.drop(i));
 
   // Create Post Schema
   const PostSchema = e.object({
@@ -45,7 +45,7 @@ try {
       e.object({
         name: e.string(),
         dob: e.optional(e.date()),
-      })
+      }),
     ),
     followers: e.optional(e.array(e.if(ObjectId.isValid))),
     posts: e.optional(e.array(e.if(ObjectId.isValid))),
@@ -56,14 +56,14 @@ try {
         e.object({
           description: e.string(),
           user: e.instanceOf(ObjectId, { instantiate: true }),
-        })
-      )
+        }),
+      ),
     ),
     latestActivity: e.optional(
       e.object({
         description: e.string(),
         user: e.instanceOf(ObjectId, { instantiate: true }),
-      })
+      }),
     ),
     createdAt: e.optional(e.date()).default(() => new Date()),
     updatedAt: e.optional(e.date()).default(() => new Date()),
@@ -82,7 +82,7 @@ try {
     {
       key: { username: "text", "profile.name": "text" },
       // background: true,
-    }
+    },
   );
 
   UserModel
@@ -119,8 +119,11 @@ try {
     },
     getter: (key) => {
       const Value = Cache.get(key);
-      if (Value && (!Value.ttl || Value.ttl + Value.time >= Date.now() / 1000))
+      if (
+        Value && (!Value.ttl || Value.ttl + Value.time >= Date.now() / 1000)
+      ) {
         return Value.value;
+      }
     },
     deleter: (key) => {
       Cache.delete(key);
@@ -141,7 +144,7 @@ try {
         title: "Test",
         description: "This is a test post.",
       },
-      { session }
+      { session },
     );
 
     await UserModel.createMany(
@@ -183,7 +186,7 @@ try {
           followers: [User1Id],
         },
       ],
-      { session }
+      { session },
     );
 
     // await UserModel.findOne({}, { session })
@@ -263,7 +266,9 @@ try {
 
   console.log("Connected:", Mongo.isConnected());
 
-  await Mongo.connect("mongodb://localhost:27017/mongo");
+  await Mongo.connect(
+    "mongodb://localhost:27017/mongo-1,mongodb://localhost:27017/mongo",
+  );
 
   console.log("Connected:", Mongo.isConnected());
 
@@ -281,7 +286,7 @@ try {
       $setOnInsert: {
         avatar: { url: null },
       },
-    }
+    },
   );
 } catch (error) {
   console.log(error);
