@@ -74,10 +74,11 @@ Deno.test({
   async fn(t) {
     Mongo.enableLogs = true;
 
-    const ConnectionString = "mongodb://localhost:27017/mongo";
+    const ConnectionString =
+      "mongodb://localhost:27017/mongo,mongodb://localhost:27017/mongo-1";
 
     await Mongo.connect(ConnectionString);
-    await Mongo.drop();
+    await Mongo.drop(1);
 
     // Setup Caching
     Mongo.setCachingMethods({
@@ -146,7 +147,7 @@ Deno.test({
         ),
       });
 
-    const UserModel = Mongo.model("user", UserSchema);
+    const UserModel = Mongo.model("user", UserSchema, 1);
 
     UserModel.pre("update", (details) => {
       details.updates.$set = {
@@ -178,7 +179,7 @@ Deno.test({
         updatedAt: e.optional(e.date()).default(() => new Date()),
       });
 
-    const PostModel = Mongo.model("post", PostSchema);
+    const PostModel = Mongo.model("post", PostSchema, 1);
 
     PostModel.pre("update", (details) => {
       details.updates.$set = {
@@ -500,7 +501,7 @@ Deno.test({
           );
 
           throw new Error(`Transaction cancelled!`);
-        });
+        }, 1);
 
         throw new Error(`This transaction should not execute!`);
       } catch {
@@ -543,7 +544,7 @@ Deno.test({
           },
           { session },
         );
-      });
+      }, 1);
 
       if ((await UserModel.count()) === 0 || (await PostModel.count()) === 0) {
         throw new Error(`Transaction commit not working!`);

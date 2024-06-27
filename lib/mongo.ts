@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any ban-ts-comment
 import pluralize from "npm:pluralize@8.0.0";
 import type { ObjectValidator } from "../validator.ts";
 import {
@@ -49,13 +49,21 @@ export type TCacheOptions = {
 export class Mongo {
   static enableLogs = false;
 
-  static client?: MongoClient;
+  static clients: MongoClient[] = [];
 
-  protected static preConnectEvents: Array<() => void | Promise<void>> = [];
-  protected static postConnectEvents: Array<() => void | Promise<void>> = [];
+  protected static preConnectEvents: Array<
+    (connectionIndex: number) => void | Promise<void>
+  > = [];
+  protected static postConnectEvents: Array<
+    (connectionIndex: number) => void | Promise<void>
+  > = [];
 
-  protected static preDisconnectEvents: Array<() => void | Promise<void>> = [];
-  protected static postDisconnectEvents: Array<() => void | Promise<void>> = [];
+  protected static preDisconnectEvents: Array<
+    (connectionIndex: number) => void | Promise<void>
+  > = [];
+  protected static postDisconnectEvents: Array<
+    (connectionIndex: number) => void | Promise<void>
+  > = [];
 
   protected static cachingMethods?: {
     // deno-lint-ignore ban-types
@@ -91,7 +99,7 @@ export class Mongo {
 
   static pre(
     event: "connect" | "disconnect",
-    callback: () => void | Promise<void>,
+    callback: (connectionIndex: number) => void | Promise<void>,
   ) {
     switch (event) {
       case "connect":
@@ -110,7 +118,7 @@ export class Mongo {
 
   static post(
     event: "connect" | "disconnect",
-    callback: () => void | Promise<void>,
+    callback: (connectionIndex: number) => void | Promise<void>,
   ) {
     switch (event) {
       case "connect":
@@ -131,49 +139,82 @@ export class Mongo {
    * Is database connected?
    * @returns
    */
-  static isConnected() {
-    return (
-      this.client instanceof MongoClient &&
-      "topology" in this.client &&
-      typeof this.client.topology === "object" &&
-      !!this.client.topology &&
-      "isConnected" in this.client.topology &&
-      typeof this.client.topology.isConnected === "function" &&
-      !!this.client.topology.isConnected()
+  static isConnected(connectionIndex?: number) {
+    const isConnected = (i: number) => {
+      const Conn = this.clients[i];
+
+      return (
+        Conn instanceof MongoClient &&
+        "topology" in Conn &&
+        typeof Conn.topology === "object" &&
+        !!Conn.topology &&
+        "isConnected" in Conn.topology &&
+        typeof Conn.topology.isConnected === "function" &&
+        !!Conn.topology.isConnected()
+      );
+    };
+
+    if (typeof connectionIndex === "number") {
+      return isConnected(connectionIndex);
+    } else {
+      return (
+        !!this.clients.length &&
+        this.clients.reduce(
+          (connected, _, i) => connected && isConnected(i),
+          true,
+        )
+      );
+    }
+  }
+
+  static async connect(
+    urls: string | string[],
+    options?: MongoClientOptions | MongoClientOptions[],
+  ) {
+    const Urls = urls instanceof Array ? urls : urls.split(",");
+    const Options = options instanceof Array ? options : [options];
+
+    await Promise.all(
+      Urls.map(async (url, i) => {
+        const options = Options[i];
+
+        // Execute Pre-Connect Events
+        for (const _ of this.preConnectEvents) await _(i);
+
+        this.clients[i] ??= await MongoClient.connect(url, options);
+
+        // Execute Post-Connect Events
+        for (const _ of this.postConnectEvents) await _(i);
+      }),
     );
   }
 
-  static async connect(url: string, options?: MongoClientOptions) {
-    // Execute Pre-Connect Events
-    for (const _ of this.preConnectEvents) await _();
+  static async disconnect(connectionIndex?: number) {
+    const close = async (i: number) => {
+      // Execute Pre-Disconnect Events
+      for (const _ of this.preDisconnectEvents) await _(i);
 
-    this.client ??= await MongoClient.connect(url, options);
+      this.clients[i]?.close();
+      delete this.clients[i];
 
-    // Execute Post-Connect Events
-    for (const _ of this.postConnectEvents) await _();
+      // Execute Post-Disconnect Events
+      for (const _ of this.postDisconnectEvents) await _(i);
+    };
+
+    if (typeof connectionIndex === "number") await close(connectionIndex);
+    else await Promise.all(this.clients.map((_, i) => close(i)));
   }
 
-  static async disconnect() {
-    // Execute Pre-Disconnect Events
-    for (const _ of this.preDisconnectEvents) await _();
-
-    this.client?.close();
-    delete this.client;
-
-    // Execute Post-Disconnect Events
-    for (const _ of this.postDisconnectEvents) await _();
-  }
-
-  static async drop(dbName?: string | undefined) {
-    await this.client?.db(dbName).dropDatabase();
+  static async drop(connectionIndex?: number, dbName?: string | undefined) {
+    await this.clients[connectionIndex ?? 0]?.db(dbName).dropDatabase();
   }
 
   static model<T extends ObjectValidator<any, any, any>>(
     name: string,
     schema: T | (() => T),
-    options?: ModelOptions,
+    opts?: ModelOptions | number,
   ) {
-    return new MongoModel(pluralize(name), schema, options);
+    return new MongoModel(pluralize(name), schema, opts);
   }
 
   /**
@@ -186,20 +227,43 @@ export class Mongo {
     callback: (session: ClientSession) => Promise<T>,
     opts?:
       | {
+        connectionIndex?: number;
         sessionOpts?: ClientSessionOptions;
         transactionOpts?: TransactionOptions;
         sessionEndOpts?: EndSessionOptions;
       }
-      | ClientSession,
+      | ClientSession
+      | number,
+    connectionIndex?: number,
   ) {
-    if (opts instanceof ClientSession) return callback(opts);
+    if (opts instanceof ClientSession) {
+      if (
+        "_connectionIndex" in opts &&
+        typeof opts._connectionIndex === "number" &&
+        typeof connectionIndex === "number" &&
+        opts._connectionIndex !== connectionIndex
+      ) {
+        throw new Error(
+          `ClientSession for a different connection index '${opts._connectionIndex}' cannot execute the transaction of connection index '${connectionIndex}'!`,
+        );
+      }
 
-    if (!this.client) throw new Error(`Please connect the client first!`);
+      return callback(opts);
+    }
 
-    const Session = this.client.startSession(opts?.sessionOpts);
+    const Opts = typeof opts === "number" ? { connectionIndex: opts } : opts;
+    const CIndex = Opts?.connectionIndex ?? connectionIndex ?? 0;
+    const Conn = this.clients[CIndex];
+
+    if (!Conn) throw new Error(`Please connect the client first!`);
+
+    const Session = Conn.startSession(Opts?.sessionOpts);
+
+    // @ts-ignore
+    Session._connectionIndex = CIndex;
 
     try {
-      Session.startTransaction(opts?.transactionOpts);
+      Session.startTransaction(Opts?.transactionOpts);
 
       const Result = await callback(Session);
 
@@ -211,7 +275,7 @@ export class Mongo {
 
       throw error;
     } finally {
-      await Session.endSession(opts?.sessionEndOpts);
+      await Session.endSession(Opts?.sessionEndOpts);
     }
   }
 

@@ -50,6 +50,7 @@ import {
 } from "./query/utility.ts";
 
 export interface ModelOptions {
+  connectionIndex?: number;
   database?: string;
   collectionOptions?: CollectionOptions;
   logs?: boolean;
@@ -75,7 +76,7 @@ export class MongoModel<
       console.info(
         "Query Executed::",
         highligthEs(
-          `${this.database.databaseName}.${this.Name}.${method}(\n\r\t${
+          `@${this.ConnectionIndex}.${this.database.databaseName}.${this.Name}.${method}(\n\r\t${
             args
               .map((arg) => {
                 const Arg = { ...arg };
@@ -85,7 +86,7 @@ export class MongoModel<
                     (
                       Arg.session as ClientSession
                     ).id?.id.toUUID()
-                  })`;
+                  }) @${Arg.session._connectionIndex ?? this.ConnectionIndex}`;
                 }
 
                 return Arg
@@ -116,25 +117,36 @@ export class MongoModel<
     return this.getSchema();
   }
 
+  public Options: ModelOptions;
+  public ConnectionIndex: number;
+
   constructor(
     public Name: string,
     public ModelSchema: Schema | (() => Schema),
-    public Options: ModelOptions = {},
+    opts?: ModelOptions | number,
   ) {
     super();
+
+    this.Options = typeof opts === "number"
+      ? { connectionIndex: opts }
+      : opts ?? {};
+
+    this.ConnectionIndex = this.Options.connectionIndex ??= 0;
   }
 
   get database() {
-    if (!Mongo.isConnected()) {
+    if (!Mongo.isConnected(this.ConnectionIndex)) {
       throw new Error(`Please connect to the database!`);
     }
 
     if (
       !this.DatabaseInstance ||
       ("client" in this.DatabaseInstance &&
-        this.DatabaseInstance.client !== Mongo.client!)
+        this.DatabaseInstance.client !== Mongo.clients[this.ConnectionIndex]!)
     ) {
-      return (this.DatabaseInstance = Mongo.client!.db(this.Options.database));
+      return (this.DatabaseInstance = Mongo.clients[this.ConnectionIndex]!.db(
+        this.Options.database,
+      ));
     }
 
     return this.DatabaseInstance;
@@ -160,7 +172,7 @@ export class MongoModel<
       }
     };
 
-    if (Mongo.isConnected()) await createIndex();
+    if (Mongo.isConnected(this.ConnectionIndex)) await createIndex();
     else Mongo.post("connect", createIndex);
 
     return this;
@@ -176,7 +188,7 @@ export class MongoModel<
       }
     };
 
-    if (Mongo.isConnected()) await dropIndex();
+    if (Mongo.isConnected(this.ConnectionIndex)) await dropIndex();
     else Mongo.post("connect", dropIndex);
 
     return this;

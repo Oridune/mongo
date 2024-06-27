@@ -3,9 +3,9 @@ import type { DeleteOptions, UpdateOptions } from "../../deps.ts";
 import type { MongoModel } from "../model.ts";
 import { BaseUpdateQuery, UpdateManyQuery, UpdateOneQuery } from "./update.ts";
 import {
-  type BaseFindQuery,
   FindOneQuery,
   FindQuery,
+  type BaseFindQuery,
   type PopulatedDocument,
   type PopulateOptions,
 } from "./find.ts";
