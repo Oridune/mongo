@@ -379,9 +379,11 @@ export class MongoModel<
     );
   }
 
-  public updateOne<F = InputDocument<InputShape>>(
+  public updateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     const Filter = (
@@ -395,12 +397,14 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public async updateOneOrFail<F = InputDocument<InputShape>>(
+  public async updateOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
-    const Result = await this.updateOne<F>(filter, updates, options);
+    const Result = await this.updateOne(filter, updates, options);
 
     if (!Result.modifiedCount) {
       throw new Error("Record update has been failed!");
@@ -409,9 +413,11 @@ export class MongoModel<
     return Result;
   }
 
-  public updateAndFindOne<F = InputDocument<InputShape>>(
+  public updateAndFindOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     const Filter = (
@@ -425,9 +431,11 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateOne<F = InputDocument<InputShape>>(
+  public findAndUpdateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     const Filter = (
@@ -441,9 +449,11 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public updateMany<F = InputDocument<InputShape>>(
+  public updateMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     return new UpdateManyQuery(this, options)
@@ -451,12 +461,14 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public async updateManyOrFail<F = InputDocument<InputShape>>(
+  public async updateManyOrFail(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
-    const Result = await this.updateMany<F>(filter, updates, options);
+    const Result = await this.updateMany(filter, updates, options);
 
     if (!Result.modifiedCount) {
       throw new Error("Record update has been failed!");
@@ -465,9 +477,11 @@ export class MongoModel<
     return Result;
   }
 
-  public updateAndFindMany<F = InputDocument<InputShape>>(
+  public updateAndFindMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     return new UpdateAndFindManyQuery(this, options)
@@ -475,9 +489,11 @@ export class MongoModel<
       .updates(updates as any);
   }
 
-  public findAndUpdateMany<F = InputDocument<InputShape>>(
+  public findAndUpdateMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    updates?: UpdateFilter<F> & Partial<F>,
+    updates?:
+      & UpdateFilter<InputDocument<InputShape>>
+      & Partial<InputDocument<InputShape>>,
     options?: UpdateOptions & { validate?: boolean },
   ) {
     return new FindAndUpdateManyQuery(this, options)
@@ -599,7 +615,11 @@ export class MongoModel<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
     S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
-  >(field: F, model: M, options?: PopulateOptions<M>) {
+  >(field: F, model: M, options?: PopulateOptions<M>): MongoModel<
+    Schema,
+    InputShape,
+    PopulatedDocument<OutputShape, F, S[]>
+  > {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,
       this.ModelSchema,
@@ -612,18 +632,18 @@ export class MongoModel<
       options: options as any,
     };
 
-    return Model as MongoModel<
-      Schema,
-      InputShape,
-      PopulatedDocument<OutputShape, F, S[]>
-    >;
+    return Model as any;
   }
 
   public populateOne<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
     S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
-  >(field: F, model: M, options?: PopulateOptions<M>) {
+  >(field: F, model: M, options?: PopulateOptions<M>): MongoModel<
+    Schema,
+    InputShape,
+    PopulatedDocument<OutputShape, F, S>
+  > {
     const Model = new (this["constructor"] as typeof MongoModel)(
       this.Name,
       this.ModelSchema,
@@ -639,10 +659,6 @@ export class MongoModel<
       },
     };
 
-    return Model as MongoModel<
-      Schema,
-      InputShape,
-      PopulatedDocument<OutputShape, F, S>
-    >;
+    return Model as any;
   }
 }

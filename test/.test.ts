@@ -139,7 +139,7 @@ Deno.test({
                   .optional(e.instanceOf(ObjectId, { instantiate: true }))
                   .default(() => new ObjectId()),
                 message: e.string(),
-                priority: e.value(100),
+                priority: e.optional(e.value(100)),
                 createdAt: e.optional(e.date()).default(() => new Date()),
               }),
             )
@@ -418,6 +418,7 @@ Deno.test({
           $push: {
             activity: {
               description: "This is a test...",
+              user: User1Id,
             },
           },
         },

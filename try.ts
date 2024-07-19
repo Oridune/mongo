@@ -272,22 +272,27 @@ try {
 
   console.log("Connected:", Mongo.isConnected());
 
-  await UserModel.updateMany(
+  const { modifications } = await UserModel.updateManyOrFail(
     {},
     {
       password: "revealed!",
-      $push: {
-        attachments: {
-          $each: [{ url: null, sizeInBytes: 1 }],
-          $position: 2,
-        },
-        followers: User1Id,
-      },
-      $setOnInsert: {
-        avatar: { url: null },
+      // $push: {
+      //   attachments: {
+      //     $each: [{ url: null, sizeInBytes: 1 }],
+      //     $position: 2,
+      //   },
+      //   followers: User1Id,
+      // },
+      // $setOnInsert: {
+      //   avatar: { url: null },
+      // },
+      $addToSet: {
+        followers: User1Id
       },
     },
   );
+
+  console.log("Modifications:", modifications);
 } catch (error) {
   console.log(error);
 }

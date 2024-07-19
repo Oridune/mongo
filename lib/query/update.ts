@@ -41,9 +41,8 @@ export class BaseUpdateQuery<
         !!Object.keys(Value).find((_) =>
           /^\$(each|slice|position|sort)/.test(_)
         )
-      ) {
-        ModifierKeys.push(Key);
-      } else InsertKeys.push(Key);
+      ) ModifierKeys.push(Key);
+      else InsertKeys.push(Key);
     }
 
     return {
@@ -83,9 +82,9 @@ export class BaseUpdateQuery<
     const ExpressionKeys: string[] = [];
     const ReplacementKeys: string[] = [];
 
-    const ExpressionRegex = /^\$(.+)/;
-    const ReplacerRegex = /\.\$(\[.*\])?$/;
-    const PositionalRegex = /^\$(\[.*\])?$/;
+    const ExpressionRegex = /^\$(.+)/; // Keys like $inc
+    const ReplacerRegex = /\.\$(\[.*\])?$/; // Keys like something.$[foo], something.$
+    const PositionalRegex = /^\$(\[.*\])?$/; // Keys like $, $[0]
 
     for (const [Key, Value] of Object.entries(data)) {
       if (typeof Value === "object" && !!Value) {
@@ -103,8 +102,6 @@ export class BaseUpdateQuery<
     const ResolvedSchema = e.object().extends(
       e.deepPartial(e.omit(Schema, ReplacementKeys)),
     ).extends(e.pick(Schema, ReplacementKeys));
-
-    console.log("ReP:", ReplacementKeys);
 
     return {
       ...assignDeepValues(

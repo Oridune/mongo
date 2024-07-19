@@ -2,7 +2,7 @@
 import type { Document, ObjectId, UpdateFilter } from "../deps.ts";
 import type { IsObject as _IsObject } from "../validator.ts";
 
-type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
+// type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
 
 // // "a.b.c" => "b.c"
 // type Tail<S> = S extends `${string}.${infer T}` ? Tail<T> : S;
@@ -33,28 +33,28 @@ type IsObject<T, R, F = T> = _IsObject<T, R, F, ObjectId>;
 //   ? T
 //   : FlattenObject<FlattenOneLevel<T>>;
 
-type OptionalizeIfObject<T, R = Exclude<T, undefined>> = IsObject<
-  R,
-  Optionalize<R>,
-  R extends Array<infer O> ? Array<OptionalizeIfObject<O>> : R
->;
+// type OptionalizeIfObject<T, R = Exclude<T, undefined>> = IsObject<
+//   R,
+//   Optionalize<R>,
+//   R extends Array<infer O> ? Array<OptionalizeIfObject<O>> : R
+// >;
 
-type OptionalizeEach<T> = {
-  [K in keyof T]: OptionalizeIfObject<T[K]>;
-};
+// type OptionalizeEach<T> = {
+//   [K in keyof T]: OptionalizeIfObject<T[K]>;
+// };
 
-export type Optionalize<
-  T,
-  UndefinedKeys extends keyof T = {
-    [K in keyof T]: undefined extends T[K] ? K : never;
-  }[keyof T],
-  RequiredT = Omit<T, UndefinedKeys>,
-  DeepRequired = OptionalizeEach<RequiredT>,
-  OptionalT = Pick<T, UndefinedKeys>,
-  DeepOptional = OptionalizeEach<OptionalT>,
-> = DeepRequired & Partial<DeepOptional>;
+// export type Optionalize<
+//   T,
+//   UndefinedKeys extends keyof T = {
+//     [K in keyof T]: undefined extends T[K] ? K : never;
+//   }[keyof T],
+//   RequiredT = Omit<T, UndefinedKeys>,
+//   DeepRequired = OptionalizeEach<RequiredT>,
+//   OptionalT = Pick<T, UndefinedKeys>,
+//   DeepOptional = OptionalizeEach<OptionalT>,
+// > = DeepRequired & Partial<DeepOptional>;
 
-export type InputDocument<T> = { _id?: ObjectId } & Omit<Optionalize<T>, "_id">;
+export type InputDocument<T> = { _id?: ObjectId } & Omit<T, "_id">;
 
 export type OutputDocument<T> = { _id: ObjectId } & Omit<T, "_id">;
 
@@ -237,7 +237,9 @@ export const mongodbModifiersToObject = (
       for (const SetterKey of Object.keys(updates[Mode])) {
         result[SetterKey] = (() => {
           const Target = updates[Mode][SetterKey];
+
           if ("$each" in Target) return Target.$each;
+          
           return [Target];
         })();
       }

@@ -6,8 +6,8 @@
       "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
       "jsr:@oridune/validator@^0.2.52": "jsr:@oridune/validator@0.2.52",
       "jsr:@oridune/validator@^0.3.0": "jsr:@oridune/validator@0.3.0",
-      "jsr:@oridune/validator@^0.3.1": "jsr:@oridune/validator@0.3.1",
-      "jsr:@std/fmt@^0.225.3": "jsr:@std/fmt@0.225.3",
+      "jsr:@oridune/validator@^0.3.6": "jsr:@oridune/validator@0.3.6",
+      "jsr:@std/fmt@^0.225.3": "jsr:@std/fmt@0.225.6",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
@@ -30,14 +30,17 @@
           "jsr:@std/fmt@^0.225.3"
         ]
       },
-      "@oridune/validator@0.3.1": {
-        "integrity": "af03260983310dc0e339deea2e07ff1394960a0111ec9a000eb8af4777caeae9",
+      "@oridune/validator@0.3.6": {
+        "integrity": "255c97027d4969776d523b30bd78a674dbccca7aa7398c5178b219ee11bdf9cd",
         "dependencies": [
           "jsr:@std/fmt@^0.225.3"
         ]
       },
       "@std/fmt@0.225.3": {
         "integrity": "cb6ea567155f9865b80b502b2dde7671803eddd6dad743d8851d0de2c40bd349"
+      },
+      "@std/fmt@0.225.6": {
+        "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
       }
     },
     "npm": {
@@ -1068,7 +1071,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@^0.3.1"
+      "jsr:@oridune/validator@^0.3.6"
     ]
   }
 }
