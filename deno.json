@@ -6,6 +6,6 @@
     "./validator": "./validator.ts"
   },
   "imports": {
-    "@oridune/validator": "jsr:@oridune/validator@^0.3.7"
+    "@oridune/validator": "jsr:@oridune/validator@^0.3.9"
   }
 }

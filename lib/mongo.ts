@@ -50,7 +50,7 @@ export class Mongo {
   static enableLogs = false;
 
   static clients: MongoClient[] = [];
-  static models: Map<string, MongoModel<any>> = new Map();
+  static models: Map<string, MongoModel<ObjectValidator<any>>> = new Map();
 
   protected static preConnectEvents: Array<
     (connectionIndex: number) => void | Promise<void>
@@ -217,7 +217,7 @@ export class Mongo {
   ) {
     const Model = new MongoModel(pluralize(name), schema, opts);
 
-    this.models.set(name, Model);
+    this.models.set(name, Model as any);
 
     return Model;
   }
