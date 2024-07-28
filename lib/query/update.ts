@@ -51,7 +51,7 @@ export class BaseUpdateQuery<
         await e
           .partial(this.DatabaseModel.getUpdateSchema())
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
-            name: this.DatabaseModel.Name,
+            name: this.DatabaseModel.name,
           }),
         {
           modifier: (value, key) =>
@@ -69,7 +69,7 @@ export class BaseUpdateQuery<
               pickProps(ModifierKeys, data, (value) => value.$each),
             ),
             {
-              name: this.DatabaseModel.Name,
+              name: this.DatabaseModel.name,
             },
           ),
         { modifier: (value, key) => ({ ...data[key], $each: value }) },
@@ -108,7 +108,7 @@ export class BaseUpdateQuery<
         Keys,
         await ResolvedSchema
           .validate(dotNotationToDeepObject(omitProps(ExpressionKeys, data)), {
-            name: this.DatabaseModel.Name,
+            name: this.DatabaseModel.name,
             deepOptions: {
               ignoreNanKeys: true,
               pushNanKeys: true,

@@ -50,6 +50,7 @@ export class Mongo {
   static enableLogs = false;
 
   static clients: MongoClient[] = [];
+  static models: Map<string, MongoModel<any>> = new Map();
 
   protected static preConnectEvents: Array<
     (connectionIndex: number) => void | Promise<void>
@@ -209,12 +210,16 @@ export class Mongo {
     await this.clients[connectionIndex ?? 0]?.db(dbName).dropDatabase();
   }
 
-  static model<T extends ObjectValidator<any, any, any>>(
+  static model<T extends ObjectValidator<any>>(
     name: string,
     schema: T | (() => T),
     opts?: ModelOptions | number,
   ) {
-    return new MongoModel(pluralize(name), schema, opts);
+    const Model = new MongoModel(pluralize(name), schema, opts);
+
+    this.models.set(name, Model);
+
+    return Model;
   }
 
   /**

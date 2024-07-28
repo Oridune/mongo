@@ -62,8 +62,8 @@ export class MongoModel<
   InputShape extends object = inferInput<Schema>,
   OutputShape extends object = inferOutput<Schema>,
 > extends MongoHooks<InputShape, OutputShape> {
-  protected DatabaseInstance?: Db;
-  protected PopulateConfig?: {
+  protected databaseInstance?: Db;
+  protected populateConfig?: {
     field: string;
     model: MongoModel<any, any, any>;
     options?: PopulateOptions<any> & {
@@ -72,11 +72,11 @@ export class MongoModel<
   };
 
   protected log(method: string, ...args: any[]) {
-    if (this.Options.logs || Mongo.enableLogs) {
+    if (this.options.logs || Mongo.enableLogs) {
       console.info(
         "Query Executed::",
         highligthEs(
-          `@${this.ConnectionIndex}.${this.database.databaseName}.${this.Name}.${method}(\n\r\t${
+          `@${this.connectionIndex}.${this.database.databaseName}.${this.name}.${method}(\n\r\t${
             args
               .map((arg) => {
                 const Arg = { ...arg };
@@ -86,7 +86,7 @@ export class MongoModel<
                     (
                       Arg.session as ClientSession
                     ).id?.id.toUUID()
-                  }) @${Arg.session._connectionIndex ?? this.ConnectionIndex}`;
+                  }) @${Arg.session._connectionIndex ?? this.connectionIndex}`;
                 }
 
                 return Arg
@@ -102,9 +102,9 @@ export class MongoModel<
   }
 
   public getSchema() {
-    const Schema = typeof this.ModelSchema === "function"
-      ? this.ModelSchema()
-      : this.ModelSchema;
+    const Schema = typeof this.schema === "function"
+      ? this.schema()
+      : this.schema;
 
     if (!(Schema instanceof ObjectValidator)) {
       throw new Error(`Invalid or unexpected schema passed!`);
@@ -117,43 +117,43 @@ export class MongoModel<
     return this.getSchema();
   }
 
-  public Options: ModelOptions;
-  public ConnectionIndex: number;
+  public options: ModelOptions;
+  public connectionIndex: number;
 
   constructor(
-    public Name: string,
-    public ModelSchema: Schema | (() => Schema),
+    public name: string,
+    public schema: Schema | (() => Schema),
     opts?: ModelOptions | number,
   ) {
     super();
 
-    this.Options = typeof opts === "number"
+    this.options = typeof opts === "number"
       ? { connectionIndex: opts }
       : opts ?? {};
 
-    this.ConnectionIndex = this.Options.connectionIndex ??= 0;
+    this.connectionIndex = this.options.connectionIndex ??= 0;
   }
 
   get database() {
-    if (!Mongo.isConnected(this.ConnectionIndex)) {
+    if (!Mongo.isConnected(this.connectionIndex)) {
       throw new Error(`Please connect to the database!`);
     }
 
     if (
-      !this.DatabaseInstance ||
-      ("client" in this.DatabaseInstance &&
-        this.DatabaseInstance.client !== Mongo.clients[this.ConnectionIndex]!)
+      !this.databaseInstance ||
+      ("client" in this.databaseInstance &&
+        this.databaseInstance.client !== Mongo.clients[this.connectionIndex]!)
     ) {
-      return (this.DatabaseInstance = Mongo.clients[this.ConnectionIndex]!.db(
-        this.Options.database,
+      return (this.databaseInstance = Mongo.clients[this.connectionIndex]!.db(
+        this.options.database,
       ));
     }
 
-    return this.DatabaseInstance;
+    return this.databaseInstance;
   }
 
   get collection() {
-    return this.database.collection(this.Name, this.Options.collectionOptions);
+    return this.database.collection(this.name, this.options.collectionOptions);
   }
 
   public async createIndex(
@@ -172,7 +172,7 @@ export class MongoModel<
       }
     };
 
-    if (Mongo.isConnected(this.ConnectionIndex)) await createIndex();
+    if (Mongo.isConnected(this.connectionIndex)) await createIndex();
     else Mongo.post("connect", createIndex);
 
     return this;
@@ -188,7 +188,7 @@ export class MongoModel<
       }
     };
 
-    if (Mongo.isConnected(this.ConnectionIndex)) await dropIndex();
+    if (Mongo.isConnected(this.connectionIndex)) await dropIndex();
     else Mongo.post("connect", dropIndex);
 
     return this;
@@ -210,7 +210,7 @@ export class MongoModel<
     const Doc = options?.validate === false
       ? doc
       : await this.getSchema().validate(doc, {
-        name: this.Name,
+        name: this.name,
       });
 
     const Ack = await this.collection.insertOne(Doc, options);
@@ -245,7 +245,7 @@ export class MongoModel<
     const Docs = options?.validate === false
       ? docs
       : await e.array(this.getSchema()).validate(docs, {
-        name: this.Name,
+        name: this.name,
       });
 
     const Ack = await this.collection.insertMany(Docs, options);
@@ -593,7 +593,7 @@ export class MongoModel<
     this.log("replaceOne", Filter, doc, options);
 
     const Doc = await this.getSchema().validate(doc, {
-      name: this.Name,
+      name: this.name,
     });
 
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
@@ -621,12 +621,12 @@ export class MongoModel<
     PopulatedDocument<OutputShape, F, S[]>
   > {
     const Model = new (this["constructor"] as typeof MongoModel)(
-      this.Name,
-      this.ModelSchema,
-      this.Options,
+      this.name,
+      this.schema,
+      this.options,
     );
 
-    Model["PopulateConfig"] = {
+    Model["populateConfig"] = {
       field,
       model,
       options: options as any,
@@ -645,12 +645,12 @@ export class MongoModel<
     PopulatedDocument<OutputShape, F, S>
   > {
     const Model = new (this["constructor"] as typeof MongoModel)(
-      this.Name,
-      this.ModelSchema,
-      this.Options,
+      this.name,
+      this.schema,
+      this.options,
     );
 
-    Model["PopulateConfig"] = {
+    Model["populateConfig"] = {
       field,
       model,
       options: {

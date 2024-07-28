@@ -78,7 +78,7 @@ export class BaseFindQuery<
       unwind?: boolean;
     },
   ): any[] {
-    const SubPopulateConfig = model["PopulateConfig"];
+    const SubPopulateConfig = model["populateConfig"];
 
     const IsNestedPopulate = /\./.test(field);
     const ParentField = field.split(".")[0];
@@ -108,7 +108,7 @@ export class BaseFindQuery<
         : []),
       {
         $lookup: {
-          from: model.Name,
+          from: model.name,
           localField: field,
           foreignField: options?.foreignField ?? "_id",
           as: field,
