@@ -33,4 +33,4 @@ export {
   type MatchKeysAndValues,
   type PushOperator,
   type SetFields,
-} from "npm:mongodb@6.3.0";
+} from "npm:mongodb@6.8.0";

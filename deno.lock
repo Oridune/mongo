@@ -12,6 +12,7 @@
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
       "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
       "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
+      "npm:mongodb@6.8.0": "npm:mongodb@6.8.0",
       "npm:pluralize@8.0.0": "npm:pluralize@8.0.0"
     },
     "jsr": {
@@ -50,6 +51,12 @@
           "sparse-bitfield": "sparse-bitfield@3.0.3"
         }
       },
+      "@mongodb-js/saslprep@1.1.7": {
+        "integrity": "sha512-dCHW/oEX0KJ4NjDULBo3JiOaK5+6axtpBbS+ao2ZInoAL9/YRQLhXzSNAFz7hP4nzLkIqsfYAK/PDE3+XHny0Q==",
+        "dependencies": {
+          "sparse-bitfield": "sparse-bitfield@3.0.3"
+        }
+      },
       "@types/node@18.16.19": {
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
         "dependencies": {}
@@ -79,6 +86,10 @@
       },
       "bson@6.2.0": {
         "integrity": "sha512-ID1cI+7bazPDyL9wYy9GaQ8gEEohWvcUl/Yf0dIdutJxnmInEEyCsb4awy/OiBfall7zBA179Pahi3vCdFze3Q==",
+        "dependencies": {}
+      },
+      "bson@6.8.0": {
+        "integrity": "sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==",
         "dependencies": {}
       },
       "chalk@2.4.2": {
@@ -154,6 +165,14 @@
         "dependencies": {
           "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.0",
           "bson": "bson@6.2.0",
+          "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
+        }
+      },
+      "mongodb@6.8.0": {
+        "integrity": "sha512-HGQ9NWDle5WvwMnrvUxsFYPd3JEbqD3RgABHBQRuoCEND0qzhsd0iH5ypHsf1eJ+sXmvmyKpP+FLOKY8Il7jMw==",
+        "dependencies": {
+          "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.7",
+          "bson": "bson@6.8.0",
           "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
         }
       },
