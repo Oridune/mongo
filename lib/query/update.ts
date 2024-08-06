@@ -219,7 +219,7 @@ export class UpdateOneQuery<
     const Result = {
       ...(await this.DatabaseModel.collection.updateOne(
         this.Filters,
-        Updates,
+        Updates as UpdateFilter<any>,
         this.Options,
       )),
       get modifications() {
