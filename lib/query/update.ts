@@ -49,9 +49,12 @@ export class BaseUpdateQuery<
       ...assignDeepValues(
         InsertKeys,
         await e
-          .partial(this.DatabaseModel.getUpdateSchema())
+          .partial(this.DatabaseModel.getUpdateSchema(), { noDefaults: true })
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
             name: this.DatabaseModel.name,
+            context: {
+              databaseOperation: "update",
+            },
           }),
         {
           modifier: (value, key) =>
@@ -63,13 +66,16 @@ export class BaseUpdateQuery<
       ...assignDeepValues(
         ModifierKeys,
         await e
-          .partial(this.DatabaseModel.getUpdateSchema())
+          .partial(this.DatabaseModel.getUpdateSchema(), { noDefaults: true })
           .validate(
             dotNotationToDeepObject(
               pickProps(ModifierKeys, data, (value) => value.$each),
             ),
             {
               name: this.DatabaseModel.name,
+              context: {
+                databaseOperation: "update",
+              },
             },
           ),
         { modifier: (value, key) => ({ ...data[key], $each: value }) },
@@ -100,7 +106,7 @@ export class BaseUpdateQuery<
 
     const Schema = this.DatabaseModel.getUpdateSchema();
     const ResolvedSchema = e.object().extends(
-      e.deepPartial(e.omit(Schema, ReplacementKeys)),
+      e.deepPartial(e.omit(Schema, ReplacementKeys), { noDefaults: true }),
     ).extends(e.pick(Schema, ReplacementKeys));
 
     return {
@@ -112,6 +118,9 @@ export class BaseUpdateQuery<
             deepOptions: {
               ignoreNanKeys: true,
               pushNanKeys: true,
+            },
+            context: {
+              databaseOperation: "update",
             },
           }),
         {

@@ -117,6 +117,15 @@ Deno.test({
         _id: e
           .optional(e.instanceOf(ObjectId, { instantiate: true }))
           .default(() => new ObjectId()),
+        reference: e.optional(e.number()).default((ctx) => {
+          const Ref = Math.random();
+
+          if (ctx.context.databaseOperation === "update") {
+            throw new Error("Cannot create reference now!");
+          }
+
+          return Ref;
+        }),
         username: e.string(),
         password: e.optional(e.string()).default("topSecret"),
         profile: e.object({
@@ -297,8 +306,7 @@ Deno.test({
       const Users = await UserModel.updateAndFindMany(
         {},
         { "profile.dob": new Date() },
-      )
-        .project({ profile: 1 });
+      ).project({ profile: 1 });
 
       Users.map((user, i) => {
         if (Object.keys(user).length > 2) {
@@ -318,9 +326,7 @@ Deno.test({
         Post &&
         (Post.updatedAt.toString() === PostsData[0].updatedAt.toString() ||
           Post.createdAt.toString() !== PostsData[0].createdAt.toString())
-      ) {
-        throw new Error(`Hook didn't update the modification time!`);
-      }
+      ) throw new Error(`Hook didn't update the modification time!`);
 
       const { modifications: m1 } = await UserModel.updateOne(User2Id, {
         $push: {
@@ -333,7 +339,11 @@ Deno.test({
 
       await e
         .partial(UserSchema)
-        .validate(m1)
+        .validate(m1, {
+          context: {
+            databaseOperation: "find",
+          },
+        })
         .catch((error) => {
           console.error(error);
           throw error;

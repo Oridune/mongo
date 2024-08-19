@@ -211,6 +211,9 @@ export class MongoModel<
       ? doc
       : await this.getSchema().validate(doc, {
         name: this.name,
+        context: {
+          databaseOperation: "create",
+        },
       });
 
     const Ack = await this.collection.insertOne(Doc, options);
@@ -246,6 +249,9 @@ export class MongoModel<
       ? docs
       : await e.array(this.getSchema()).validate(docs, {
         name: this.name,
+        context: {
+          databaseOperation: "create",
+        },
       });
 
     const Ack = await this.collection.insertMany(Docs, options);
@@ -594,6 +600,9 @@ export class MongoModel<
 
     const Doc = await this.getSchema().validate(doc, {
       name: this.name,
+      context: {
+        databaseOperation: "replace",
+      },
     });
 
     const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
