@@ -1,11 +1,11 @@
 {
   "name": "@oridune/mongo",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "exports": {
     ".": "./mod.ts",
     "./validator": "./validator.ts"
   },
   "imports": {
-    "@oridune/validator": "jsr:@oridune/validator@^0.3.16"
+    "@oridune/validator": "jsr:@oridune/validator@^0.3.17"
   }
 }
