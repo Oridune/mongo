@@ -70,7 +70,7 @@ const UsersData = [
 ];
 
 Deno.test({
-  name: "Array Validator Tests",
+  name: "Mongo crud tests",
   async fn(t) {
     Mongo.enableLogs = true;
 

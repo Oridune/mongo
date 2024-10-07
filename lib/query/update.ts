@@ -90,7 +90,7 @@ export class BaseUpdateQuery<
 
     const ExpressionRegex = /^\$(.+)/; // Keys like $inc
     const ReplacerRegex = /\.\$(\[.*\])?$/; // Keys like something.$[foo], something.$
-    const PositionalRegex = /^\$(\[.*\])?$/; // Keys like $, $[0]
+    // const PositionalRegex = /^\$(\[.*\])?$/; // Keys like $, $[0]
 
     for (const [Key, Value] of Object.entries(data)) {
       if (typeof Value === "object" && !!Value) {
@@ -116,19 +116,18 @@ export class BaseUpdateQuery<
           .validate(dotNotationToDeepObject(omitProps(ExpressionKeys, data)), {
             name: this.DatabaseModel.name,
             deepOptions: {
-              ignoreNanKeys: true,
-              pushNanKeys: true,
+              preserveShape: true,
             },
             context: {
               databaseOperation: "update",
             },
           }),
-        {
-          resolver: (value, key, parent) => {
-            if (PositionalRegex.test(key)) return parent[0];
-            return value;
-          },
-        },
+        // {
+        //   resolver: (value, key, parent) => {
+        //     if (PositionalRegex.test(key)) return parent[0];
+        //     return value;
+        //   },
+        // },
       ),
       ...pickProps(ExpressionKeys, data),
     };
