@@ -115,13 +115,13 @@ export const assignDeepValues = (
   keys: string[],
   deepObject: any,
   options?: {
-    modifier?: (value: any, key: string, parent: any) => any;
-    resolver?: (value: any, key: string, parent: any) => any;
+    modifier?: (value: any, key: string, parent: any, index: number) => any;
+    resolver?: (value: any, key: string, parent: any, index: number) => any;
   },
 ) => {
   const Result: any = {};
 
-  keys.forEach((key) => {
+  keys.forEach((key, index) => {
     let value = deepObject;
     let parent: any = undefined;
 
@@ -131,7 +131,7 @@ export const assignDeepValues = (
 
     for (const NestedKey of NestedKeys) {
       const Target = typeof options?.resolver === "function"
-        ? options.resolver(value[NestedKey], NestedKey, value)
+        ? options.resolver(value[NestedKey], NestedKey, value, index)
         : value[NestedKey];
 
       if (Target !== undefined) {
@@ -146,7 +146,7 @@ export const assignDeepValues = (
     const Value = exists ? value : undefined;
 
     Result[key] = typeof options?.modifier === "function"
-      ? options?.modifier(Value, key, parent)
+      ? options?.modifier(Value, key, parent, index)
       : Value;
   });
 
@@ -226,10 +226,10 @@ export const mongodbModifiersToObject = (
   if (typeof updates.$set === "object") {
     result = updates.$set;
 
-    for (const $ of Object.keys(result).filter((key) => /\.\$\.?/.test(key))) {
-      result[$.replace("$", "0")] = result[$];
-      delete result[$];
-    }
+    // for (const $ of Object.keys(result).filter((key) => /\.\$\.?/.test(key))) {
+    //   result[$.replace("$", "0")] = result[$];
+    //   delete result[$];
+    // }
   }
 
   for (const Mode of ["$push", "$addToSet"]) {
@@ -239,7 +239,7 @@ export const mongodbModifiersToObject = (
           const Target = updates[Mode][SetterKey];
 
           if ("$each" in Target) return Target.$each;
-          
+
           return [Target];
         })();
       }

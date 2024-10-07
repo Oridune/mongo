@@ -6,7 +6,7 @@
       "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
       "jsr:@oridune/validator@^0.2.52": "jsr:@oridune/validator@0.2.52",
       "jsr:@oridune/validator@^0.3.0": "jsr:@oridune/validator@0.3.0",
-      "jsr:@oridune/validator@^0.3.15": "jsr:@oridune/validator@0.3.15",
+      "jsr:@oridune/validator@^0.3.18": "jsr:@oridune/validator@0.3.18",
       "jsr:@std/fmt@^0.225.3": "jsr:@std/fmt@0.225.6",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
@@ -31,8 +31,8 @@
           "jsr:@std/fmt@^0.225.3"
         ]
       },
-      "@oridune/validator@0.3.15": {
-        "integrity": "ea87d469ea12c8ce7cee5be6f4fa86f17634aea8704bd9aeced2f7c8a8e99595",
+      "@oridune/validator@0.3.18": {
+        "integrity": "1986c77787b785d18cf3d3d6733d898b35647d9137ddcfcb217095dbdfd53c09",
         "dependencies": [
           "jsr:@std/fmt@^0.225.3"
         ]
@@ -262,6 +262,10 @@
     "https://deno.land/std@0.161.0/path/posix.ts": "6b63de7097e68c8663c84ccedc0fd977656eb134432d818ecd3a4e122638ac24",
     "https://deno.land/std@0.161.0/path/separator.ts": "fe1816cb765a8068afb3e8f13ad272351c85cbc739af56dacfc7d93d710fe0f9",
     "https://deno.land/std@0.161.0/path/win32.ts": "ee8826dce087d31c5c81cd414714e677eb68febc40308de87a2ce4b40e10fb8d",
+    "https://deno.land/std@0.165.0/fmt/colors.ts": "9e36a716611dcd2e4865adea9c4bec916b5c60caad4cdcdc630d4974e6bb8bd4",
+    "https://deno.land/std@0.165.0/testing/_diff.ts": "a23e7fc2b4d8daa3e158fa06856bedf5334ce2a2831e8bf9e509717f455adb2c",
+    "https://deno.land/std@0.165.0/testing/_format.ts": "cd11136e1797791045e639e9f0f4640d5b4166148796cad37e6ef75f7d7f3832",
+    "https://deno.land/std@0.165.0/testing/asserts.ts": "1e340c589853e82e0807629ba31a43c84ebdcdeca910c4a9705715dfdb0f5ce8",
     "https://deno.land/std@0.181.0/_util/asserts.ts": "178dfc49a464aee693a7e285567b3d0b555dc805ff490505a8aae34f9cfb1462",
     "https://deno.land/std@0.181.0/_util/os.ts": "d932f56d41e4f6a6093d56044e29ce637f8dcc43c5a90af43504a889cf1775e3",
     "https://deno.land/std@0.181.0/fs/_util.ts": "65381f341af1ff7f40198cee15c20f59951ac26e51ddc651c5293e24f9ce6f32",
@@ -1090,7 +1094,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@^0.3.15"
+      "jsr:@oridune/validator@^0.3.18"
     ]
   }
 }
