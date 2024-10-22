@@ -3,9 +3,9 @@ import type { DeleteOptions, UpdateOptions } from "../../deps.ts";
 import type { MongoModel } from "../model.ts";
 import { BaseUpdateQuery, UpdateManyQuery, UpdateOneQuery } from "./update.ts";
 import {
+  type BaseFindQuery,
   FindOneQuery,
   FindQuery,
-  type BaseFindQuery,
   type PopulatedDocument,
   type PopulateOptions,
 } from "./find.ts";
@@ -171,7 +171,7 @@ export class UpdateAndFindOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape> | null,
 > extends BaseFindAndUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     await new UpdateOneQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
@@ -180,7 +180,7 @@ export class UpdateAndFindOneQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions,
   ) {
     super(
@@ -198,7 +198,7 @@ export class FindAndUpdateOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape> | null,
 > extends BaseFindAndUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     const Result = await this.FindQuery;
 
     await new UpdateOneQuery(this.DatabaseModel, this.Options)
@@ -209,7 +209,7 @@ export class FindAndUpdateOneQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions,
   ) {
     super(
@@ -227,7 +227,7 @@ export class UpdateAndFindManyQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape>[],
 > extends BaseFindAndUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     await new UpdateManyQuery(this.DatabaseModel, this.Options)
       .filter(this.Filters)
       .updates(this.Updates as any);
@@ -236,7 +236,7 @@ export class UpdateAndFindManyQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions,
   ) {
     super(
@@ -254,7 +254,7 @@ export class FindAndUpdateManyQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape>[],
 > extends BaseFindAndUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     const Result = await this.FindQuery;
 
     await new UpdateManyQuery(this.DatabaseModel, this.Options)
@@ -265,7 +265,7 @@ export class FindAndUpdateManyQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions,
   ) {
     super(
@@ -283,7 +283,7 @@ export class FindAndDeleteOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape> | null,
 > extends BaseFindAndDeleteQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     const Result = await this.FindQuery;
 
     await new DeleteOneQuery(this.DatabaseModel, this.Options).filter(
@@ -312,7 +312,7 @@ export class FindAndDeleteManyQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape>[],
 > extends BaseFindAndDeleteQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     const Result = await this.FindQuery;
 
     await new DeleteManyQuery(this.DatabaseModel, this.Options).filter(

@@ -210,7 +210,7 @@ export class UpdateOneQuery<
     modifications: InputDocument<Shape>;
   },
 > extends BaseUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     for (const Hook of this.DatabaseModel["PreHooks"].update ?? []) {
       await Hook({
         event: "update",
@@ -250,7 +250,7 @@ export class UpdateOneQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions & { validate?: boolean },
   ) {
     super(DatabaseModel);
@@ -264,7 +264,7 @@ export class UpdateManyQuery<
     modifications: InputDocument<Shape>;
   },
 > extends BaseUpdateQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     for (const Hook of this.DatabaseModel["PreHooks"].update ?? []) {
       await Hook({
         event: "update",
@@ -309,7 +309,7 @@ export class UpdateManyQuery<
   }
 
   constructor(
-    protected DatabaseModel: Model,
+    protected override DatabaseModel: Model,
     protected Options?: UpdateOptions & { validate?: boolean },
   ) {
     super(DatabaseModel);

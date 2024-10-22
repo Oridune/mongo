@@ -1,8 +1,13 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type { AggregateOptions, Filter } from "../../deps.ts";
+import type { AggregateOptions, Document, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
-import type { InputDocument, OutputDocument } from "../utility.ts";
+import {
+  getObjectValue,
+  type InputDocument,
+  type OutputDocument,
+  setObjectValue,
+} from "../utility.ts";
 import { Mongo, type TCacheOptions } from "../mongo.ts";
 
 export type Sorting<T> =
@@ -70,6 +75,13 @@ export class BaseFindQuery<
   Result = OutputDocument<Shape>[],
 > extends BaseQuery<Result> {
   private Aggregation: Record<string, any>[] = [];
+
+  private Fetches?: Record<string, {
+    field: string;
+    model: MongoModel<any, any, any>;
+    options?: PopulateOptions<MongoModel<any, any, any>>;
+    singular?: boolean;
+  }>;
 
   protected createPopulateAggregation(
     field: string,
@@ -201,6 +213,36 @@ export class BaseFindQuery<
     ];
   }
 
+  protected async fetchRelation<T extends Array<any>>(results: T) {
+    if (!this.Fetches) return results;
+
+    return await Promise.all(results.map(async (item) => {
+      for (const fetch of Object.values(this.Fetches!)) {
+        const Ref = getObjectValue(item, fetch.field);
+
+        if (Ref) {
+          const Query = fetch.model
+            [fetch.singular ? "findOne" : "find"]({
+              [fetch.options?.foreignField ?? "_id"]: Ref,
+            });
+
+          fetch.options?.filter && Query.filter(fetch.options.filter);
+          fetch.options?.skip && Query.skip(fetch.options.skip);
+          fetch.options?.limit && Query.limit(fetch.options.limit);
+          fetch.options?.sort && Query.sort(fetch.options.sort);
+          fetch.options?.project && Query.project(fetch.options.project);
+          fetch.options?.having && Query.filter(fetch.options.having);
+
+          const Results = await Query;
+
+          setObjectValue(item, fetch.field, Results);
+        }
+      }
+
+      return item;
+    }));
+  }
+
   constructor(
     protected DatabaseModel: Model,
     protected Options?: BaseFindQueryOptions<Shape>,
@@ -283,15 +325,52 @@ export class BaseFindQuery<
     >;
   }
 
+  public fetch<
+    F extends string | `${string}.${string}`,
+    M extends MongoModel<any, any, any>,
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
+  >(field: F, model: M, options?: PopulateOptions<M>) {
+    (this.Fetches ??= {})[field] = {
+      field,
+      model,
+      options,
+    };
+
+    return this as unknown as BaseFindQuery<
+      Model,
+      Shape,
+      Result extends Array<infer R> ? PopulatedDocument<R, F, S[]>[]
+        : PopulatedDocument<Result, F, S[]>
+    >;
+  }
+
+  public fetchOne<
+    F extends string | `${string}.${string}`,
+    M extends MongoModel<any, any, any>,
+    S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
+  >(field: F, model: M, options?: PopulateOptions<M>) {
+    (this.Fetches ??= {})[field] = {
+      field,
+      model,
+      options,
+      singular: true,
+    };
+
+    return this as unknown as BaseFindQuery<
+      Model,
+      Shape,
+      Result extends Array<infer R> ? PopulatedDocument<R, F, S>[]
+        : PopulatedDocument<Result, F, S>
+    >;
+  }
+
   public getPipeline() {
     if (typeof this.Options?.initialFilter === "function") {
       const InitialFilter = this.Options.initialFilter();
 
       if (
         typeof InitialFilter === "object" && Object.keys(InitialFilter).length
-      ) {
-        return [{ $match: InitialFilter }, ...this.Aggregation];
-      }
+      ) return [{ $match: InitialFilter }, ...this.Aggregation];
     }
 
     return this.Aggregation;
@@ -303,7 +382,7 @@ export class FindQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape>[],
 > extends BaseFindQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     const Aggregation = this.getPipeline();
 
     for (const Hook of this.DatabaseModel["PreHooks"].read ?? []) {
@@ -316,35 +395,44 @@ export class FindQuery<
 
     this.DatabaseModel["log"]("find", Aggregation, this.Options);
 
-    const Result = await (Mongo.useCaching(
-      () =>
-        this.DatabaseModel.collection
-          .aggregate(Aggregation, this.Options)
-          .toArray(),
+    let Results = await (Mongo.useCaching(
+      async () =>
+        await this.fetchRelation(
+          await this.DatabaseModel.collection
+            .aggregate(Aggregation, this.Options)
+            .toArray(),
+        ),
       this.Options?.cache,
     ));
 
-    return Promise.all(
-      Result.map(
-        (doc) =>
-          this.DatabaseModel["PostHooks"].read?.reduce(
-            async (doc, hook) =>
-              hook({
-                event: "read",
-                method: "find",
-                data: await doc as any,
-              }) as any,
-            Promise.resolve(doc),
-          ) ?? doc,
-      ),
-    ) as any;
+    if (this.DatabaseModel["PostHooks"].read?.length) {
+      Results = await Promise.all(
+        Results.map(
+          (doc) =>
+            this.DatabaseModel["PostHooks"].read!.reduce(
+              async (doc, hook) =>
+                hook({
+                  event: "read",
+                  method: "find",
+                  data: await doc as any,
+                }) as any,
+              Promise.resolve(doc),
+            ) ?? doc,
+        ),
+      );
+    }
+
+    return Results as Result;
   }
 
   constructor(
-    protected DatabaseModel: Model,
-    protected Options?: AggregateOptions & BaseFindQueryOptions<Shape> & {
-      cache?: TCacheOptions;
-    },
+    protected override DatabaseModel: Model,
+    protected override Options?:
+      & AggregateOptions
+      & BaseFindQueryOptions<Shape>
+      & {
+        cache?: TCacheOptions;
+      },
   ) {
     super(DatabaseModel, Options);
   }
@@ -357,7 +445,7 @@ export class FindOneQuery<
 > extends BaseFindQuery<Model, Shape, Result> {
   protected LimitApplied = false;
 
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     if (!this.LimitApplied) {
       this.limit(1).LimitApplied = true;
     }
@@ -374,45 +462,56 @@ export class FindOneQuery<
 
     this.DatabaseModel["log"]("findOne", Aggregation, this.Options);
 
-    const Result = await Mongo.useCaching(
-      () =>
-        this.DatabaseModel.collection
-          .aggregate(Aggregation, this.Options)
-          .toArray() as Promise<OutputDocument<Shape>[]>,
+    const Results = await Mongo.useCaching(
+      async () =>
+        await this.fetchRelation(
+          await this.DatabaseModel.collection
+            .aggregate(Aggregation, this.Options)
+            .toArray(),
+        ),
       this.Options?.cache,
     );
 
-    if (!Result.length) {
+    if (!Results.length) {
       if (this.Options?.errorOnNull) throw new Error("Record not found!");
       else return null as Result;
     }
 
-    return (
-      await Promise.all(
-        Result.map(
-          (doc) =>
-            this.DatabaseModel["PostHooks"].read?.reduce<
-              Promise<OutputDocument<Shape>>
-            >(
-              async (doc, hook) =>
-                hook({
-                  event: "read",
-                  method: "findOne",
-                  data: await doc,
-                }) as any,
-              Promise.resolve(doc),
-            ) ?? doc,
-        ),
-      )
-    )[0] as Result;
+    let Result = Results[0] as Result;
+
+    if (this.DatabaseModel["PostHooks"].read?.length) {
+      Result = (
+        await Promise.all(
+          Results.map(
+            (doc) =>
+              this.DatabaseModel["PostHooks"].read?.reduce<
+                Promise<OutputDocument<Shape>>
+              >(
+                async (doc, hook) =>
+                  hook({
+                    event: "read",
+                    method: "findOne",
+                    data: await doc,
+                  }) as any,
+                Promise.resolve(doc),
+              ) ?? doc,
+          ),
+        )
+      )[0] as Result;
+    }
+
+    return Result;
   }
 
   constructor(
-    protected DatabaseModel: Model,
-    protected Options?: AggregateOptions & BaseFindQueryOptions<Shape> & {
-      cache?: TCacheOptions;
-      errorOnNull?: boolean;
-    },
+    protected override DatabaseModel: Model,
+    protected override Options?:
+      & AggregateOptions
+      & BaseFindQueryOptions<Shape>
+      & {
+        cache?: TCacheOptions;
+        errorOnNull?: boolean;
+      },
   ) {
     super(DatabaseModel, Options);
   }

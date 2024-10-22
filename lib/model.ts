@@ -50,11 +50,25 @@ import {
 } from "./query/utility.ts";
 
 export interface ModelOptions {
+  /**
+   * A connection index determines which database to connect with.
+   */
   connectionIndex?: number;
+
+  /**
+   * Target database name
+   */
   database?: string;
+
+  /**
+   * Specify the collection options for native mongodb driver
+   */
   collectionOptions?: CollectionOptions;
+
+  /**
+   * Enable or disable logs
+   */
   logs?: boolean;
-  invalidateFields?: string[];
 }
 
 export class MongoModel<
@@ -101,6 +115,10 @@ export class MongoModel<
     }
   }
 
+  /**
+   * Get the validator schema of this model.
+   * @returns
+   */
   public getSchema() {
     const Schema = typeof this.schema === "function"
       ? this.schema()
@@ -113,11 +131,19 @@ export class MongoModel<
     return e.deepCast(Schema);
   }
 
+  /**
+   * Get the validator schema of this model in update state.
+   * @returns
+   */
   public getUpdateSchema() {
     return this.getSchema();
   }
 
   public options: ModelOptions;
+
+  /**
+   * A connection index determines which database to connect with.
+   */
   public connectionIndex: number;
 
   constructor(
@@ -134,6 +160,9 @@ export class MongoModel<
     this.connectionIndex = this.options.connectionIndex ??= 0;
   }
 
+  /**
+   * Get access to the database on the native mongodb driver
+   */
   get database() {
     if (!Mongo.isConnected(this.connectionIndex)) {
       throw new Error(`Please connect to the database!`);
@@ -152,10 +181,18 @@ export class MongoModel<
     return this.databaseInstance;
   }
 
+  /**
+   * Get access to the collection on the native mongodb driver
+   */
   get collection() {
     return this.database.collection(this.name, this.options.collectionOptions);
   }
 
+  /**
+   * Create a new index
+   * @param indexDesc Describe your index
+   * @returns
+   */
   public async createIndex(
     ...indexDesc: (CreateIndexesOptions & {
       key: Partial<Record<string, IndexDirection>>;
@@ -178,6 +215,12 @@ export class MongoModel<
     return this;
   }
 
+  /**
+   * Drop an index
+   * @param indexNames Names of the indexes to be dropped
+   * @param options
+   * @returns
+   */
   public async dropIndex(
     indexNames: string[],
     options?: CommandOperationOptions,
@@ -194,6 +237,12 @@ export class MongoModel<
     return this;
   }
 
+  /**
+   * Create a new document in the collection
+   * @param doc
+   * @param options
+   * @returns
+   */
   public async create(
     doc: InputDocument<InputShape>,
     options?: InsertOneOptions & { validate?: boolean },
@@ -228,6 +277,12 @@ export class MongoModel<
     );
   }
 
+  /**
+   * Create multiple documents in a single query
+   * @param docs
+   * @param options
+   * @returns
+   */
   public async createMany(
     docs: InputDocument<InputShape>[],
     options?: BulkWriteOptions & { validate?: boolean },
@@ -271,13 +326,14 @@ export class MongoModel<
     ) as any;
   }
 
-  public find(
-    filter: Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: TCacheOptions },
-  ) {
-    return new FindQuery(this, options).filter(filter as any);
-  }
-
+  /**
+   * Search for documents on this collection using full text index
+   *
+   * A full text search index is required.
+   * @param searchTerm
+   * @param options
+   * @returns
+   */
   public search(
     searchTerm?:
       | string
@@ -300,6 +356,25 @@ export class MongoModel<
     });
   }
 
+  /**
+   * Find documents from this collection
+   * @param filter
+   * @param options
+   * @returns
+   */
+  public find(
+    filter: Filter<InputDocument<InputShape>> = {},
+    options?: AggregateOptions & { cache?: TCacheOptions },
+  ) {
+    return new FindQuery(this, options).filter(filter as any);
+  }
+
+  /**
+   * Find a single document
+   * @param filter
+   * @param options
+   * @returns
+   */
   public findOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: TCacheOptions },
@@ -313,6 +388,12 @@ export class MongoModel<
     return new FindOneQuery(this, options).filter(Filter);
   }
 
+  /**
+   * Try to find a single document. If not found, throws an error.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public findOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: AggregateOptions & { cache?: TCacheOptions },
@@ -334,6 +415,12 @@ export class MongoModel<
     return Query as UnnulledFindOneQuery<typeof Query>;
   }
 
+  /**
+   * Count all documents given a specific filter/conditions.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public count(
     filter: Filter<InputDocument<InputShape>> = {},
     options?: CountDocumentsOptions & { cache?: TCacheOptions },
@@ -351,6 +438,12 @@ export class MongoModel<
     );
   }
 
+  /**
+   * Check if document(s) exists.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public async exists(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: CountDocumentsOptions & { cache?: TCacheOptions },
@@ -368,6 +461,12 @@ export class MongoModel<
     ));
   }
 
+  /**
+   * Watch for real time updates from mongodb
+   * @param filter
+   * @param options
+   * @returns
+   */
   public watch(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: ChangeStreamOptions,
@@ -379,12 +478,20 @@ export class MongoModel<
     ) as any;
 
     this.log("watch", Filter, options);
+
     return this.collection.watch<OutputDocument<OutputShape>>(
       [{ $match: Filter }],
       options,
     );
   }
 
+  /**
+   * Update a single document
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public updateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -403,6 +510,13 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Try to update a single document. Throws an error if failed to update or condition didn't met.
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public async updateOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -419,6 +533,13 @@ export class MongoModel<
     return Result;
   }
 
+  /**
+   * Update a single document and then return the updated document
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public updateAndFindOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -437,6 +558,13 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Find a single document and update it. Returns the old verion of the document
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public findAndUpdateOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -455,6 +583,13 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Update many documents
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public updateMany(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -467,6 +602,13 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Try to update many documents. Throws an error if failed or couldn't update a single document.
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public async updateManyOrFail(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -483,6 +625,13 @@ export class MongoModel<
     return Result;
   }
 
+  /**
+   * Update many documents and then return them.
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public updateAndFindMany(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -495,6 +644,13 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Find many documents and update them, returning the old version of documents.
+   * @param filter
+   * @param updates
+   * @param options
+   * @returns
+   */
   public findAndUpdateMany(
     filter: Filter<InputDocument<InputShape>> = {},
     updates?:
@@ -507,6 +663,12 @@ export class MongoModel<
       .updates(updates as any);
   }
 
+  /**
+   * Delete a single document
+   * @param filter
+   * @param options
+   * @returns
+   */
   public deleteOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -520,6 +682,12 @@ export class MongoModel<
     return new DeleteOneQuery(this, options).filter(Filter);
   }
 
+  /**
+   * Try to delete a single document. Throws an error if couldn't delete.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public async deleteOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -533,6 +701,12 @@ export class MongoModel<
     return Result;
   }
 
+  /**
+   * Find and delete a single document, returning the document.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public findAndDeleteOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -546,6 +720,12 @@ export class MongoModel<
     return new FindAndDeleteOneQuery(this, options).filter(Filter);
   }
 
+  /**
+   * Delete many documents
+   * @param filter
+   * @param options
+   * @returns
+   */
   public deleteMany(
     filter: Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -553,6 +733,12 @@ export class MongoModel<
     return new DeleteManyQuery(this, options).filter(filter as any);
   }
 
+  /**
+   * Try to delete many documents. Throws an error if couldn't delete.
+   * @param filter
+   * @param options
+   * @returns
+   */
   public async deleteManyOrFail(
     filter: Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -566,6 +752,12 @@ export class MongoModel<
     return Result;
   }
 
+  /**
+   * Find many and delete them
+   * @param filter
+   * @param options
+   * @returns
+   */
   public findAndDeleteMany(
     filter: Filter<InputDocument<InputShape>> = {},
     options?: DeleteOptions,
@@ -573,6 +765,13 @@ export class MongoModel<
     return new FindAndDeleteManyQuery(this, options).filter(filter as any);
   }
 
+  /**
+   * Replace a single document with another document
+   * @param filter
+   * @param doc
+   * @param options
+   * @returns
+   */
   public async replaceOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     doc: InputDocument<InputShape>,
@@ -620,6 +819,13 @@ export class MongoModel<
     return Result;
   }
 
+  /**
+   * Populates the array of references with documents referenced of another collection.
+   * @param field
+   * @param model
+   * @param options
+   * @returns
+   */
   public populate<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,
@@ -644,6 +850,13 @@ export class MongoModel<
     return Model as any;
   }
 
+  /**
+   * Populate a reference with a document
+   * @param field
+   * @param model
+   * @param options
+   * @returns
+   */
   public populateOne<
     F extends string | `${string}.${string}`,
     M extends MongoModel<any, any, any>,

@@ -248,3 +248,36 @@ export const mongodbModifiersToObject = (
 
   return result;
 };
+
+export const setObjectValue = <T extends Record<string, any>, O = T>(
+  obj: T,
+  key: string,
+  value: any,
+): O => {
+  const keys = key.split(".");
+  let current = obj;
+
+  keys.forEach((k: keyof T, index) => {
+    if (index === keys.length - 1) current[k] = value;
+    else current = current[k] ??= {} as T[string];
+  });
+
+  return obj as unknown as O;
+};
+
+export const getObjectValue = <T extends Record<string, any>, O = T>(
+  obj: T,
+  key: string,
+): any => {
+  const keys = key.split(".");
+
+  let current = obj;
+
+  for (const k of keys) {
+    if (current[k] === undefined) return;
+
+    current = current[k];
+  }
+
+  return current as unknown as O;
+};

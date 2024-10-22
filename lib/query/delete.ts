@@ -26,7 +26,7 @@ export class DeleteOneQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = DeleteResult
 > extends BaseDeleteQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     for (const Hook of this.Model["PreHooks"].delete ?? [])
       await Hook({
         event: "delete",
@@ -64,7 +64,7 @@ export class DeleteManyQuery<
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = DeleteResult
 > extends BaseDeleteQuery<Model, Shape, Result> {
-  protected async exec(): Promise<Result> {
+  protected override async exec(): Promise<Result> {
     for (const Hook of this.DatabaseModel["PreHooks"].delete ?? [])
       await Hook({
         event: "delete",
