@@ -1,9 +1,11 @@
-import e, { inferInput, inferOutput } from "../validator.ts";
-import { InputDocument, Mongo, ObjectId, OutputDocument } from "../mod.ts";
+import e, { type inferInput, type inferOutput } from "../validator.ts";
 import {
-    assertEquals,
-    assertObjectMatch,
-} from "https://deno.land/std@0.165.0/testing/asserts.ts";
+    type InputDocument,
+    Mongo,
+    ObjectId,
+    type OutputDocument,
+} from "../mod.ts";
+import { assertEquals } from "https://deno.land/std@0.165.0/testing/asserts.ts";
 
 export enum WarehouseInventoryStatus {
     PENDING = "pending",
@@ -75,7 +77,7 @@ WarehouseInventoryModel.pre("update", (details) => {
 });
 
 Deno.test({
-    name: "Mongo crud tests",
+    name: "Array filter tests",
     async fn(t) {
         Mongo.enableLogs = true;
 
@@ -85,75 +87,81 @@ Deno.test({
         await Mongo.connect(ConnectionString);
         await Mongo.drop(1);
 
-        await t.step("Create Users and Posts", async () => {
-            type TShelfValue = string | number | ObjectId | Date;
+        await t.step(
+            "Add shelf references to a warehouse inventory",
+            async () => {
+                type TShelfValue = string | number | ObjectId | Date;
 
-            interface IUpdateFields {
-                [key: string]: TShelfValue;
-            }
+                interface IUpdateFields {
+                    [key: string]: TShelfValue;
+                }
 
-            const updateFields: IUpdateFields = {};
-            const arrayFilters: Array<Record<string, ObjectId>> = [];
+                const updateFields: IUpdateFields = {};
+                const arrayFilters: Array<Record<string, ObjectId>> = [];
 
-            const data = [{
-                _id: new ObjectId(),
-                shelfId: "1",
-                quantity: 30,
-            }, {
-                _id: new ObjectId(),
-                shelfId: "2",
-                quantity: 20,
-            }, {
-                _id: new ObjectId(),
-                shelfId: "3",
-                quantity: 10,
-            }];
+                const data = [{
+                    _id: new ObjectId(),
+                    shelfId: "1",
+                    quantity: 30,
+                }, {
+                    _id: new ObjectId(),
+                    shelfId: "2",
+                    quantity: 20,
+                }, {
+                    _id: new ObjectId(),
+                    shelfId: "3",
+                    quantity: 10,
+                }];
 
-            data.forEach((shelf, index) => {
-                Object.keys(shelf).forEach((key) => {
-                    if (key !== "_id") {
-                        updateFields[`shelfReferences.$[elem${index}].${key}`] =
-                            shelf[
+                data.forEach((shelf, index) => {
+                    Object.keys(shelf).forEach((key) => {
+                        if (key !== "_id") {
+                            updateFields[
+                                `shelfReferences.$[elem${index}].${key}`
+                            ] = shelf[
                                 key as keyof typeof shelf
                             ] as TShelfValue;
-                    }
+                        }
+                    });
+
+                    updateFields[`shelfReferences.$[elem${index}].updatedBy`] =
+                        new ObjectId();
+
+                    updateFields[`shelfReferences.$[elem${index}].updatedAt`] =
+                        new Date();
+
+                    arrayFilters.push({
+                        [`elem${index}._id`]: shelf?._id as ObjectId,
+                    });
                 });
 
-                updateFields[`shelfReferences.$[elem${index}].updatedBy`] =
-                    new ObjectId();
+                const query = {
+                    _id: new ObjectId(),
+                };
 
-                updateFields[`shelfReferences.$[elem${index}].updatedAt`] =
-                    new Date();
+                const { modifications } = await WarehouseInventoryModel
+                    .updateOne(
+                        query,
+                        { $set: updateFields },
+                        {
+                            arrayFilters,
+                        },
+                    );
 
-                arrayFilters.push({
-                    [`elem${index}._id`]: shelf?._id as ObjectId,
-                });
-            });
-
-            const query = {
-                _id: new ObjectId(),
-            };
-
-            const { modifications } = await WarehouseInventoryModel
-                .updateOne(
-                    query,
-                    { $set: updateFields },
-                    {
-                        arrayFilters,
-                    },
+                assertEquals(
+                    Object.values(modifications.shelfReferences!).map((
+                        item,
+                    ) => ({
+                        shelfId: item.shelfId,
+                        quantity: item.quantity,
+                    })),
+                    data.map((item) => ({
+                        shelfId: item.shelfId,
+                        quantity: item.quantity,
+                    })),
                 );
-
-            assertEquals(
-                Object.values(modifications.shelfReferences!).map((item) => ({
-                    shelfId: item.shelfId,
-                    quantity: item.quantity,
-                })),
-                data.map((item) => ({
-                    shelfId: item.shelfId,
-                    quantity: item.quantity,
-                })),
-            );
-        });
+            },
+        );
 
         await Mongo.disconnect();
     },

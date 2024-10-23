@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type { AggregateOptions, Document, Filter } from "../../deps.ts";
+import type { AggregateOptions, Filter } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
 import {
@@ -65,6 +65,13 @@ export type PopulateOptions<
   having?: Filter<InputDocument<I>>;
 };
 
+export type FetchOptions = {
+  field: string;
+  model: MongoModel<any, any, any>;
+  options?: PopulateOptions<MongoModel<any, any, any>>;
+  singular?: boolean;
+};
+
 export interface BaseFindQueryOptions<Shape> {
   initialFilter?: () => Filter<InputDocument<Shape>>;
 }
@@ -76,12 +83,7 @@ export class BaseFindQuery<
 > extends BaseQuery<Result> {
   private Aggregation: Record<string, any>[] = [];
 
-  private Fetches?: Record<string, {
-    field: string;
-    model: MongoModel<any, any, any>;
-    options?: PopulateOptions<MongoModel<any, any, any>>;
-    singular?: boolean;
-  }>;
+  private Fetches?: Record<string, FetchOptions>;
 
   protected createPopulateAggregation(
     field: string,
@@ -133,29 +135,18 @@ export class BaseFindQuery<
               )
               : [];
 
-            if (typeof options?.filter === "object") {
+            typeof options?.filter === "object" &&
               Pipeline.push({ $match: options.filter });
-            }
-
-            if (typeof options?.sort === "object") {
+            typeof options?.sort === "object" &&
               Pipeline.push({ $sort: options.sort });
-            }
-
-            if (typeof options?.project === "object") {
-              Pipeline.push({ $project: options.project });
-            }
-
-            if (typeof options?.skip === "number") {
+            typeof options?.skip === "number" &&
               Pipeline.push({ $skip: options.skip });
-            }
-
-            if (typeof options?.limit === "number") {
+            typeof options?.limit === "number" &&
               Pipeline.push({ $limit: options.limit });
-            }
-
-            if (typeof options?.having === "object") {
+            typeof options?.project === "object" &&
+              Pipeline.push({ $project: options.project });
+            typeof options?.having === "object" &&
               Pipeline.push({ $match: options.having });
-            }
 
             return Pipeline;
           })(),
@@ -213,29 +204,88 @@ export class BaseFindQuery<
     ];
   }
 
-  protected async fetchRelation<T extends Array<any>>(results: T) {
+  protected async fetchRelations<T extends Array<any>>(results: T) {
     if (!this.Fetches) return results;
 
+    const fetch = async (details: FetchOptions, ref: any) => {
+      if (ref instanceof Array && !ref.length) return [];
+
+      const Query = details.model.find({
+        [details.options?.foreignField ?? "_id"]: ref instanceof Array
+          ? { $in: ref }
+          : ref,
+      });
+
+      typeof details.options?.filter === "object" &&
+        Query.filter(details.options.filter);
+      typeof details.options?.sort === "object" &&
+        Query.sort(details.options.sort);
+      typeof details.options?.skip === "number" &&
+        Query.skip(details.options.skip);
+      typeof details.options?.limit === "number" &&
+        Query.limit(details.options.limit);
+      typeof details.options?.project === "object" &&
+        Query.project(details.options.project);
+      typeof details.options?.having === "object" &&
+        Query.filter(details.options.having);
+
+      return await Query;
+    };
+
     return await Promise.all(results.map(async (item) => {
-      for (const fetch of Object.values(this.Fetches!)) {
-        const Ref = getObjectValue(item, fetch.field);
+      for (const fetchDetails of Object.values(this.Fetches!)) {
+        const { plural, value } = getObjectValue(item, fetchDetails.field);
 
-        if (Ref) {
-          const Query = fetch.model
-            [fetch.singular ? "findOne" : "find"]({
-              [fetch.options?.foreignField ?? "_id"]: Ref,
+        const currentField = fetchDetails.field.split(".");
+
+        if (plural) {
+          if (value instanceof Array && value[0] instanceof Array) {
+            const Results = await Promise.all(
+              value.map((v) => fetch(fetchDetails, v)),
+            );
+
+            Results.forEach((result, index) => {
+              const newField = [...currentField];
+
+              newField.splice(
+                currentField.length - 1,
+                0,
+                index.toString(),
+              );
+
+              setObjectValue(
+                item,
+                newField,
+                fetchDetails.singular ? result[0] : result,
+              );
             });
+          } else {
+            const Results = await fetch(fetchDetails, value);
 
-          fetch.options?.filter && Query.filter(fetch.options.filter);
-          fetch.options?.skip && Query.skip(fetch.options.skip);
-          fetch.options?.limit && Query.limit(fetch.options.limit);
-          fetch.options?.sort && Query.sort(fetch.options.sort);
-          fetch.options?.project && Query.project(fetch.options.project);
-          fetch.options?.having && Query.filter(fetch.options.having);
+            Results.forEach((result, index) => {
+              const newField = [...currentField];
 
-          const Results = await Query;
+              newField.splice(
+                currentField.length - 1,
+                0,
+                index.toString(),
+              );
 
-          setObjectValue(item, fetch.field, Results);
+              setObjectValue(
+                item,
+                newField,
+                result,
+              );
+            });
+          }
+        } else {
+          const Results = await fetch(fetchDetails, value);
+
+          setObjectValue(
+            item,
+            currentField,
+            fetchDetails.singular ? Results[0] : Results,
+          );
         }
       }
 
@@ -293,6 +343,10 @@ export class BaseFindQuery<
       throw new Error("Invalid population model!");
     }
 
+    if (this.DatabaseModel.connectionIndex !== model.connectionIndex) {
+      throw new Error("Cannot populate from another connection!");
+    }
+
     this.Aggregation.push(
       ...this.createPopulateAggregation(field, model, options as any),
     );
@@ -310,6 +364,14 @@ export class BaseFindQuery<
     M extends MongoModel<any, any, any>,
     S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
   >(field: F, model: M, options?: PopulateOptions<M>) {
+    if (!(model instanceof MongoModel)) {
+      throw new Error("Invalid population model!");
+    }
+
+    if (this.DatabaseModel.connectionIndex !== model.connectionIndex) {
+      throw new Error("Cannot populate from another connection!");
+    }
+
     this.Aggregation.push(
       ...this.createPopulateAggregation(field, model, {
         ...(options as any),
@@ -330,6 +392,10 @@ export class BaseFindQuery<
     M extends MongoModel<any, any, any>,
     S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
   >(field: F, model: M, options?: PopulateOptions<M>) {
+    if (!(model instanceof MongoModel)) {
+      throw new Error("Invalid population model!");
+    }
+
     (this.Fetches ??= {})[field] = {
       field,
       model,
@@ -349,6 +415,10 @@ export class BaseFindQuery<
     M extends MongoModel<any, any, any>,
     S = OutputDocument<M extends MongoModel<any, any, infer R> ? R : never>,
   >(field: F, model: M, options?: PopulateOptions<M>) {
+    if (!(model instanceof MongoModel)) {
+      throw new Error("Invalid population model!");
+    }
+
     (this.Fetches ??= {})[field] = {
       field,
       model,
@@ -397,7 +467,7 @@ export class FindQuery<
 
     let Results = await (Mongo.useCaching(
       async () =>
-        await this.fetchRelation(
+        await this.fetchRelations(
           await this.DatabaseModel.collection
             .aggregate(Aggregation, this.Options)
             .toArray(),
@@ -464,7 +534,7 @@ export class FindOneQuery<
 
     const Results = await Mongo.useCaching(
       async () =>
-        await this.fetchRelation(
+        await this.fetchRelations(
           await this.DatabaseModel.collection
             .aggregate(Aggregation, this.Options)
             .toArray(),

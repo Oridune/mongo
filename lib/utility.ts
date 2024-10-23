@@ -249,35 +249,56 @@ export const mongodbModifiersToObject = (
   return result;
 };
 
+export const getObjectValue = (
+  obj: Record<string, any>,
+  keys: string | string[],
+  options?: {
+    child?: boolean;
+  },
+): {
+  plural?: true;
+  value?: any;
+} => {
+  const Keys = keys instanceof Array ? [...keys] : keys.split(".");
+  const key = Keys.shift();
+
+  if (!key || obj[key] === undefined) {
+    return {};
+  }
+
+  if (Keys.length) {
+    if (!options?.child && obj[key] instanceof Array && isNaN(+Keys[0])) {
+      return {
+        plural: true,
+        value: obj[key].map((t) =>
+          getObjectValue(t, Keys, { child: true }).value
+        ).filter(
+          Boolean,
+        ),
+      };
+    }
+
+    return getObjectValue(obj[key], Keys);
+  }
+
+  return {
+    value: obj[key],
+  };
+};
+
 export const setObjectValue = <T extends Record<string, any>, O = T>(
   obj: T,
-  key: string,
+  keys: string | string[],
   value: any,
 ): O => {
-  const keys = key.split(".");
+  const Keys = keys instanceof Array ? keys : keys.split(".");
+
   let current = obj;
 
-  keys.forEach((k: keyof T, index) => {
+  Keys.forEach((k: keyof T, index) => {
     if (index === keys.length - 1) current[k] = value;
     else current = current[k] ??= {} as T[string];
   });
 
   return obj as unknown as O;
-};
-
-export const getObjectValue = <T extends Record<string, any>, O = T>(
-  obj: T,
-  key: string,
-): any => {
-  const keys = key.split(".");
-
-  let current = obj;
-
-  for (const k of keys) {
-    if (current[k] === undefined) return;
-
-    current = current[k];
-  }
-
-  return current as unknown as O;
 };

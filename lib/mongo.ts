@@ -172,7 +172,7 @@ export class Mongo {
     urls: string | string[],
     options?: MongoClientOptions | MongoClientOptions[],
   ) {
-    const Urls = urls instanceof Array ? urls : urls.split(",");
+    const Urls = urls instanceof Array ? urls : urls.trim().split(/\s*,\s*/);
     const Options = options instanceof Array ? options : [options];
 
     await Promise.all(
@@ -208,6 +208,12 @@ export class Mongo {
 
   static async drop(connectionIndex?: number, dbName?: string | undefined) {
     await this.clients[connectionIndex ?? 0]?.db(dbName).dropDatabase();
+  }
+
+  static async dropAll(dbName?: string | undefined) {
+    for (const client of this.clients) {
+      await client.db(dbName).dropDatabase();
+    }
   }
 
   static model<T extends ObjectValidator<any>>(
