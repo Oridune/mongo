@@ -1,231 +1,223 @@
 {
-  "version": "3",
-  "packages": {
-    "specifiers": {
-      "jsr:@oridune/validator@0.2.50": "jsr:@oridune/validator@0.2.50",
-      "jsr:@oridune/validator@^0.2.51": "jsr:@oridune/validator@0.2.51",
-      "jsr:@oridune/validator@^0.2.52": "jsr:@oridune/validator@0.2.52",
-      "jsr:@oridune/validator@^0.3.0": "jsr:@oridune/validator@0.3.0",
-      "jsr:@oridune/validator@^0.3.18": "jsr:@oridune/validator@0.3.18",
-      "jsr:@std/fmt@^0.225.3": "jsr:@std/fmt@0.225.6",
-      "npm:@types/node": "npm:@types/node@18.16.19",
-      "npm:highlight-es@1.0.3": "npm:highlight-es@1.0.3",
-      "npm:mongodb@6.2.0": "npm:mongodb@6.2.0",
-      "npm:mongodb@6.3.0": "npm:mongodb@6.3.0",
-      "npm:mongodb@6.8.0": "npm:mongodb@6.8.0",
-      "npm:pluralize@8.0.0": "npm:pluralize@8.0.0"
+  "version": "4",
+  "specifiers": {
+    "jsr:@oridune/validator@0.2.50": "0.2.50",
+    "jsr:@oridune/validator@0.3": "0.3.0",
+    "jsr:@oridune/validator@~0.2.51": "0.2.51",
+    "jsr:@oridune/validator@~0.2.52": "0.2.52",
+    "jsr:@oridune/validator@~0.3.19": "0.3.19",
+    "jsr:@oridune/validator@~0.3.20": "0.3.20",
+    "jsr:@std/fmt@~0.225.3": "0.225.6",
+    "npm:@types/node@*": "18.16.19",
+    "npm:highlight-es@1.0.3": "1.0.3",
+    "npm:mongodb@6.2.0": "6.2.0",
+    "npm:mongodb@6.3.0": "6.3.0",
+    "npm:mongodb@6.8.0": "6.8.0",
+    "npm:pluralize@8.0.0": "8.0.0"
+  },
+  "jsr": {
+    "@oridune/validator@0.2.50": {
+      "integrity": "8a6bf6c36da1c9cb7ee7f879b2234d855c1aba2549c5db47f685cdbae3a6d6f9"
     },
-    "jsr": {
-      "@oridune/validator@0.2.50": {
-        "integrity": "8a6bf6c36da1c9cb7ee7f879b2234d855c1aba2549c5db47f685cdbae3a6d6f9"
-      },
-      "@oridune/validator@0.2.51": {
-        "integrity": "a08f72ddb909524dbe33c2d16d9c1ba319b491b1b133570f00ea057feeeda87a"
-      },
-      "@oridune/validator@0.2.52": {
-        "integrity": "9983cc761024fe9292459fe0e44557eb1544717fa65b0b6774134246368178be"
-      },
-      "@oridune/validator@0.3.0": {
-        "integrity": "a329055a7fbe610ddebf68ca3cb933f8b4aac806398233f3b46de7a7048d518e",
-        "dependencies": [
-          "jsr:@std/fmt@^0.225.3"
-        ]
-      },
-      "@oridune/validator@0.3.18": {
-        "integrity": "1986c77787b785d18cf3d3d6733d898b35647d9137ddcfcb217095dbdfd53c09",
-        "dependencies": [
-          "jsr:@std/fmt@^0.225.3"
-        ]
-      },
-      "@std/fmt@0.225.3": {
-        "integrity": "cb6ea567155f9865b80b502b2dde7671803eddd6dad743d8851d0de2c40bd349"
-      },
-      "@std/fmt@0.225.6": {
-        "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
-      }
+    "@oridune/validator@0.2.51": {
+      "integrity": "a08f72ddb909524dbe33c2d16d9c1ba319b491b1b133570f00ea057feeeda87a"
     },
-    "npm": {
-      "@mongodb-js/saslprep@1.1.0": {
-        "integrity": "sha512-Xfijy7HvfzzqiOAhAepF4SGN5e9leLkMvg/OPOF97XemjfVCYN/oWa75wnkc6mltMSTwY+XlbhWgUOJmkFspSw==",
-        "dependencies": {
-          "sparse-bitfield": "sparse-bitfield@3.0.3"
-        }
-      },
-      "@mongodb-js/saslprep@1.1.7": {
-        "integrity": "sha512-dCHW/oEX0KJ4NjDULBo3JiOaK5+6axtpBbS+ao2ZInoAL9/YRQLhXzSNAFz7hP4nzLkIqsfYAK/PDE3+XHny0Q==",
-        "dependencies": {
-          "sparse-bitfield": "sparse-bitfield@3.0.3"
-        }
-      },
-      "@types/node@18.16.19": {
-        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
-        "dependencies": {}
-      },
-      "@types/webidl-conversions@7.0.2": {
-        "integrity": "sha512-uNv6b/uGRLlCVmelat2rA8bcVd3k/42mV2EmjhPh6JLkd35T5bgwR/t6xy7a9MWhd9sixIeBUzhBenvk3NO+DQ==",
-        "dependencies": {}
-      },
-      "@types/whatwg-url@11.0.3": {
-        "integrity": "sha512-z1ELvMijRL1QmU7QuzDkeYXSF2+dXI0ITKoQsIoVKcNBOiK5RMmWy+pYYxJTHFt8vkpZe7UsvRErQwcxZkjoUw==",
-        "dependencies": {
-          "@types/webidl-conversions": "@types/webidl-conversions@7.0.2"
-        }
-      },
-      "@types/whatwg-url@8.2.2": {
-        "integrity": "sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==",
-        "dependencies": {
-          "@types/node": "@types/node@18.16.19",
-          "@types/webidl-conversions": "@types/webidl-conversions@7.0.2"
-        }
-      },
-      "ansi-styles@3.2.1": {
-        "integrity": "sha512-VT0ZI6kZRdTh8YyJw3SMbYm/u+NqfsAxEpWO0Pf9sq8/e94WxxOpPKx9FR1FlyCtOVDNOQ+8ntlqFxiRc+r5qA==",
-        "dependencies": {
-          "color-convert": "color-convert@1.9.3"
-        }
-      },
-      "bson@6.2.0": {
-        "integrity": "sha512-ID1cI+7bazPDyL9wYy9GaQ8gEEohWvcUl/Yf0dIdutJxnmInEEyCsb4awy/OiBfall7zBA179Pahi3vCdFze3Q==",
-        "dependencies": {}
-      },
-      "bson@6.8.0": {
-        "integrity": "sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ==",
-        "dependencies": {}
-      },
-      "chalk@2.4.2": {
-        "integrity": "sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==",
-        "dependencies": {
-          "ansi-styles": "ansi-styles@3.2.1",
-          "escape-string-regexp": "escape-string-regexp@1.0.5",
-          "supports-color": "supports-color@5.5.0"
-        }
-      },
-      "color-convert@1.9.3": {
-        "integrity": "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==",
-        "dependencies": {
-          "color-name": "color-name@1.1.3"
-        }
-      },
-      "color-name@1.1.3": {
-        "integrity": "sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw==",
-        "dependencies": {}
-      },
-      "escape-string-regexp@1.0.5": {
-        "integrity": "sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==",
-        "dependencies": {}
-      },
-      "has-flag@3.0.0": {
-        "integrity": "sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==",
-        "dependencies": {}
-      },
-      "highlight-es@1.0.3": {
-        "integrity": "sha512-s/SIX6yp/5S1p8aC/NRDC1fwEb+myGIfp8/TzZz0rtAv8fzsdX7vGl3Q1TrXCsczFq8DI3CBFBCySPClfBSdbg==",
-        "dependencies": {
-          "chalk": "chalk@2.4.2",
-          "is-es2016-keyword": "is-es2016-keyword@1.0.0",
-          "js-tokens": "js-tokens@3.0.2"
-        }
-      },
-      "is-es2016-keyword@1.0.0": {
-        "integrity": "sha512-JtZWPUwjdbQ1LIo9OSZ8MdkWEve198ors27vH+RzUUvZXXZkzXCxFnlUhzWYxy5IexQSRiXVw9j2q/tHMmkVYQ==",
-        "dependencies": {}
-      },
-      "js-tokens@3.0.2": {
-        "integrity": "sha512-RjTcuD4xjtthQkaWH7dFlH85L+QaVtSoOyGdZ3g6HFhS9dFNDfLyqgm2NFe2X6cQpeFmt0452FJjFG5UameExg==",
-        "dependencies": {}
-      },
-      "memory-pager@1.5.0": {
-        "integrity": "sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==",
-        "dependencies": {}
-      },
-      "mongodb-connection-string-url@2.6.0": {
-        "integrity": "sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==",
-        "dependencies": {
-          "@types/whatwg-url": "@types/whatwg-url@8.2.2",
-          "whatwg-url": "whatwg-url@11.0.0"
-        }
-      },
-      "mongodb-connection-string-url@3.0.0": {
-        "integrity": "sha512-t1Vf+m1I5hC2M5RJx/7AtxgABy1cZmIPQRMXw+gEIPn/cZNF3Oiy+l0UIypUwVB5trcWHq3crg2g3uAR9aAwsQ==",
-        "dependencies": {
-          "@types/whatwg-url": "@types/whatwg-url@11.0.3",
-          "whatwg-url": "whatwg-url@13.0.0"
-        }
-      },
-      "mongodb@6.2.0": {
-        "integrity": "sha512-d7OSuGjGWDZ5usZPqfvb36laQ9CPhnWkAGHT61x5P95p/8nMVeH8asloMwW6GcYFeB0Vj4CB/1wOTDG2RA9BFA==",
-        "dependencies": {
-          "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.0",
-          "bson": "bson@6.2.0",
-          "mongodb-connection-string-url": "mongodb-connection-string-url@2.6.0"
-        }
-      },
-      "mongodb@6.3.0": {
-        "integrity": "sha512-tt0KuGjGtLUhLoU263+xvQmPHEGTw5LbcNC73EoFRYgSHwZt5tsoJC110hDyO1kjQzpgNrpdcSza9PknWN4LrA==",
-        "dependencies": {
-          "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.0",
-          "bson": "bson@6.2.0",
-          "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
-        }
-      },
-      "mongodb@6.8.0": {
-        "integrity": "sha512-HGQ9NWDle5WvwMnrvUxsFYPd3JEbqD3RgABHBQRuoCEND0qzhsd0iH5ypHsf1eJ+sXmvmyKpP+FLOKY8Il7jMw==",
-        "dependencies": {
-          "@mongodb-js/saslprep": "@mongodb-js/saslprep@1.1.7",
-          "bson": "bson@6.8.0",
-          "mongodb-connection-string-url": "mongodb-connection-string-url@3.0.0"
-        }
-      },
-      "pluralize@8.0.0": {
-        "integrity": "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==",
-        "dependencies": {}
-      },
-      "punycode@2.3.0": {
-        "integrity": "sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==",
-        "dependencies": {}
-      },
-      "sparse-bitfield@3.0.3": {
-        "integrity": "sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==",
-        "dependencies": {
-          "memory-pager": "memory-pager@1.5.0"
-        }
-      },
-      "supports-color@5.5.0": {
-        "integrity": "sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==",
-        "dependencies": {
-          "has-flag": "has-flag@3.0.0"
-        }
-      },
-      "tr46@3.0.0": {
-        "integrity": "sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==",
-        "dependencies": {
-          "punycode": "punycode@2.3.0"
-        }
-      },
-      "tr46@4.1.1": {
-        "integrity": "sha512-2lv/66T7e5yNyhAAC4NaKe5nVavzuGJQVVtRYLyQ2OI8tsJ61PMLlelehb0wi2Hx6+hT/OJUWZcw8MjlSRnxvw==",
-        "dependencies": {
-          "punycode": "punycode@2.3.0"
-        }
-      },
-      "webidl-conversions@7.0.0": {
-        "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==",
-        "dependencies": {}
-      },
-      "whatwg-url@11.0.0": {
-        "integrity": "sha512-RKT8HExMpoYx4igMiVMY83lN6UeITKJlBQ+vR/8ZJ8OCdSiN3RwCq+9gH0+Xzj0+5IrM6i4j/6LuvzbZIQgEcQ==",
-        "dependencies": {
-          "tr46": "tr46@3.0.0",
-          "webidl-conversions": "webidl-conversions@7.0.0"
-        }
-      },
-      "whatwg-url@13.0.0": {
-        "integrity": "sha512-9WWbymnqj57+XEuqADHrCJ2eSXzn8WXIW/YSGaZtb2WKAInQ6CHfaUUcTyyver0p8BDg5StLQq8h1vtZuwmOig==",
-        "dependencies": {
-          "tr46": "tr46@4.1.1",
-          "webidl-conversions": "webidl-conversions@7.0.0"
-        }
-      }
+    "@oridune/validator@0.2.52": {
+      "integrity": "9983cc761024fe9292459fe0e44557eb1544717fa65b0b6774134246368178be"
+    },
+    "@oridune/validator@0.3.0": {
+      "integrity": "a329055a7fbe610ddebf68ca3cb933f8b4aac806398233f3b46de7a7048d518e",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@oridune/validator@0.3.19": {
+      "integrity": "72d8cc011c7b09d522877ff81f5cf5cfc1083334a0959239790d45d0ef7cb849",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@oridune/validator@0.3.20": {
+      "integrity": "55a4ed1304f088f0ec4fbce1b973cbbfb41dd5f5ebe176437c46dba9d33720d9",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@std/fmt@0.225.3": {
+      "integrity": "cb6ea567155f9865b80b502b2dde7671803eddd6dad743d8851d0de2c40bd349"
+    },
+    "@std/fmt@0.225.6": {
+      "integrity": "aba6aea27f66813cecfd9484e074a9e9845782ab0685c030e453a8a70b37afc8"
+    }
+  },
+  "npm": {
+    "@mongodb-js/saslprep@1.1.0": {
+      "integrity": "sha512-Xfijy7HvfzzqiOAhAepF4SGN5e9leLkMvg/OPOF97XemjfVCYN/oWa75wnkc6mltMSTwY+XlbhWgUOJmkFspSw==",
+      "dependencies": [
+        "sparse-bitfield"
+      ]
+    },
+    "@mongodb-js/saslprep@1.1.7": {
+      "integrity": "sha512-dCHW/oEX0KJ4NjDULBo3JiOaK5+6axtpBbS+ao2ZInoAL9/YRQLhXzSNAFz7hP4nzLkIqsfYAK/PDE3+XHny0Q==",
+      "dependencies": [
+        "sparse-bitfield"
+      ]
+    },
+    "@types/node@18.16.19": {
+      "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA=="
+    },
+    "@types/webidl-conversions@7.0.2": {
+      "integrity": "sha512-uNv6b/uGRLlCVmelat2rA8bcVd3k/42mV2EmjhPh6JLkd35T5bgwR/t6xy7a9MWhd9sixIeBUzhBenvk3NO+DQ=="
+    },
+    "@types/whatwg-url@11.0.3": {
+      "integrity": "sha512-z1ELvMijRL1QmU7QuzDkeYXSF2+dXI0ITKoQsIoVKcNBOiK5RMmWy+pYYxJTHFt8vkpZe7UsvRErQwcxZkjoUw==",
+      "dependencies": [
+        "@types/webidl-conversions"
+      ]
+    },
+    "@types/whatwg-url@8.2.2": {
+      "integrity": "sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==",
+      "dependencies": [
+        "@types/node",
+        "@types/webidl-conversions"
+      ]
+    },
+    "ansi-styles@3.2.1": {
+      "integrity": "sha512-VT0ZI6kZRdTh8YyJw3SMbYm/u+NqfsAxEpWO0Pf9sq8/e94WxxOpPKx9FR1FlyCtOVDNOQ+8ntlqFxiRc+r5qA==",
+      "dependencies": [
+        "color-convert"
+      ]
+    },
+    "bson@6.2.0": {
+      "integrity": "sha512-ID1cI+7bazPDyL9wYy9GaQ8gEEohWvcUl/Yf0dIdutJxnmInEEyCsb4awy/OiBfall7zBA179Pahi3vCdFze3Q=="
+    },
+    "bson@6.8.0": {
+      "integrity": "sha512-iOJg8pr7wq2tg/zSlCCHMi3hMm5JTOxLTagf3zxhcenHsFp+c6uOs6K7W5UE7A4QIJGtqh/ZovFNMP4mOPJynQ=="
+    },
+    "chalk@2.4.2": {
+      "integrity": "sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==",
+      "dependencies": [
+        "ansi-styles",
+        "escape-string-regexp",
+        "supports-color"
+      ]
+    },
+    "color-convert@1.9.3": {
+      "integrity": "sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==",
+      "dependencies": [
+        "color-name"
+      ]
+    },
+    "color-name@1.1.3": {
+      "integrity": "sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw=="
+    },
+    "escape-string-regexp@1.0.5": {
+      "integrity": "sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg=="
+    },
+    "has-flag@3.0.0": {
+      "integrity": "sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw=="
+    },
+    "highlight-es@1.0.3": {
+      "integrity": "sha512-s/SIX6yp/5S1p8aC/NRDC1fwEb+myGIfp8/TzZz0rtAv8fzsdX7vGl3Q1TrXCsczFq8DI3CBFBCySPClfBSdbg==",
+      "dependencies": [
+        "chalk",
+        "is-es2016-keyword",
+        "js-tokens"
+      ]
+    },
+    "is-es2016-keyword@1.0.0": {
+      "integrity": "sha512-JtZWPUwjdbQ1LIo9OSZ8MdkWEve198ors27vH+RzUUvZXXZkzXCxFnlUhzWYxy5IexQSRiXVw9j2q/tHMmkVYQ=="
+    },
+    "js-tokens@3.0.2": {
+      "integrity": "sha512-RjTcuD4xjtthQkaWH7dFlH85L+QaVtSoOyGdZ3g6HFhS9dFNDfLyqgm2NFe2X6cQpeFmt0452FJjFG5UameExg=="
+    },
+    "memory-pager@1.5.0": {
+      "integrity": "sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg=="
+    },
+    "mongodb-connection-string-url@2.6.0": {
+      "integrity": "sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==",
+      "dependencies": [
+        "@types/whatwg-url@8.2.2",
+        "whatwg-url@11.0.0"
+      ]
+    },
+    "mongodb-connection-string-url@3.0.0": {
+      "integrity": "sha512-t1Vf+m1I5hC2M5RJx/7AtxgABy1cZmIPQRMXw+gEIPn/cZNF3Oiy+l0UIypUwVB5trcWHq3crg2g3uAR9aAwsQ==",
+      "dependencies": [
+        "@types/whatwg-url@11.0.3",
+        "whatwg-url@13.0.0"
+      ]
+    },
+    "mongodb@6.2.0": {
+      "integrity": "sha512-d7OSuGjGWDZ5usZPqfvb36laQ9CPhnWkAGHT61x5P95p/8nMVeH8asloMwW6GcYFeB0Vj4CB/1wOTDG2RA9BFA==",
+      "dependencies": [
+        "@mongodb-js/saslprep@1.1.0",
+        "bson@6.2.0",
+        "mongodb-connection-string-url@2.6.0"
+      ]
+    },
+    "mongodb@6.3.0": {
+      "integrity": "sha512-tt0KuGjGtLUhLoU263+xvQmPHEGTw5LbcNC73EoFRYgSHwZt5tsoJC110hDyO1kjQzpgNrpdcSza9PknWN4LrA==",
+      "dependencies": [
+        "@mongodb-js/saslprep@1.1.0",
+        "bson@6.2.0",
+        "mongodb-connection-string-url@3.0.0"
+      ]
+    },
+    "mongodb@6.8.0": {
+      "integrity": "sha512-HGQ9NWDle5WvwMnrvUxsFYPd3JEbqD3RgABHBQRuoCEND0qzhsd0iH5ypHsf1eJ+sXmvmyKpP+FLOKY8Il7jMw==",
+      "dependencies": [
+        "@mongodb-js/saslprep@1.1.7",
+        "bson@6.8.0",
+        "mongodb-connection-string-url@3.0.0"
+      ]
+    },
+    "pluralize@8.0.0": {
+      "integrity": "sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA=="
+    },
+    "punycode@2.3.0": {
+      "integrity": "sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA=="
+    },
+    "sparse-bitfield@3.0.3": {
+      "integrity": "sha512-kvzhi7vqKTfkh0PZU+2D2PIllw2ymqJKujUcyPMd9Y75Nv4nPbGJZXNhxsgdQab2BmlDct1YnfQCguEvHr7VsQ==",
+      "dependencies": [
+        "memory-pager"
+      ]
+    },
+    "supports-color@5.5.0": {
+      "integrity": "sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==",
+      "dependencies": [
+        "has-flag"
+      ]
+    },
+    "tr46@3.0.0": {
+      "integrity": "sha512-l7FvfAHlcmulp8kr+flpQZmVwtu7nfRV7NZujtN0OqES8EL4O4e0qqzL0DC5gAvx/ZC/9lk6rhcUwYvkBnBnYA==",
+      "dependencies": [
+        "punycode"
+      ]
+    },
+    "tr46@4.1.1": {
+      "integrity": "sha512-2lv/66T7e5yNyhAAC4NaKe5nVavzuGJQVVtRYLyQ2OI8tsJ61PMLlelehb0wi2Hx6+hT/OJUWZcw8MjlSRnxvw==",
+      "dependencies": [
+        "punycode"
+      ]
+    },
+    "webidl-conversions@7.0.0": {
+      "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g=="
+    },
+    "whatwg-url@11.0.0": {
+      "integrity": "sha512-RKT8HExMpoYx4igMiVMY83lN6UeITKJlBQ+vR/8ZJ8OCdSiN3RwCq+9gH0+Xzj0+5IrM6i4j/6LuvzbZIQgEcQ==",
+      "dependencies": [
+        "tr46@3.0.0",
+        "webidl-conversions"
+      ]
+    },
+    "whatwg-url@13.0.0": {
+      "integrity": "sha512-9WWbymnqj57+XEuqADHrCJ2eSXzn8WXIW/YSGaZtb2WKAInQ6CHfaUUcTyyver0p8BDg5StLQq8h1vtZuwmOig==",
+      "dependencies": [
+        "tr46@4.1.1",
+        "webidl-conversions"
+      ]
     }
   },
   "remote": {
@@ -1094,7 +1086,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@^0.3.18"
+      "jsr:@oridune/validator@~0.3.20"
     ]
   }
 }

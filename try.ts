@@ -1,42 +1,41 @@
+import { inspect } from "node:util";
 import { ObjectId } from "./deps.ts";
 import { Mongo } from "./mod.ts";
 import e from "./validator.ts";
 
+Mongo.enableLogs = true;
+
 await Mongo.connect(
   `
-  mongodb://localhost:27017/mongo-1,
-  mongodb://localhost:27017/mongo-2
+  mongodb://localhost:27017/mongo-1
   `,
 );
 
 await Mongo.dropAll();
 
 const UserSchema = e.object({
-  username: e.string(),
-  password: e.string(),
-  posts: e.array(e.instanceOf(ObjectId, { instantiate: true })),
+  invoices: e.array(e.object({
+    currency: e.in(["lyd", "usd"]).checkpoint(),
+    items: e.array(e.object({
+      amount: e.number(),
+    })),
+  })),
 });
 
 const UserModel = Mongo.model("user", UserSchema, 0);
 
-const PostSchema = e.object({
-  title: e.string(),
-});
-
-const PostModel = Mongo.model("post", PostSchema, 1);
-
-const post = await PostModel.create({
-  title: "test",
-});
-
-await UserModel.create({
-  username: "saif",
-  password: "saif",
-  posts: [post._id],
-});
-
-console.log("It starts here!");
-
-console.log(await UserModel.find().fetchOne("posts", PostModel));
+await UserModel.updateOne({}, {
+  $push: {
+    "invoices.$[invoice1].items": {
+      $each: [{
+        amount: 1,
+      }],
+    },
+  },
+}, {
+  arrayFilters: [{
+    "invoice1.currency": "lyd",
+  }],
+}).catch((err) => console.error(inspect(err, false, Infinity, true)));
 
 await Mongo.disconnect();

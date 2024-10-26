@@ -48,10 +48,14 @@ export class BaseUpdateQuery<
     return {
       ...assignDeepValues(
         InsertKeys,
-        await e
-          .partial(this.DatabaseModel.getUpdateSchema(), { noDefaults: true })
+        await e.partial(this.DatabaseModel.getUpdateSchema(), {
+          noDefaults: true,
+        })
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
             name: this.DatabaseModel.name,
+            deepOptions: {
+              preserveShape: true,
+            },
             context: {
               databaseOperation: "update",
             },
@@ -65,14 +69,18 @@ export class BaseUpdateQuery<
       ),
       ...assignDeepValues(
         ModifierKeys,
-        await e
-          .partial(this.DatabaseModel.getUpdateSchema(), { noDefaults: true })
+        await e.deepPartial(this.DatabaseModel.getUpdateSchema(), {
+          noDefaults: true,
+        })
           .validate(
             dotNotationToDeepObject(
               pickProps(ModifierKeys, data, (value) => value.$each),
             ),
             {
               name: this.DatabaseModel.name,
+              deepOptions: {
+                preserveShape: true,
+              },
               context: {
                 databaseOperation: "update",
               },
@@ -90,7 +98,6 @@ export class BaseUpdateQuery<
 
     const ExpressionRegex = /^\$(.+)/; // Keys like $inc
     const ReplacerRegex = /\.\$(\[.*\])?$/; // Keys like something.$[foo], something.$
-    // const PositionalRegex = /^\$(\[.*\])?$/; // Keys like $, $[0]
 
     for (const [Key, Value] of Object.entries(data)) {
       if (typeof Value === "object" && !!Value) {
@@ -122,12 +129,6 @@ export class BaseUpdateQuery<
               databaseOperation: "update",
             },
           }),
-        // {
-        //   resolver: (value, key, parent) => {
-        //     if (PositionalRegex.test(key)) return parent[0];
-        //     return value;
-        //   },
-        // },
       ),
       ...pickProps(ExpressionKeys, data),
     };
