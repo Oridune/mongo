@@ -53,9 +53,6 @@ export class BaseUpdateQuery<
         })
           .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
             name: this.DatabaseModel.name,
-            deepOptions: {
-              preserveShape: true,
-            },
             context: {
               databaseOperation: "update",
             },

@@ -20,6 +20,9 @@ const UserSchema = e.object({
       amount: e.number(),
     })),
   })),
+  timeline: e.array(e.object({
+    user: e.instanceOf(ObjectId, { instantiate: true }),
+  })),
 });
 
 const UserModel = Mongo.model("user", UserSchema, 0);
@@ -30,6 +33,9 @@ await UserModel.updateOne({}, {
       $each: [{
         amount: 1,
       }],
+    },
+    timeline: {
+      user: new ObjectId(),
     },
   },
 }, {
