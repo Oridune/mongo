@@ -76,12 +76,14 @@ export interface BaseFindQueryOptions<Shape> {
   initialFilter?: () => Filter<InputDocument<Shape>>;
 }
 
+type Document = Record<string, any>;
+
 export class BaseFindQuery<
   Model extends MongoModel<any, any, any>,
   Shape = Model extends MongoModel<any, any, infer R> ? R : never,
   Result = OutputDocument<Shape>[],
 > extends BaseQuery<Result> {
-  private Aggregation: Record<string, any>[] = [];
+  private Aggregation: Document[] = [];
 
   private Fetches?: Record<string, FetchOptions>;
 
@@ -300,9 +302,51 @@ export class BaseFindQuery<
     super();
   }
 
+  public custom(pipeline: Document[]) {
+    if (pipeline instanceof Array && pipeline.length) {
+      this.Aggregation.push(...pipeline);
+    }
+
+    return this;
+  }
+
   public filter(filter: Filter<InputDocument<Shape>>) {
     if (typeof filter === "object" && Object.keys(filter).length) {
       this.Aggregation.push({ $match: filter });
+    }
+
+    return this;
+  }
+
+  public groupBy(
+    field: string | string[],
+    options?: { selectLastDoc?: boolean },
+  ) {
+    const fields = field instanceof Array ? field : [field];
+
+    if (fields.length) {
+      const groupKeys = fields.reduce((keys, key) => {
+        keys[key] = `$${key}`;
+        return keys;
+      }, {} as Record<string, string>);
+
+      this.Aggregation.push({
+        $group: {
+          _id: groupKeys,
+          record: {
+            [options?.selectLastDoc ? "$last" : "$first"]: "$$ROOT",
+          },
+        },
+      }, {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              "$record",
+              groupKeys,
+            ],
+          },
+        },
+      });
     }
 
     return this;
