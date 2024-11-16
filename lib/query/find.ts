@@ -333,6 +333,7 @@ export class BaseFindQuery<
       this.Aggregation.push({
         $group: {
           _id: groupKeys,
+          totalCount: { $sum: 1 },
           record: {
             [options?.selectLastDoc ? "$last" : "$first"]: "$$ROOT",
           },
