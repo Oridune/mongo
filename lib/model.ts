@@ -33,6 +33,7 @@ import {
   type OutputDocument,
 } from "./utility.ts";
 import {
+  CountQuery,
   FindOneQuery,
   FindQuery,
   type PopulatedDocument,
@@ -422,8 +423,8 @@ export class MongoModel<
    * @returns
    */
   public count(
-    filter: Filter<InputDocument<InputShape>> = {},
-    options?: CountDocumentsOptions & { cache?: TCacheOptions },
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    options?: AggregateOptions & { cache?: TCacheOptions },
   ) {
     const Filter = (
       ObjectId.isValid(filter as any)
@@ -431,11 +432,7 @@ export class MongoModel<
         : filter
     ) as any;
 
-    this.log("count", Filter, options);
-    return Mongo.useCaching(
-      () => this.collection.countDocuments(Filter, options),
-      options?.cache,
-    );
+    return new CountQuery(this, options).filter(Filter);
   }
 
   /**

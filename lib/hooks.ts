@@ -33,7 +33,7 @@ export type THooksDetails<InputShape, OutputShape> = {
     pre: {
       details: {
         event: "read";
-        method: "find" | "findOne";
+        method: "find" | "findOne" | "count";
         aggregationPipeline: Document[];
       };
       returns: void | Promise<void>;
@@ -41,7 +41,7 @@ export type THooksDetails<InputShape, OutputShape> = {
     post: {
       details: {
         event: "read";
-        method: "find" | "findOne";
+        method: "find" | "findOne" | "count";
         data: OutputDocument<OutputShape>;
       };
       returns:

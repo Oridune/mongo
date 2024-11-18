@@ -14,34 +14,40 @@ await Mongo.connect(
 await Mongo.dropAll();
 
 const UserSchema = e.object({
-  invoices: e.array(e.object({
-    currency: e.in(["lyd", "usd"]).checkpoint(),
-    items: e.array(e.object({
-      amount: e.number(),
-    })),
-  })),
-  timeline: e.array(e.object({
-    user: e.instanceOf(ObjectId, { instantiate: true }),
-  })),
+  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+  // invoices: e.array(e.object({
+  //   currency: e.in(["lyd", "usd"]).checkpoint(),
+  //   items: e.array(e.object({
+  //     amount: e.number(),
+  //   })),
+  // })),
+  // timeline: e.array(e.object({
+  //   user: e.instanceOf(ObjectId, { instantiate: true }),
+  // })),
 });
 
 const UserModel = Mongo.model("user", UserSchema, 0);
 
-await UserModel.updateOne({}, {
-  $push: {
-    "invoices.$[invoice1].items": {
-      $each: [{
-        amount: 1,
-      }],
-    },
-    timeline: {
-      user: new ObjectId(),
-    },
-  },
-}, {
-  arrayFilters: [{
-    "invoice1.currency": "lyd",
-  }],
-}).catch((err) => console.error(inspect(err, false, Infinity, true)));
+await UserModel.create({});
+
+// await UserModel.updateOne({}, {
+//   $push: {
+//     "invoices.$[invoice1].items": {
+//       $each: [{
+//         amount: 1,
+//       }],
+//     },
+//     timeline: {
+//       user: new ObjectId(),
+//     },
+//   },
+// }, {
+//   arrayFilters: [{
+//     "invoice1.currency": "lyd",
+//   }],
+// }).catch((err) => console.error(inspect(err, false, Infinity, true)));
+
+const C = await UserModel.count().groupBy("users");
+console.log("Count:", C);
 
 await Mongo.disconnect();

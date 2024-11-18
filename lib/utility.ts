@@ -63,7 +63,11 @@ export const circularReplacer = () => {
   return (_: any, value: any) => {
     if (typeof value === "object" && value !== null) {
       if (seen.has(value)) {
-        return "[Circular]";
+        try {
+          JSON.stringify(value);
+        } catch {
+          return "[Circular]";
+        }
       }
       seen.add(value);
     }

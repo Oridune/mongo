@@ -344,6 +344,9 @@ export class BaseFindQuery<
             $mergeObjects: [
               "$record",
               groupKeys,
+              {
+                totalCount: "$totalCount",
+              },
             ],
           },
         },
@@ -626,6 +629,67 @@ export class FindOneQuery<
       & {
         cache?: TCacheOptions;
         errorOnNull?: boolean;
+      },
+  ) {
+    super(DatabaseModel, Options);
+  }
+}
+
+export class CountQuery<
+  Model extends MongoModel<any, any, any>,
+  Shape = Model extends MongoModel<any, any, infer R> ? R : never,
+  Result = number,
+> extends BaseFindQuery<Model, Shape, Result> {
+  protected override async exec(): Promise<Result> {
+    this.custom([{ $count: "count" }]);
+
+    const Aggregation = this.getPipeline();
+
+    for (const Hook of this.DatabaseModel["PreHooks"].read ?? []) {
+      await Hook({
+        event: "read",
+        method: "count",
+        aggregationPipeline: Aggregation,
+      });
+    }
+
+    this.DatabaseModel["log"]("count", Aggregation, this.Options);
+
+    let Results = await (Mongo.useCaching(
+      async () =>
+        await this.DatabaseModel.collection
+          .aggregate(Aggregation, this.Options)
+          .toArray(),
+      this.Options?.cache,
+    ));
+
+    if (this.DatabaseModel["PostHooks"].read?.length) {
+      Results = await Promise.all(
+        Results.map(
+          (doc) =>
+            this.DatabaseModel["PostHooks"].read!.reduce(
+              async (doc, hook) =>
+                hook({
+                  event: "read",
+                  method: "count",
+                  data: await doc as any,
+                }) as any,
+              Promise.resolve(doc),
+            ) ?? doc,
+        ),
+      );
+    }
+
+    return (Results[0]?.count ?? 0) as Result;
+  }
+
+  constructor(
+    protected override DatabaseModel: Model,
+    protected override Options?:
+      & AggregateOptions
+      & BaseFindQueryOptions<Shape>
+      & {
+        cache?: TCacheOptions;
       },
   ) {
     super(DatabaseModel, Options);
