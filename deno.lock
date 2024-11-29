@@ -3,10 +3,10 @@
   "specifiers": {
     "jsr:@oridune/validator@0.2.50": "0.2.50",
     "jsr:@oridune/validator@0.3": "0.3.0",
+    "jsr:@oridune/validator@0.4": "0.4.0",
     "jsr:@oridune/validator@~0.2.51": "0.2.51",
     "jsr:@oridune/validator@~0.2.52": "0.2.52",
     "jsr:@oridune/validator@~0.3.19": "0.3.19",
-    "jsr:@oridune/validator@~0.3.20": "0.3.20",
     "jsr:@std/fmt@~0.225.3": "0.225.6",
     "npm:@types/node@*": "18.16.19",
     "npm:highlight-es@1.0.3": "1.0.3",
@@ -37,8 +37,8 @@
         "jsr:@std/fmt"
       ]
     },
-    "@oridune/validator@0.3.20": {
-      "integrity": "55a4ed1304f088f0ec4fbce1b973cbbfb41dd5f5ebe176437c46dba9d33720d9",
+    "@oridune/validator@0.4.0": {
+      "integrity": "46cfac94943493a6fe43eead961f1cbe903ea5029095bef69d0acfb633b93812",
       "dependencies": [
         "jsr:@std/fmt"
       ]
@@ -1086,7 +1086,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@~0.3.20"
+      "jsr:@oridune/validator@0.4"
     ]
   }
 }
