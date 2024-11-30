@@ -6,7 +6,7 @@
     "jsr:@oridune/validator@~0.2.51": "0.2.51",
     "jsr:@oridune/validator@~0.2.52": "0.2.52",
     "jsr:@oridune/validator@~0.3.19": "0.3.19",
-    "jsr:@oridune/validator@~0.4.1": "0.4.1",
+    "jsr:@oridune/validator@~0.4.3": "0.4.3",
     "jsr:@std/fmt@~0.225.3": "0.225.6",
     "npm:@types/node@*": "18.16.19",
     "npm:highlight-es@1.0.3": "1.0.3",
@@ -37,8 +37,8 @@
         "jsr:@std/fmt"
       ]
     },
-    "@oridune/validator@0.4.1": {
-      "integrity": "8a98a65300f656e9c4dc06138566eac8d5199da0793ca36e8e62a14737bf6590",
+    "@oridune/validator@0.4.3": {
+      "integrity": "66ae72955580a43c04fb0222b0753fc09f0e20be17452dce75c413e21a24cac4",
       "dependencies": [
         "jsr:@std/fmt"
       ]
@@ -1086,7 +1086,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@~0.4.1"
+      "jsr:@oridune/validator@~0.4.3"
     ]
   }
 }
