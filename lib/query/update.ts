@@ -45,13 +45,20 @@ export class BaseUpdateQuery<
       else InsertKeys.push(Key);
     }
 
+    const PickedInsertKeys = pickProps(InsertKeys, data);
+    const PickedModifierKeys = pickProps(ModifierKeys, data, (value) => value.$each);
+
+    const FlattenInsertKeys = dotNotationToDeepObject(PickedInsertKeys);
+    const FlattenModifierKeys = dotNotationToDeepObject(PickedModifierKeys);
+
+    const RootInsertKeys = Object.keys(FlattenInsertKeys);
+    const RootModifierKeys = Object.keys(FlattenModifierKeys);
+
     return {
       ...assignDeepValues(
         InsertKeys,
-        await e.partial(this.DatabaseModel.getUpdateSchema(), {
-          noDefaults: true,
-        })
-          .validate(dotNotationToDeepObject(pickProps(InsertKeys, data)), {
+        await e.partial(e.pick(this.DatabaseModel.getUpdateSchema(), RootInsertKeys))
+          .validate(FlattenInsertKeys, {
             name: this.DatabaseModel.name,
             context: {
               databaseOperation: "update",
@@ -66,13 +73,9 @@ export class BaseUpdateQuery<
       ),
       ...assignDeepValues(
         ModifierKeys,
-        await e.deepPartial(this.DatabaseModel.getUpdateSchema(), {
-          noDefaults: true,
-        })
+        await e.deepPartial(e.pick(this.DatabaseModel.getUpdateSchema(), RootModifierKeys))
           .validate(
-            dotNotationToDeepObject(
-              pickProps(ModifierKeys, data, (value) => value.$each),
-            ),
+            FlattenModifierKeys,
             {
               name: this.DatabaseModel.name,
               deepOptions: {

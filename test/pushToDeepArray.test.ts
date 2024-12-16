@@ -6,6 +6,7 @@ const UserSchema = e.object({
   invoices: e.array(e.object({
     currency: e.in(["lyd", "usd"]).checkpoint(),
     items: e.array(e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })).default(() => new ObjectId()),
       amount: e.number(),
     })),
   })),
@@ -26,7 +27,7 @@ Deno.test({
     await Mongo.dropAll();
 
     await t.step("Create Users and Posts", async () => {
-      await UserModel.updateOne({}, {
+      const { modifications } = await UserModel.updateOne({}, {
         $push: {
           "invoices.$[invoice1].items": {
             $each: [{
@@ -45,6 +46,12 @@ Deno.test({
         console.error(inspect(err, false, Infinity, true));
         throw err;
       });
+
+      console.log("PushToDeepArray Modifications:", inspect(modifications, false, Infinity, true));
+
+      // deno-lint-ignore no-explicit-any
+      if (!(modifications.invoices["$[invoice1]" as any].items[0]._id instanceof ObjectId))
+        throw new Error("A default value was not generated!");
     });
 
     await Mongo.disconnect();
