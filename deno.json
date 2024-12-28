@@ -1,6 +1,6 @@
 {
   "name": "@oridune/mongo",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "exports": {
     ".": "./mod.ts",
     "./validator": "./validator.ts"
