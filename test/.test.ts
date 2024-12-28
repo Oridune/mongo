@@ -564,6 +564,6 @@ Deno.test({
 
     await Mongo.disconnect();
   },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  // sanitizeResources: false,
+  // sanitizeOps: false,
 });

@@ -514,12 +514,18 @@ export class FindQuery<
     this.DatabaseModel["log"]("find", Aggregation, this.Options);
 
     let Results = await (Mongo.useCaching(
-      async () =>
-        await this.fetchRelations(
-          await this.DatabaseModel.collection
-            .aggregate(Aggregation, this.Options)
-            .toArray(),
-        ),
+      async () => {
+        const cursor = this.DatabaseModel.collection
+          .aggregate(Aggregation, this.Options);
+
+        const results = await this.fetchRelations(
+          await cursor.toArray(),
+        );
+
+        await cursor.close();
+
+        return results;
+      },
       this.Options?.cache,
     ));
 
@@ -581,12 +587,18 @@ export class FindOneQuery<
     this.DatabaseModel["log"]("findOne", Aggregation, this.Options);
 
     const Results = await Mongo.useCaching(
-      async () =>
-        await this.fetchRelations(
-          await this.DatabaseModel.collection
-            .aggregate(Aggregation, this.Options)
-            .toArray(),
-        ),
+      async () => {
+        const cursor = this.DatabaseModel.collection
+          .aggregate(Aggregation, this.Options);
+
+        const results = await this.fetchRelations(
+          await cursor.toArray(),
+        );
+
+        await cursor.close();
+
+        return results;
+      },
       this.Options?.cache,
     );
 
@@ -656,10 +668,18 @@ export class CountQuery<
     this.DatabaseModel["log"]("count", Aggregation, this.Options);
 
     let Results = await (Mongo.useCaching(
-      async () =>
-        await this.DatabaseModel.collection
-          .aggregate(Aggregation, this.Options)
-          .toArray(),
+      async () => {
+        const cursor = this.DatabaseModel.collection
+          .aggregate(Aggregation, this.Options);
+
+        const results = await this.fetchRelations(
+          await cursor.toArray(),
+        );
+
+        await cursor.close();
+
+        return results;
+      },
       this.Options?.cache,
     ));
 
