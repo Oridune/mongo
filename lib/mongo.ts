@@ -75,27 +75,15 @@ export class Mongo {
   };
 
   protected static setCache(key: string, value: TCacheValue, ttl?: number) {
-    if (typeof this.cachingMethods?.set !== "function") {
-      throw new Error(`Caching methods are not provided!`);
-    }
-
-    return this.cachingMethods.set(key, value, ttl);
+    return this.cachingMethods?.set(key, value, ttl);
   }
 
   protected static getCache(key: string) {
-    if (typeof this.cachingMethods?.get !== "function") {
-      throw new Error(`Caching methods are not provided!`);
-    }
-
-    return this.cachingMethods.get(key);
+    return this.cachingMethods?.get(key);
   }
 
   protected static deleteCache(key: string) {
-    if (typeof this.cachingMethods?.del !== "function") {
-      throw new Error(`Caching methods are not provided!`);
-    }
-
-    return this.cachingMethods.del(key);
+    return this.cachingMethods?.del(key);
   }
 
   static pre(

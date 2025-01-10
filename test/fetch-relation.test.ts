@@ -1,39 +1,38 @@
 import e from "../validator.ts";
 import { Mongo, ObjectId } from "../mod.ts";
 
-const UserSchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  username: e.string(),
-  password: e.string(),
-  posts: e.array(e.instanceOf(ObjectId, { instantiate: true })),
-  timeline: e.array(e.object({
-    user: e.instanceOf(ObjectId, { instantiate: true }),
-  })),
-});
-
-const UserModel = Mongo.model("user", UserSchema, 0);
-
-const PostSchema = e.object({
-  _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-  title: e.string(),
-});
-
-const PostModel = Mongo.model("post", PostSchema, 1);
-
-const CheckSchema = e.object({
-  _id: e.instanceOf(ObjectId, { instantiate: true }),
-  posts: e.array(PostSchema),
-  timeline: e.array(e.object({
-    user: e.object({
-      _id: e.instanceOf(ObjectId, { instantiate: true }),
-      username: e.string(),
-    }),
-  })),
-}).extends(e.omit(UserSchema, ["_id", "posts", "timeline"]));
-
 Deno.test({
   name: "Fetch relationships from other connections",
   async fn(t) {
+    const UserSchema = e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+      username: e.string(),
+      password: e.string(),
+      posts: e.array(e.instanceOf(ObjectId, { instantiate: true })),
+      timeline: e.array(e.object({
+        user: e.instanceOf(ObjectId, { instantiate: true }),
+      })),
+    });
+
+    const UserModel = Mongo.model("user", UserSchema, 0);
+
+    const PostSchema = e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+      title: e.string(),
+    });
+
+    const PostModel = Mongo.model("post", PostSchema, 1);
+
+    const CheckSchema = e.object({
+      _id: e.instanceOf(ObjectId, { instantiate: true }),
+      posts: e.array(PostSchema),
+      timeline: e.array(e.object({
+        user: e.object({
+          _id: e.instanceOf(ObjectId, { instantiate: true }),
+          username: e.string(),
+        }),
+      })),
+    }).extends(e.omit(UserSchema, ["_id", "posts", "timeline"]));
     Mongo.enableLogs = true;
 
     await Mongo.connect(
@@ -88,6 +87,6 @@ Deno.test({
 
     await Mongo.disconnect();
   },
-  // sanitizeResources: false,
-  // sanitizeOps: false,
+  sanitizeResources: true,
+  sanitizeOps: true,
 });

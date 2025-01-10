@@ -3,75 +3,75 @@ import { FindOneQuery, FindQuery } from "../lib/query/find.ts";
 import { CacheProvider, Mongo, ObjectId } from "../mod.ts";
 import e, { ValidationException } from "../validator.ts";
 
-const Cache = new Map<
-  string,
-  {
-    value: any;
-    ttl?: number;
-    time: number;
-  }
->();
-
-const PostsData = [
-  {
-    title: "Test",
-    description: "This is a test post.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const User1Id = new ObjectId();
-const User2Id = new ObjectId();
-
-const UsersData = [
-  {
-    _id: User1Id,
-    username: "saffellikhan",
-    profile: {
-      name: "Saif Ali Khan",
-      // dob: new Date(),
-    },
-    activity: [
-      {
-        description: "Logged in!",
-        user: User1Id,
-      },
-      {
-        description: "Waved by someone!",
-        user: User2Id,
-      },
-    ],
-    latestActivity: {
-      description: "Waved by someone!",
-      user: User2Id,
-    },
-    timeline: [{ message: "Hello world!" }],
-  },
-  {
-    _id: User2Id,
-    username: "abdullah",
-    password: "secret3",
-    profile: {
-      name: "Abdullah Khan",
-      dob: new Date(),
-    },
-    activity: [
-      {
-        description: "Waved by someone!",
-        user: User1Id,
-      },
-    ],
-    latestActivity: {
-      description: "Waved by someone!",
-      user: User1Id,
-    },
-  },
-];
-
 Deno.test({
   name: "Mongo crud tests",
   async fn(t) {
+    const Cache = new Map<
+      string,
+      {
+        value: any;
+        ttl?: number;
+        time: number;
+      }
+    >();
+
+    const PostsData = [
+      {
+        title: "Test",
+        description: "This is a test post.",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    const User1Id = new ObjectId();
+    const User2Id = new ObjectId();
+
+    const UsersData = [
+      {
+        _id: User1Id,
+        username: "saffellikhan",
+        profile: {
+          name: "Saif Ali Khan",
+          // dob: new Date(),
+        },
+        activity: [
+          {
+            description: "Logged in!",
+            user: User1Id,
+          },
+          {
+            description: "Waved by someone!",
+            user: User2Id,
+          },
+        ],
+        latestActivity: {
+          description: "Waved by someone!",
+          user: User2Id,
+        },
+        timeline: [{ message: "Hello world!" }],
+      },
+      {
+        _id: User2Id,
+        username: "abdullah",
+        password: "secret3",
+        profile: {
+          name: "Abdullah Khan",
+          dob: new Date(),
+        },
+        activity: [
+          {
+            description: "Waved by someone!",
+            user: User1Id,
+          },
+        ],
+        latestActivity: {
+          description: "Waved by someone!",
+          user: User1Id,
+        },
+      },
+    ];
+
     Mongo.enableLogs = true;
 
     const ConnectionString =
@@ -564,6 +564,6 @@ Deno.test({
 
     await Mongo.disconnect();
   },
-  // sanitizeResources: false,
-  // sanitizeOps: false,
+  sanitizeResources: true,
+  sanitizeOps: true,
 });
