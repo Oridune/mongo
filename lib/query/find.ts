@@ -214,7 +214,7 @@ export class BaseFindQuery<
 
       const Query = details.model.find({
         [details.options?.foreignField ?? "_id"]: ref instanceof Array
-          ? { $in: ref }
+          ? { $in: Array.from(new Set(ref)) }
           : ref,
       });
 

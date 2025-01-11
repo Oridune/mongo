@@ -254,7 +254,7 @@ export const mongodbModifiersToObject = (
 };
 
 export const getObjectValue = (
-  obj: Record<string, any>,
+  obj: Record<string, any> | null | undefined,
   keys: string | string[],
   options?: {
     child?: boolean;
@@ -263,6 +263,8 @@ export const getObjectValue = (
   plural?: true;
   value?: any;
 } => {
+  if (!obj) return {};
+
   const Keys = keys instanceof Array ? [...keys] : keys.split(".");
   const key = Keys.shift();
 
