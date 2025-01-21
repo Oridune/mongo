@@ -1,36 +1,34 @@
-// deno-lint-ignore-file ban-ts-comment
-// @ts-ignore
-import EsHighlighter from "npm:highlight-es@1.0.3";
+import EsHighlighter from "highlighter";
 
 export const highligthEs = (content: string): string => EsHighlighter(content);
 
 export {
-  MongoClient,
-  ClientSession,
-  ObjectId,
-  type ClientSessionOptions,
-  type EndSessionOptions,
-  type MongoClientOptions,
-  type TransactionOptions,
   type AggregateOptions,
   type BulkWriteOptions,
   type ChangeStreamOptions,
+  ClientSession,
+  type ClientSessionOptions,
   type CollectionOptions,
   type CommandOperationOptions,
   type CountDocumentsOptions,
   type CreateIndexesOptions,
   type Db,
   type DeleteOptions,
+  type DeleteResult,
+  type Document,
+  type EndSessionOptions,
   type Filter,
   type IndexDirection,
   type InsertOneOptions,
+  type MatchKeysAndValues,
+  MongoClient,
+  type MongoClientOptions,
+  ObjectId,
+  type PushOperator,
   type ReplaceOptions,
+  type SetFields,
+  type TransactionOptions,
   type UpdateFilter,
   type UpdateOptions,
   type UpdateResult,
-  type DeleteResult,
-  type Document,
-  type MatchKeysAndValues,
-  type PushOperator,
-  type SetFields,
-} from "npm:mongodb@6.12.0";
+} from "mongodb";

@@ -207,7 +207,7 @@ export class BaseFindQuery<
   }
 
   protected async fetchRelations<T extends Array<any>>(results: T) {
-    if (!this.Fetches) return results;
+    if (!this.Fetches || !results.length) return results;
 
     const fetch = async (details: FetchOptions, ref: any) => {
       if (ref instanceof Array && !ref.length) return [];

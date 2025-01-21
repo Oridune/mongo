@@ -1131,7 +1131,9 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@~0.4.5"
+      "jsr:@oridune/validator@~0.4.5",
+      "npm:highlight-es@1.0.3",
+      "npm:mongodb@6.12.0"
     ]
   }
 }
