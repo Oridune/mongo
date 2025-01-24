@@ -16,23 +16,23 @@ Deno.test({
 
     const UserModel = Mongo.model("user", UserSchema, 0);
 
-    // const PostSchema = e.object({
-    //   _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
-    //   title: e.string(),
-    // });
+    const PostSchema = e.object({
+      _id: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+      title: e.string(),
+    });
 
-    // const PostModel = Mongo.model("post", PostSchema, 1);
+    const PostModel = Mongo.model("post", PostSchema, 1);
 
-    // const CheckSchema = e.object({
-    //   _id: e.instanceOf(ObjectId, { instantiate: true }),
-    //   posts: e.array(PostSchema),
-    //   timeline: e.array(e.object({
-    //     user: e.object({
-    //       _id: e.instanceOf(ObjectId, { instantiate: true }),
-    //       username: e.string(),
-    //     }),
-    //   })),
-    // }).extends(e.omit(UserSchema, ["_id", "posts", "timeline"]));
+    const CheckSchema = e.object({
+      _id: e.instanceOf(ObjectId, { instantiate: true }),
+      posts: e.array(PostSchema),
+      timeline: e.array(e.object({
+        user: e.object({
+          _id: e.instanceOf(ObjectId, { instantiate: true }),
+          username: e.string(),
+        }),
+      })),
+    }).extends(e.omit(UserSchema, ["_id", "posts", "timeline"]));
 
     Mongo.enableLogs = true;
 
@@ -45,46 +45,48 @@ Deno.test({
 
     await Mongo.dropAll();
 
-    // await t.step("Create Users and Posts", async () => {
-    //   const [post1, post2] = await PostModel.createMany([{
-    //     title: "post 1",
-    //   }, {
-    //     title: "post 2",
-    //   }]);
+    await t.step("Create Users and Posts", async () => {
+      const [post1, post2] = await PostModel.createMany([{
+        title: "post 1",
+      }, {
+        title: "post 2",
+      }]);
 
-    //   const user1 = await UserModel.create({
-    //     username: "saif",
-    //     password: "saif",
-    //     posts: [post1._id],
-    //     timeline: [],
-    //   });
+      const user1 = await UserModel.create({
+        username: "saif",
+        password: "saif",
+        posts: [post1._id],
+        timeline: [],
+      });
 
-    //   const user2 = await UserModel.create({
-    //     username: "john",
-    //     password: "john",
-    //     posts: [],
-    //     timeline: [{
-    //       user: user1._id,
-    //     }],
-    //   });
+      const user2 = await UserModel.create({
+        username: "john",
+        password: "john",
+        posts: [],
+        timeline: [{
+          user: user1._id,
+        }],
+      });
 
-    //   const _user3 = await UserModel.create({
-    //     username: "jean",
-    //     password: "jean",
-    //     posts: [post1._id, post2._id],
-    //     timeline: [{
-    //       user: user1._id,
-    //     }, {
-    //       user: user2._id,
-    //     }],
-    //   });
+      const _user3 = await UserModel.create({
+        username: "jean",
+        password: "jean",
+        posts: [post1._id, post2._id],
+        timeline: [{
+          user: user1._id,
+        }, {
+          user: user2._id,
+        }, {
+          user: user1._id,
+        }],
+      });
 
-    //   const Results = await UserModel.find()
-    //     .fetch("posts", PostModel)
-    //     .fetchOne("timeline.user", UserModel, { project: { username: 1 } });
+      const Results = await UserModel.find()
+        .fetch("posts", PostModel)
+        .fetchOne("timeline.user", UserModel, { project: { username: 1 } });
 
-    //   await e.array(CheckSchema).validate(Results);
-    // });
+      await e.array(CheckSchema).validate(Results);
+    });
 
     await t.step("Validate relation data type", async () => {
       const user = await UserModel.create({

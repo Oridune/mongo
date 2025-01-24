@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any ban-types
-import type { AggregateOptions, Filter } from "../../deps.ts";
+import { type AggregateOptions, type Filter, ObjectId } from "../../deps.ts";
 import { BaseQuery } from "./base.ts";
 import { MongoModel } from "../model.ts";
 import {
@@ -214,7 +214,11 @@ export class BaseFindQuery<
 
       const Query = details.model.find({
         [details.options?.foreignField ?? "_id"]: ref instanceof Array
-          ? { $in: Array.from(new Set(ref)) }
+          ? {
+            $in: Array
+              .from(new Set(ref.map(String)))
+              .map((_) => new ObjectId(_)),
+          }
           : ref,
       });
 
@@ -267,8 +271,12 @@ export class BaseFindQuery<
             });
           } else {
             const Results = await fetch(fetchDetails, value);
+            const resultMap = Object.groupBy(Results, ({ _id }) => String(_id));
+            const EndResults = (value instanceof Array ? value : [value]).map(
+              (_id) => resultMap[String(_id)]?.[0]
+            );
 
-            Results.forEach((result, index) => {
+            EndResults.forEach((result, index) => {
               const newField = [...currentField];
 
               newField.splice(
