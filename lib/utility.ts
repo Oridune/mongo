@@ -278,8 +278,6 @@ export const getObjectValue = (
         plural: true,
         value: obj[key].map((t) =>
           getObjectValue(t, Keys, { child: true }).value
-        ).filter(
-          Boolean,
         ),
       };
     }

@@ -11,6 +11,10 @@ Deno.test({
       posts: e.optional(e.array(e.instanceOf(ObjectId, { instantiate: true }))),
       timeline: e.optional(e.array(e.object({
         user: e.instanceOf(ObjectId, { instantiate: true }),
+        post: e.optional(e.instanceOf(ObjectId, { instantiate: true })),
+        collaborators: e.optional(
+          e.array(e.instanceOf(ObjectId, { instantiate: true })),
+        ),
       }))),
     });
 
@@ -31,6 +35,14 @@ Deno.test({
           _id: e.instanceOf(ObjectId, { instantiate: true }),
           username: e.string(),
         }),
+        post: e.optional(e.object({
+          _id: e.instanceOf(ObjectId, { instantiate: true }),
+          title: e.string(),
+        })),
+        collaborators: e.optional(e.array(e.object({
+          _id: e.instanceOf(ObjectId, { instantiate: true }),
+          username: e.string(),
+        }))),
       })),
     }).extends(e.omit(UserSchema, ["_id", "posts", "timeline"]));
 
@@ -76,14 +88,21 @@ Deno.test({
           user: user1._id,
         }, {
           user: user2._id,
+          post: post2._id,
         }, {
           user: user1._id,
+          post: post1._id,
+          collaborators: [user1._id, user2._id],
         }],
       });
 
       const Results = await UserModel.find()
         .fetch("posts", PostModel)
-        .fetchOne("timeline.user", UserModel, { project: { username: 1 } });
+        .fetchOne("timeline.user", UserModel, { project: { username: 1 } })
+        .fetchOne("timeline.post", PostModel, { project: { title: 1 } })
+        .fetch("timeline.collaborators", UserModel, {
+          project: { username: 1 },
+        });
 
       await e.array(CheckSchema).validate(Results);
     });

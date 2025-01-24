@@ -210,16 +210,20 @@ export class BaseFindQuery<
     if (!this.Fetches || !results.length) return results;
 
     const fetch = async (details: FetchOptions, ref: any) => {
-      if (ref === undefined || ref instanceof Array && !ref.length) return [];
+      const _ref = ref instanceof Array ? ref.filter(Boolean) : ref;
+
+      if (_ref === undefined || (_ref instanceof Array && !_ref.length)) {
+        return [];
+      }
 
       const Query = details.model.find({
-        [details.options?.foreignField ?? "_id"]: ref instanceof Array
+        [details.options?.foreignField ?? "_id"]: _ref instanceof Array
           ? {
             $in: Array
-              .from(new Set(ref.map(String)))
+              .from(new Set(_ref.map(String)))
               .map((_) => new ObjectId(_)),
           }
-          : ref,
+          : _ref,
       });
 
       typeof details.options?.filter === "object" &&
@@ -245,21 +249,30 @@ export class BaseFindQuery<
         const currentField = fetchDetails.field.split(".");
 
         if (plural) {
-          if (value instanceof Array && value[0] instanceof Array) {
-            const Results = await Promise.all(
-              value.map((v) => fetch(fetchDetails, v)),
+          if (!(value instanceof Array)) {
+            throw new Error("Something is not right!");
+          }
+
+          const Results = await fetch(fetchDetails, value.flat());
+          const resultMap = Object.groupBy(Results, ({ _id }) => String(_id));
+
+          value.forEach((id, index) => {
+            const newField = [...currentField];
+
+            newField.splice(
+              currentField.length - 1,
+              0,
+              index.toString(),
             );
 
-            Results.forEach((result, index) => {
-              const newField = [...currentField];
-
-              newField.splice(
-                currentField.length - 1,
-                0,
-                index.toString(),
+            if (id) {
+              const TargetValues = (id instanceof Array ? id : [id]).map((i) =>
+                resultMap[String(i)]?.[0]
               );
 
-              const TargetValue = fetchDetails.singular ? result[0] : result;
+              const TargetValue = fetchDetails.singular
+                ? TargetValues[0]
+                : TargetValues;
 
               if (TargetValue !== undefined) {
                 setObjectValue(
@@ -268,32 +281,8 @@ export class BaseFindQuery<
                   TargetValue,
                 );
               }
-            });
-          } else {
-            const Results = await fetch(fetchDetails, value);
-            const resultMap = Object.groupBy(Results, ({ _id }) => String(_id));
-            const EndResults = (value instanceof Array ? value : [value]).map(
-              (_id) => resultMap[String(_id)]?.[0]
-            );
-
-            EndResults.forEach((result, index) => {
-              const newField = [...currentField];
-
-              newField.splice(
-                currentField.length - 1,
-                0,
-                index.toString(),
-              );
-
-              if (result !== undefined) {
-                setObjectValue(
-                  item,
-                  newField,
-                  result,
-                );
-              }
-            });
-          }
+            }
+          });
         } else {
           const Results = await fetch(fetchDetails, value);
 
