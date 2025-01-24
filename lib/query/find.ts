@@ -210,7 +210,7 @@ export class BaseFindQuery<
     if (!this.Fetches || !results.length) return results;
 
     const fetch = async (details: FetchOptions, ref: any) => {
-      if (ref instanceof Array && !ref.length) return [];
+      if (ref === undefined || ref instanceof Array && !ref.length) return [];
 
       const Query = details.model.find({
         [details.options?.foreignField ?? "_id"]: ref instanceof Array
@@ -255,11 +255,15 @@ export class BaseFindQuery<
                 index.toString(),
               );
 
-              setObjectValue(
-                item,
-                newField,
-                fetchDetails.singular ? result[0] : result,
-              );
+              const TargetValue = fetchDetails.singular ? result[0] : result;
+
+              if (TargetValue !== undefined) {
+                setObjectValue(
+                  item,
+                  newField,
+                  TargetValue,
+                );
+              }
             });
           } else {
             const Results = await fetch(fetchDetails, value);
@@ -273,21 +277,27 @@ export class BaseFindQuery<
                 index.toString(),
               );
 
-              setObjectValue(
-                item,
-                newField,
-                result,
-              );
+              if (result !== undefined) {
+                setObjectValue(
+                  item,
+                  newField,
+                  result,
+                );
+              }
             });
           }
         } else {
           const Results = await fetch(fetchDetails, value);
 
-          setObjectValue(
-            item,
-            currentField,
-            fetchDetails.singular ? Results[0] : Results,
-          );
+          const TargetValue = fetchDetails.singular ? Results[0] : Results;
+
+          if (TargetValue !== undefined) {
+            setObjectValue(
+              item,
+              currentField,
+              TargetValue,
+            );
+          }
         }
       }
 
