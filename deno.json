@@ -8,6 +8,6 @@
   "imports": {
     "@oridune/validator": "jsr:@oridune/validator@^0.4.5",
     "highlighter": "npm:highlight-es@1.0.3",
-    "mongodb": "npm:mongodb@6.12.0"
+    "mongodb": "npm:mongodb@6.16.0"
   }
 }
