@@ -256,26 +256,19 @@ export class Mongo {
 
     if (!Conn) throw new Error(`Please connect the client first!`);
 
-    const Session = Conn.startSession(Opts?.sessionOpts);
+    await Conn.withSession(
+      {
+        ...Opts?.sessionOpts,
+        defaultTransactionOptions: Opts?.transactionOpts ??
+          Opts?.sessionOpts?.defaultTransactionOptions,
+      },
+      async (session) => {
+        // @ts-ignore
+        session._connectionIndex = CIndex;
 
-    // @ts-ignore
-    Session._connectionIndex = CIndex;
-
-    try {
-      Session.startTransaction(Opts?.transactionOpts);
-
-      const Result = await callback(Session);
-
-      await Session.commitTransaction();
-
-      return Result;
-    } catch (error) {
-      await Session.abortTransaction();
-
-      throw error;
-    } finally {
-      await Session.endSession(Opts?.sessionEndOpts);
-    }
+        return await callback(session);
+      },
+    );
   }
 
   static setCachingMethods(options: {
