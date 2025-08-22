@@ -1,6 +1,6 @@
 {
   "name": "@oridune/mongo",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "exports": {
     ".": "./mod.ts",
     "./validator": "./validator.ts"
@@ -8,6 +8,6 @@
   "imports": {
     "@oridune/validator": "jsr:@oridune/validator@^0.4.8",
     "highlighter": "npm:highlight-es@1.0.3",
-    "mongodb": "npm:mongodb@6.16.0"
+    "mongodb": "npm:mongodb@6.18.0"
   }
 }
