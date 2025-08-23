@@ -5,7 +5,7 @@
     "jsr:@std/fmt@~0.225.3": "0.225.6",
     "npm:@types/node@*": "24.2.0",
     "npm:highlight-es@1.0.3": "1.0.3",
-    "npm:mongodb@6.16.0": "6.16.0",
+    "npm:mongodb@6.18.0": "6.18.0",
     "npm:pluralize@8.0.0": "8.0.0"
   },
   "jsr": {
@@ -97,8 +97,8 @@
         "whatwg-url"
       ]
     },
-    "mongodb@6.16.0": {
-      "integrity": "sha512-D1PNcdT0y4Grhou5Zi/qgipZOYeWrhLEpk33n3nm6LGtz61jvO88WlrWCK/bigMjpnOdAUKKQwsGIl0NtWMyYw==",
+    "mongodb@6.18.0": {
+      "integrity": "sha512-fO5ttN9VC8P0F5fqtQmclAkgXZxbIkYRTUi1j8JO6IYwvamkhtYDilJr35jOPELR49zqCJgXZWwCtW7B+TM8vQ==",
       "dependencies": [
         "@mongodb-js/saslprep",
         "bson",
@@ -153,7 +153,7 @@
     "dependencies": [
       "jsr:@oridune/validator@~0.4.8",
       "npm:highlight-es@1.0.3",
-      "npm:mongodb@6.16.0"
+      "npm:mongodb@6.18.0"
     ]
   }
 }

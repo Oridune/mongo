@@ -538,7 +538,7 @@ Deno.test({
         // Check if the result is a valid Post
         await PostSchema().validate(Post);
 
-        // Check the data consistancy in the current session
+        // Check the data consistency in the current session
         if (
           (await UserModel.count({}, { session })) === 0 ||
           (await PostModel.count({}, { session })) === 0

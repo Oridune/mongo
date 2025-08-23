@@ -63,6 +63,7 @@ export type PopulateOptions<
   limit?: number;
   project?: Projection<I>;
   having?: Filter<InputDocument<I>>;
+  disabled?: boolean;
 };
 
 export type FetchOptions = {
@@ -94,6 +95,8 @@ export class BaseFindQuery<
       unwind?: boolean;
     },
   ): any[] {
+    if (options?.disabled) return [];
+
     const SubPopulateConfig = model["populateConfig"];
 
     const IsNestedPopulate = /\./.test(field);
@@ -210,6 +213,8 @@ export class BaseFindQuery<
     if (!this.Fetches || !results.length) return results;
 
     const fetch = async (details: FetchOptions, ref: any) => {
+      if (details.options?.disabled) return [];
+
       const _ref = ref instanceof Array ? ref.filter(Boolean) : ref;
 
       if (_ref === undefined || (_ref instanceof Array && !_ref.length)) {
