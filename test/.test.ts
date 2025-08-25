@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { FindOneQuery, FindQuery } from "../lib/query/find.ts";
+import { MongoTransaction } from "../lib/transaction.ts";
 import { CacheProvider, Mongo, ObjectId } from "../mod.ts";
 import e, { ValidationException } from "../validator.ts";
 
@@ -211,6 +212,13 @@ Deno.test({
         latestActivity: ActivityWithPopulatesSchema,
       }),
     ));
+
+    const LogSchema = e.object({
+      action: e.string(),
+      createdBy: e.string(),
+    });
+
+    const LogModel = Mongo.model("log", LogSchema);
 
     await t.step("Create Indexes", async () => {
       await UserModel.createIndex(
@@ -559,6 +567,30 @@ Deno.test({
 
       if ((await UserModel.count()) === 0 || (await PostModel.count()) === 0) {
         throw new Error(`Transaction commit not working!`);
+      }
+    });
+
+    await t.step("Multi database transaction", async () => {
+      await UserModel.deleteMany();
+      await LogModel.deleteMany();
+
+      await MongoTransaction.transaction(async (session) => {
+        // Create User
+        const User = await UserModel.create(UsersData[0], { session });
+
+        await LogModel.create({
+          action: "User created",
+          createdBy: User._id.toString(),
+        }, { session });
+
+        throw new Error("rollback");
+      })
+        .catch((err) => {
+          if (err instanceof Error && err.message !== "rollback") throw err;
+        });
+
+      if (await LogModel.count() !== 0) {
+        throw new Error(`Multi db txn not working!`);
       }
     });
 

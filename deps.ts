@@ -1,6 +1,6 @@
 import EsHighlighter from "highlighter";
 
-export const highligthEs = (content: string): string => EsHighlighter(content);
+export const highlightEs = (content: string): string => EsHighlighter(content);
 
 export {
   type AggregateOptions,

@@ -16,7 +16,7 @@ import {
   type Db,
   type DeleteOptions,
   type Filter,
-  highligthEs,
+  highlightEs,
   type IndexDirection,
   type InsertOneOptions,
   ObjectId,
@@ -49,6 +49,7 @@ import {
   UpdateAndFindManyQuery,
   UpdateAndFindOneQuery,
 } from "./query/utility.ts";
+import { MongoTransaction, type WithMongoTxn } from "./transaction.ts";
 
 export interface ModelOptions {
   /**
@@ -90,7 +91,7 @@ export class MongoModel<
     if (this.options.logs || Mongo.enableLogs) {
       console.info(
         "Query Executed::",
-        highligthEs(
+        highlightEs(
           `@${this.connectionIndex}.${this.database.databaseName}.${this.name}.${method}(\n\r\t${
             args
               .map((arg) => {
@@ -246,8 +247,13 @@ export class MongoModel<
    */
   public async create(
     doc: InputDocument<InputShape>,
-    options?: InsertOneOptions & { validate?: boolean },
+    options?: WithMongoTxn<InsertOneOptions & { validate?: boolean }>,
   ): Promise<OutputDocument<OutputShape>> {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     doc =
       (await this.PreHooks.create?.reduce<Promise<InputDocument<InputShape>>>(
         async (doc, hook) =>
@@ -255,9 +261,9 @@ export class MongoModel<
         Promise.resolve(doc),
       )) ?? doc;
 
-    this.log("create", doc, options);
+    this.log("create", doc, opts);
 
-    const Doc = options?.validate === false
+    const Doc = opts?.validate === false
       ? doc
       : await this.getSchema().validate(doc, {
         name: this.name,
@@ -266,7 +272,7 @@ export class MongoModel<
         },
       });
 
-    const Ack = await this.collection.insertOne(Doc, options);
+    const Ack = await this.collection.insertOne(Doc, opts);
     const Result = { _id: Ack.insertedId, ...Doc };
 
     return (
@@ -286,8 +292,13 @@ export class MongoModel<
    */
   public async createMany(
     docs: InputDocument<InputShape>[],
-    options?: BulkWriteOptions & { validate?: boolean },
+    options?: WithMongoTxn<BulkWriteOptions & { validate?: boolean }>,
   ): Promise<OutputDocument<OutputShape>[]> {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     docs = await Promise.all(
       docs.map(
         (doc) =>
@@ -299,9 +310,9 @@ export class MongoModel<
       ),
     );
 
-    this.log("createMany", docs, options);
+    this.log("createMany", docs, opts);
 
-    const Docs = options?.validate === false
+    const Docs = opts?.validate === false
       ? docs
       : await e.array(this.getSchema()).validate(docs, {
         name: this.name,
@@ -310,7 +321,7 @@ export class MongoModel<
         },
       });
 
-    const Ack = await this.collection.insertMany(Docs, options);
+    const Ack = await this.collection.insertMany(Docs, opts);
 
     return Promise.all(
       Docs.map((doc, index) => ({
@@ -344,9 +355,14 @@ export class MongoModel<
         $caseSensitive?: boolean;
         $diacriticSensitive?: boolean;
       },
-    options?: AggregateOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<AggregateOptions & { cache?: TCacheOptions }>,
   ) {
-    return new FindQuery(this, options).filter({
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new FindQuery(this, opts).filter({
       ...(searchTerm
         ? {
           $text: typeof searchTerm === "object"
@@ -365,9 +381,14 @@ export class MongoModel<
    */
   public find(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<AggregateOptions & { cache?: TCacheOptions }>,
   ) {
-    return new FindQuery(this, options).filter(filter as any);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new FindQuery(this, opts).filter(filter as any);
   }
 
   /**
@@ -378,15 +399,20 @@ export class MongoModel<
    */
   public findOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<AggregateOptions & { cache?: TCacheOptions }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new FindOneQuery(this, options).filter(Filter);
+    return new FindOneQuery(this, opts).filter(Filter);
   }
 
   /**
@@ -397,10 +423,15 @@ export class MongoModel<
    */
   public findOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<AggregateOptions & { cache?: TCacheOptions }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Query = this.findOne(filter, {
-      ...options,
+      ...opts,
       // deno-lint-ignore ban-ts-comment
       // @ts-ignore
       errorOnNull: true,
@@ -424,15 +455,20 @@ export class MongoModel<
    */
   public count(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: AggregateOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<AggregateOptions & { cache?: TCacheOptions }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new CountQuery(this, options).filter(Filter);
+    return new CountQuery(this, opts).filter(Filter);
   }
 
   /**
@@ -443,18 +479,24 @@ export class MongoModel<
    */
   public async exists(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: CountDocumentsOptions & { cache?: TCacheOptions },
+    options?: WithMongoTxn<CountDocumentsOptions & { cache?: TCacheOptions }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    this.log("exists", Filter, options);
+    this.log("exists", Filter, opts);
+
     return !!(await Mongo.useCaching(
-      () => this.collection.countDocuments(Filter, options),
-      options?.cache,
+      () => this.collection.countDocuments(Filter, opts),
+      opts?.cache,
     ));
   }
 
@@ -466,19 +508,24 @@ export class MongoModel<
    */
   public watch(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: ChangeStreamOptions,
+    options?: WithMongoTxn<ChangeStreamOptions>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    this.log("watch", Filter, options);
+    this.log("watch", Filter, opts);
 
     return this.collection.watch<OutputDocument<OutputShape>>(
       [{ $match: Filter }],
-      options,
+      opts,
     );
   }
 
@@ -494,15 +541,20 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new UpdateOneQuery(this, options)
+    return new UpdateOneQuery(this, opts)
       .filter(Filter)
       .updates(updates as any);
   }
@@ -519,9 +571,14 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
-    const Result = await this.updateOne(filter, updates, options);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    const Result = await this.updateOne(filter, updates, opts);
 
     if (!Result.modifiedCount) {
       throw new Error("Record update has been failed!");
@@ -542,15 +599,20 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new UpdateAndFindOneQuery(this, options)
+    return new UpdateAndFindOneQuery(this, opts)
       .filter(Filter)
       .updates(updates as any);
   }
@@ -567,15 +629,20 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new FindAndUpdateOneQuery(this, options)
+    return new FindAndUpdateOneQuery(this, opts)
       .filter(Filter)
       .updates(updates as any);
   }
@@ -592,9 +659,14 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
-    return new UpdateManyQuery(this, options)
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new UpdateManyQuery(this, opts)
       .filter(filter as any)
       .updates(updates as any);
   }
@@ -611,9 +683,14 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
-    const Result = await this.updateMany(filter, updates, options);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    const Result = await this.updateMany(filter, updates, opts);
 
     if (!Result.modifiedCount) {
       throw new Error("Record update has been failed!");
@@ -634,9 +711,14 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
-    return new UpdateAndFindManyQuery(this, options)
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new UpdateAndFindManyQuery(this, opts)
       .filter(filter as any)
       .updates(updates as any);
   }
@@ -653,9 +735,14 @@ export class MongoModel<
     updates?:
       & UpdateFilter<InputDocument<InputShape>>
       & Partial<InputDocument<InputShape>>,
-    options?: UpdateOptions & { validate?: boolean },
+    options?: WithMongoTxn<UpdateOptions & { validate?: boolean }>,
   ) {
-    return new FindAndUpdateManyQuery(this, options)
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new FindAndUpdateManyQuery(this, opts)
       .filter(filter as any)
       .updates(updates as any);
   }
@@ -668,15 +755,20 @@ export class MongoModel<
    */
   public deleteOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new DeleteOneQuery(this, options).filter(Filter);
+    return new DeleteOneQuery(this, opts).filter(Filter);
   }
 
   /**
@@ -687,9 +779,14 @@ export class MongoModel<
    */
   public async deleteOneOrFail(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
-    const Result = await this.deleteOne(filter, options);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    const Result = await this.deleteOne(filter, opts);
 
     if (!Result.deletedCount) {
       throw new Error("Record deletion has been failed!");
@@ -706,15 +803,20 @@ export class MongoModel<
    */
   public findAndDeleteOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
         : filter
     ) as any;
 
-    return new FindAndDeleteOneQuery(this, options).filter(Filter);
+    return new FindAndDeleteOneQuery(this, opts).filter(Filter);
   }
 
   /**
@@ -725,9 +827,14 @@ export class MongoModel<
    */
   public deleteMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
-    return new DeleteManyQuery(this, options).filter(filter as any);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new DeleteManyQuery(this, opts).filter(filter as any);
   }
 
   /**
@@ -738,9 +845,14 @@ export class MongoModel<
    */
   public async deleteManyOrFail(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
-    const Result = await this.deleteMany(filter, options);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    const Result = await this.deleteMany(filter, opts);
 
     if (!Result.deletedCount) {
       throw new Error("Record deletion has been failed!");
@@ -757,9 +869,14 @@ export class MongoModel<
    */
   public findAndDeleteMany(
     filter: Filter<InputDocument<InputShape>> = {},
-    options?: DeleteOptions,
+    options?: WithMongoTxn<DeleteOptions>,
   ) {
-    return new FindAndDeleteManyQuery(this, options).filter(filter as any);
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    return new FindAndDeleteManyQuery(this, opts).filter(filter as any);
   }
 
   /**
@@ -772,8 +889,13 @@ export class MongoModel<
   public async replaceOne(
     filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
     doc: InputDocument<InputShape>,
-    options?: ReplaceOptions,
+    options?: WithMongoTxn<ReplaceOptions>,
   ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
     const Filter = (
       ObjectId.isValid(filter as any)
         ? { _id: new ObjectId(filter as any) }
@@ -792,7 +914,7 @@ export class MongoModel<
         Promise.resolve(doc),
       )) ?? doc;
 
-    this.log("replaceOne", Filter, doc, options);
+    this.log("replaceOne", Filter, doc, opts);
 
     const Doc = await this.getSchema().validate(doc, {
       name: this.name,
@@ -801,7 +923,7 @@ export class MongoModel<
       },
     });
 
-    const Result = (await this.collection.replaceOne(Filter, Doc, options)) as
+    const Result = (await this.collection.replaceOne(Filter, Doc, opts)) as
       | InputDocument<InputShape>
       | UpdateResult<InputDocument<InputShape>>;
 
