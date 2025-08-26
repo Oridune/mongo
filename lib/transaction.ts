@@ -18,7 +18,7 @@ export type WithoutMongoTxn<T> = T extends object ? Omit<T, "session"> & {
 
 export class MongoTransaction {
   static transaction = <T>(
-    callback: (session: MongoTransaction) => Promise<T> | void,
+    callback: (session: MongoTransaction) => Promise<T>,
     opts?:
       | {
         sessionOpts?: ClientSessionOptions;
@@ -46,7 +46,7 @@ export class MongoTransaction {
   protected sessions = new Map<number, ClientSession>();
 
   public async exec<T>(
-    callback: (session: MongoTransaction) => Promise<T> | void,
+    callback: (session: MongoTransaction) => Promise<T>,
     opts?:
       | {
         sessionOpts?: ClientSessionOptions;
