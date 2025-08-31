@@ -92,6 +92,10 @@ export class MongoTransaction {
   }
 
   public getSession(connectionIndex: number, opts?: ClientSessionOptions) {
+    const existingSession = this.sessions.get(connectionIndex);
+
+    if (existingSession) return existingSession;
+
     const Conn = Mongo.clients[connectionIndex];
 
     const session = Conn.startSession(opts);
