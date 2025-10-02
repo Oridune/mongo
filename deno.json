@@ -6,7 +6,7 @@
     "./validator": "./validator.ts"
   },
   "imports": {
-    "@oridune/validator": "jsr:@oridune/validator@^0.4.8",
+    "@oridune/validator": "jsr:@oridune/validator@^0.4.9",
     "highlighter": "npm:highlight-es@1.0.3",
     "mongodb": "npm:mongodb@6.18.0"
   }
