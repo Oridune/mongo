@@ -74,7 +74,7 @@ export class MongoTransaction {
       const results = await callback(this);
 
       await Promise.all(
-        Array.from(this.sessions).map(([, session]) =>
+        Array.from(this.sessions).reverse().map(([, session]) =>
           session.commitTransaction()
         ),
       );
