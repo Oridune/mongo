@@ -79,13 +79,13 @@ export class MongoModel<
   OutputShape extends object = inferOutput<Schema>,
 > extends MongoHooks<InputShape, OutputShape> {
   protected databaseInstance?: Db;
-  protected populateConfig?: {
+  protected populateConfig?: Array<{
     field: string;
     model: MongoModel<any, any, any>;
     options?: PopulateOptions<any> & {
       unwind?: boolean;
     };
-  };
+  }>;
 
   protected log(method: string, ...args: any[]) {
     if (this.options.logs || Mongo.enableLogs) {
@@ -960,11 +960,11 @@ export class MongoModel<
       this.options,
     );
 
-    Model["populateConfig"] = {
+    (Model["populateConfig"] ??= []).push(...(this.populateConfig ?? []), {
       field,
       model,
       options: options as any,
-    };
+    });
 
     return Model as any;
   }
@@ -991,14 +991,14 @@ export class MongoModel<
       this.options,
     );
 
-    Model["populateConfig"] = {
+    (Model["populateConfig"] ??= []).push(...(this.populateConfig ?? []), {
       field,
       model,
       options: {
         ...(options as any),
         unwind: true,
       },
-    };
+    });
 
     return Model as any;
   }

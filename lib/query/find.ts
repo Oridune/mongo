@@ -132,13 +132,7 @@ export class BaseFindQuery<
           foreignField: options?.foreignField ?? "_id",
           as: field,
           pipeline: (() => {
-            const Pipeline = typeof SubPopulateConfig === "object"
-              ? this.createPopulateAggregation(
-                SubPopulateConfig.field,
-                SubPopulateConfig.model,
-                SubPopulateConfig.options,
-              )
-              : [];
+            const Pipeline = [];
 
             typeof options?.filter === "object" &&
               Pipeline.push({ $match: options.filter });
@@ -152,6 +146,18 @@ export class BaseFindQuery<
               Pipeline.push({ $project: options.project });
             typeof options?.having === "object" &&
               Pipeline.push({ $match: options.having });
+
+            if (SubPopulateConfig instanceof Array) {
+              SubPopulateConfig.map(({ field, model, options }) =>
+                this.createPopulateAggregation(
+                  field,
+                  model,
+                  options,
+                )
+              ).flat().forEach((stage) => {
+                Pipeline.push(stage);
+              });
+            }
 
             return Pipeline;
           })(),
@@ -436,6 +442,7 @@ export class BaseFindQuery<
       ...this.createPopulateAggregation(field, model, {
         ...(options as any),
         unwind: true,
+        limit: 1,
       }),
     );
 
