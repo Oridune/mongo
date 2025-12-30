@@ -261,8 +261,6 @@ export class MongoModel<
         Promise.resolve(doc),
       )) ?? doc;
 
-    this.log("create", doc, opts);
-
     const Doc = opts?.validate === false
       ? doc
       : await this.getSchema().validate(doc, {
@@ -271,6 +269,8 @@ export class MongoModel<
           databaseOperation: "create",
         },
       });
+
+    this.log("create", Doc, opts);
 
     const Ack = await this.collection.insertOne(Doc, opts);
     const Result = { _id: Ack.insertedId, ...Doc };
@@ -310,8 +310,6 @@ export class MongoModel<
       ),
     );
 
-    this.log("createMany", docs, opts);
-
     const Docs = opts?.validate === false
       ? docs
       : await e.array(this.getSchema()).validate(docs, {
@@ -320,6 +318,8 @@ export class MongoModel<
           databaseOperation: "create",
         },
       });
+
+    this.log("createMany", Docs, opts);
 
     const Ack = await this.collection.insertMany(Docs, opts);
 
@@ -914,14 +914,14 @@ export class MongoModel<
         Promise.resolve(doc),
       )) ?? doc;
 
-    this.log("replaceOne", Filter, doc, opts);
-
     const Doc = await this.getSchema().validate(doc, {
       name: this.name,
       context: {
         databaseOperation: "replace",
       },
     });
+
+    this.log("replaceOne", Filter, Doc, opts);
 
     const Result = (await this.collection.replaceOne(Filter, Doc, opts)) as
       | InputDocument<InputShape>
