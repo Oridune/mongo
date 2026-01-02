@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@oridune/validator@~0.4.10": "0.4.10",
+    "jsr:@oridune/validator@~0.4.11": "0.4.11",
     "jsr:@std/fmt@~0.225.3": "0.225.6",
     "npm:@types/node@*": "24.2.0",
     "npm:highlight-es@1.0.3": "1.0.3",
@@ -9,8 +9,8 @@
     "npm:pluralize@8.0.0": "8.0.0"
   },
   "jsr": {
-    "@oridune/validator@0.4.10": {
-      "integrity": "cbf8a9746fd1e98c87fd41a83b9d1a3533f517ad3aaf56ae9f62e22f64d1271a",
+    "@oridune/validator@0.4.11": {
+      "integrity": "6ea8f73cccbd9b07f6e199f83d22622c5bb375f15ec4234abd2b92ddd54263af",
       "dependencies": [
         "jsr:@std/fmt"
       ]
@@ -151,7 +151,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@oridune/validator@~0.4.10",
+      "jsr:@oridune/validator@~0.4.11",
       "npm:highlight-es@1.0.3",
       "npm:mongodb@6.18.0"
     ]
