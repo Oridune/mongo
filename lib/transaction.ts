@@ -70,6 +70,11 @@ export class MongoTransaction {
       return callback(txn);
     }
 
+    const sessionEndOpts = opts && typeof opts === "object" &&
+        !("_connectionIndex" in opts) && "sessionEndOpts" in opts
+      ? opts.sessionEndOpts
+      : undefined;
+
     try {
       const results = await callback(this);
 
@@ -88,6 +93,14 @@ export class MongoTransaction {
       );
 
       throw error;
+    } finally {
+      // End all sessions to prevent memory leaks
+      await Promise.all(
+        Array.from(this.sessions).map(([, session]) =>
+          session.endSession(sessionEndOpts)
+        ),
+      );
+      this.sessions.clear();
     }
   }
 

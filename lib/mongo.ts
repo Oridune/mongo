@@ -125,6 +125,64 @@ export class Mongo {
   }
 
   /**
+   * Remove a pre-event handler
+   * @param event The event type
+   * @param callback The callback to remove
+   * @returns
+   */
+  static removePre(
+    event: "connect" | "disconnect",
+    callback: (connectionIndex: number) => void | Promise<void>,
+  ) {
+    const events = event === "connect"
+      ? this.preConnectEvents
+      : this.preDisconnectEvents;
+    const index = events.indexOf(callback);
+    if (index > -1) events.splice(index, 1);
+    return this;
+  }
+
+  /**
+   * Remove a post-event handler
+   * @param event The event type
+   * @param callback The callback to remove
+   * @returns
+   */
+  static removePost(
+    event: "connect" | "disconnect",
+    callback: (connectionIndex: number) => void | Promise<void>,
+  ) {
+    const events = event === "connect"
+      ? this.postConnectEvents
+      : this.postDisconnectEvents;
+    const index = events.indexOf(callback);
+    if (index > -1) events.splice(index, 1);
+    return this;
+  }
+
+  /**
+   * Clear all event handlers for a specific event type
+   * @param type The hook type (pre or post)
+   * @param event The event type (connect or disconnect), or omit to clear all
+   */
+  static clearEventHandlers(
+    type?: "pre" | "post",
+    event?: "connect" | "disconnect",
+  ) {
+    if (!type || type === "pre") {
+      if (!event || event === "connect") this.preConnectEvents.length = 0;
+      if (!event || event === "disconnect") this.preDisconnectEvents.length = 0;
+    }
+    if (!type || type === "post") {
+      if (!event || event === "connect") this.postConnectEvents.length = 0;
+      if (!event || event === "disconnect") {
+        this.postDisconnectEvents.length = 0;
+      }
+    }
+    return this;
+  }
+
+  /**
    * Is database connected?
    * @returns
    */
@@ -214,6 +272,23 @@ export class Mongo {
     this.models.set(name, Model as any);
 
     return Model;
+  }
+
+  /**
+   * Remove a model from the registry
+   * @param name The model name to remove
+   * @returns True if the model was removed, false if it didn't exist
+   */
+  static removeModel(name: string) {
+    return this.models.delete(name);
+  }
+
+  /**
+   * Clear all registered models
+   */
+  static clearModels() {
+    this.models.clear();
+    return this;
   }
 
   /**

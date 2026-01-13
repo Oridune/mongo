@@ -146,4 +146,65 @@ export class MongoHooks<InputShape, OutputShape> {
     (this.PostHooks[event as THookEvent] ??= []).push(callback as any);
     return this;
   }
+
+  /**
+   * Remove a pre-hook callback
+   * @param event The event type
+   * @param callback The callback to remove
+   * @returns
+   */
+  public removePre<E extends THookEvent>(
+    event: E,
+    callback: THookCallback<"pre", E, InputShape, OutputShape>
+  ) {
+    const hooks = this.PreHooks[event as THookEvent];
+    if (hooks) {
+      const index = hooks.indexOf(callback as any);
+      if (index > -1) hooks.splice(index, 1);
+    }
+    return this;
+  }
+
+  /**
+   * Remove a post-hook callback
+   * @param event The event type
+   * @param callback The callback to remove
+   * @returns
+   */
+  public removePost<E extends THookEvent>(
+    event: E,
+    callback: THookCallback<"post", E, InputShape, OutputShape>
+  ) {
+    const hooks = this.PostHooks[event as THookEvent];
+    if (hooks) {
+      const index = hooks.indexOf(callback as any);
+      if (index > -1) hooks.splice(index, 1);
+    }
+    return this;
+  }
+
+  /**
+   * Clear all hooks for a specific event type, or all hooks if no event is specified
+   * @param type The hook type (pre or post), or omit to clear both
+   * @param event The event type, or omit to clear all events
+   */
+  public clearHooks(type?: THookType, event?: THookEvent) {
+    const clearArray = (
+      hooks: Partial<Record<THookEvent, any[]>>,
+      evt?: THookEvent
+    ) => {
+      if (evt) {
+        if (hooks[evt]) hooks[evt]!.length = 0;
+      } else {
+        for (const key of Object.keys(hooks) as THookEvent[]) {
+          if (hooks[key]) hooks[key]!.length = 0;
+        }
+      }
+    };
+
+    if (!type || type === "pre") clearArray(this.PreHooks, event);
+    if (!type || type === "post") clearArray(this.PostHooks, event);
+
+    return this;
+  }
 }

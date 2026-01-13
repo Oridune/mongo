@@ -202,6 +202,9 @@ export class MongoModel<
     })[]
   ) {
     const createIndex = async () => {
+      // Remove the callback after execution to prevent memory leaks
+      Mongo.removePost("connect", createIndex);
+
       this.log("createIndex", ...indexDesc);
 
       if (indexDesc.length) {
@@ -228,6 +231,9 @@ export class MongoModel<
     options?: CommandOperationOptions,
   ) {
     const dropIndex = async () => {
+      // Remove the callback after execution to prevent memory leaks
+      Mongo.removePost("connect", dropIndex);
+
       for (const Name of indexNames) {
         await this.collection.dropIndex(Name, options);
       }
