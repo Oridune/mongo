@@ -17,6 +17,7 @@ export {
   type DeleteResult,
   type Document,
   type EndSessionOptions,
+  type EstimatedDocumentCountOptions,
   type Filter,
   type IndexDirection,
   type InsertOneOptions,

@@ -15,6 +15,7 @@ import {
   type CreateIndexesOptions,
   type Db,
   type DeleteOptions,
+  type EstimatedDocumentCountOptions,
   type Filter,
   highlightEs,
   type IndexDirection,
@@ -475,6 +476,68 @@ export class MongoModel<
     ) as any;
 
     return new CountQuery(this, opts).filter(Filter);
+  }
+
+  /**
+   * Get document's count
+   * @param filter
+   * @param options
+   * @returns
+   */
+  public async countDocuments(
+    filter: ObjectId | string | Filter<InputDocument<InputShape>> = {},
+    options?: WithMongoTxn<
+      CountDocumentsOptions & {
+        cache?: TCacheOptions;
+        disableEstimation?: boolean;
+      }
+    >,
+  ) {
+    if (!Object.keys(filter).length && !options?.disableEstimation) {
+      return this.estimatedDocumentCount(options);
+    }
+
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    const Filter = (
+      ObjectId.isValid(filter as any)
+        ? { _id: new ObjectId(filter as any) }
+        : filter
+    ) as any;
+
+    this.log("countDocuments", Filter, opts);
+
+    return (await Mongo.useCaching(
+      () => this.collection.countDocuments(Filter, opts),
+      opts?.cache,
+    ));
+  }
+
+  /**
+   * Get document's count estimation (Not the exact number)
+   * @param filter
+   * @param options
+   * @returns
+   */
+  public async estimatedDocumentCount(
+    options?: WithMongoTxn<
+      EstimatedDocumentCountOptions & { cache?: TCacheOptions }
+    >,
+  ) {
+    const opts = MongoTransaction.resolveCommandOpts(
+      options,
+      this.connectionIndex,
+    );
+
+    this.log("estimatedDocumentCount", opts);
+
+    return (await Mongo.useCaching(
+      () => this.collection.estimatedDocumentCount(opts),
+      opts?.cache,
+    ));
   }
 
   /**
